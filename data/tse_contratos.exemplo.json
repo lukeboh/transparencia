@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1",
+    "numero": "10/2023",
+    "objeto": "Serviço de limpeza e conservação",
+    "fornecedor": "Empresa A Ltda",
+    "valorGlobal": 1200000,
+    "situacao": "Vigente",
+    "responsaveis": [
+      { "nome": "Maria Silva", "matricula": "111", "papel": "Fiscal Titular" },
+      { "nome": "João Souza", "matricula": "222", "papel": "Gestor Titular" }
+    ]
+  },
+  {
+    "id": "2",
+    "numero": "11/2023",
+    "objeto": "Locação de veículos",
+    "fornecedor": "Empresa B Ltda",
+    "valorGlobal": 5300000,
+    "situacao": "Vigente",
+    "responsaveis": [
+      { "nome": "Maria Silva", "matricula": "111", "papel": "Fiscal Titular" },
+      { "nome": "Ana Costa", "matricula": "333", "papel": "Fiscal Substituto" }
+    ]
+  },
+  {
+    "id": "3",
+    "numero": "12/2023",
+    "objeto": "Manutenção predial",
+    "fornecedor": "Empresa C Ltda",
+    "valorGlobal": 2100000,
+    "situacao": "Encerrado",
+    "responsaveis": [
+      { "nome": "João Souza", "matricula": "222", "papel": "Fiscal Titular" },
+      { "nome": "João Souza", "matricula": "222", "papel": "Gestor Titular" }
+    ]
+  }
+]

@@ -1,0 +1,7 @@
+node_modules/
+data/discovery/*.har
+data/discovery/*.png
+data/discovery/*.html
+data/discovery/*.json
+data/tse_contratos.json
+data/ranking_responsaveis.csv
