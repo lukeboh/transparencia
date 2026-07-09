@@ -33,6 +33,12 @@ categoria (top 5 + "Outros"; hover sincronizado entre fatia e legenda).
 Tema claro/escuro com toggle; paleta de gráficos validada para daltonismo
 (CVD) nos dois modos, com "Outros" em cinza de de-ênfase.
 
+A rota `/responsaveis` (linkada no header e no card "Responsáveis designados")
+traz o dashboard da primeira funcionalidade do projeto: cards com total de
+responsáveis / maior valor sob responsabilidade / mediana por responsável,
+gráfico de barras horizontais com o top 10 e tabela com o top 50 do ranking
+(papéis como badges; valor de cada contrato contado uma única vez por pessoa).
+
 ## Como os dados são obtidos
 
 A página `https://contratos.comprasnet.gov.br/transparencia/contratos?unidade=TSE`

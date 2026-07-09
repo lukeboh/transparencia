@@ -6,12 +6,14 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { rankResponsaveis } from './rankResponsaveis.js';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const entrada = process.argv[2] ?? path.join(raiz, 'data/tse_contratos.json');
 const saida = process.argv[3] ?? path.join(raiz, 'web/lib/dashboard-data.ts');
 
 const MAX_FATIAS = 5; // demais categorias somadas em "Outros"
+const MAX_RANKING = 50; // linhas do ranking de responsáveis embarcadas no app
 
 function anoDe(dataBr) {
   const m = /(\d{4})$/.exec(dataBr ?? '');
@@ -68,6 +70,24 @@ async function main() {
       }]
     : principais;
 
+  const rankingCompleto = rankResponsaveis(contratos);
+  const valores = rankingCompleto.map((r) => r.valorConsolidado).sort((a, b) => a - b);
+  const meio = Math.floor(valores.length / 2);
+  const medianaValor = valores.length === 0
+    ? 0
+    : valores.length % 2 === 1
+      ? valores[meio]
+      : (valores[meio - 1] + valores[meio]) / 2;
+  const responsaveisVigentes = new Set(
+    vigentes.flatMap((c) => c.responsaveis.map((r) => r.matricula || r.nome)),
+  );
+  const ranking = rankingCompleto.slice(0, MAX_RANKING).map((r) => ({
+    nome: r.nome,
+    papeis: r.papeis,
+    valorConsolidado: r.valorConsolidado,
+    quantidadeContratos: r.quantidadeContratos,
+  }));
+
   const dados = {
     geradoEm: new Date().toISOString(),
     fonte: 'https://contratos.comprasnet.gov.br/transparencia/contratos?unidade=TSE',
@@ -80,6 +100,12 @@ async function main() {
     },
     evolucao,
     categorias,
+    responsaveis: {
+      total: rankingCompleto.length,
+      emContratosVigentes: responsaveisVigentes.size,
+      medianaValor,
+      ranking,
+    },
   };
 
   const ts = `// Gerado por src/tse/buildDashboardData.js — não editar manualmente.
@@ -106,12 +132,27 @@ export interface FatiaCategoria {
   contratos: number;
 }
 
+export interface LinhaRanking {
+  nome: string;
+  papeis: string[];
+  valorConsolidado: number;
+  quantidadeContratos: number;
+}
+
+export interface ResponsaveisData {
+  total: number;
+  emContratosVigentes: number;
+  medianaValor: number;
+  ranking: LinhaRanking[];
+}
+
 export interface DashboardData {
   geradoEm: string;
   fonte: string;
   resumo: ResumoTSE;
   evolucao: PontoEvolucao[];
   categorias: FatiaCategoria[];
+  responsaveis: ResponsaveisData;
 }
 
 export const dashboardData: DashboardData = ${JSON.stringify(dados, null, 2)};

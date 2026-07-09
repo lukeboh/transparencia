@@ -1,29 +1,8 @@
+import Link from 'next/link';
 import { FileCheck2, Landmark, Users } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { StatCard } from '@/components/dashboard/stat-card';
 import { brlCompacto, numero } from '@/lib/utils';
 import type { ResumoTSE } from '@/lib/dashboard-data';
-
-interface StatCardProps {
-  titulo: string;
-  valor: string;
-  detalhe: string;
-  icone: React.ReactNode;
-}
-
-function StatCard({ titulo, valor, detalhe, icone }: StatCardProps) {
-  return (
-    <Card className="transition-colors duration-200 hover:bg-accent/40">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-muted-foreground">{titulo}</CardTitle>
-        <span className="text-muted-foreground">{icone}</span>
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-semibold tracking-tight">{valor}</div>
-        <p className="mt-1 text-xs text-muted-foreground">{detalhe}</p>
-      </CardContent>
-    </Card>
-  );
-}
 
 export function StatCards({ resumo }: { resumo: ResumoTSE }) {
   return (
@@ -40,12 +19,18 @@ export function StatCards({ resumo }: { resumo: ResumoTSE }) {
         detalhe={`${brlCompacto(resumo.valorVigente)} em vigência hoje`}
         icone={<FileCheck2 className="h-4 w-4" aria-hidden />}
       />
-      <StatCard
-        titulo="Responsáveis designados"
-        valor={numero(resumo.totalResponsaveis)}
-        detalhe="servidores fiscais e gestores de contrato"
-        icone={<Users className="h-4 w-4" aria-hidden />}
-      />
+      <Link
+        href="/responsaveis"
+        aria-label="Ver dashboard de responsáveis"
+        className="rounded-lg outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <StatCard
+          titulo="Responsáveis designados"
+          valor={numero(resumo.totalResponsaveis)}
+          detalhe="ver ranking por valor sob responsabilidade →"
+          icone={<Users className="h-4 w-4" aria-hidden />}
+        />
+      </Link>
     </div>
   );
 }

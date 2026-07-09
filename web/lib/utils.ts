@@ -33,3 +33,18 @@ export function brlCompleto(valor: number) {
 export function numero(valor: number) {
   return inteiro.format(valor);
 }
+
+const PARTICULAS = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
+
+/** "RAFAEL FERNANDES DE BARROS" → "Rafael Fernandes de Barros". */
+export function nomeProprio(nome: string) {
+  return nome
+    .toLocaleLowerCase('pt-BR')
+    .split(' ')
+    .map((palavra) =>
+      PARTICULAS.has(palavra)
+        ? palavra
+        : palavra.charAt(0).toLocaleUpperCase('pt-BR') + palavra.slice(1),
+    )
+    .join(' ');
+}
