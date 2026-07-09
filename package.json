@@ -1,0 +1,16 @@
+{
+  "name": "transparencia",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Ferramentas de transparência de órgãos públicos brasileiros — módulo inicial: ranking de responsáveis (fiscais/gestores) pelos maiores valores consolidados de contratos do TSE.",
+  "scripts": {
+    "tse:discover": "node src/tse/discover.js",
+    "tse:scrape": "node src/tse/scrapeContratos.js",
+    "tse:rank": "node src/tse/cli.js",
+    "test": "node --test \"test/**/*.test.js\""
+  },
+  "dependencies": {
+    "playwright": "^1.56.1"
+  }
+}
