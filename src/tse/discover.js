@@ -27,9 +27,17 @@ async function main() {
   await mkdir(outDir, { recursive: true });
 
   const executablePath = await encontrarChromiumInstalado();
-  const browser = await chromium.launch(executablePath ? { executablePath } : {});
+  // O Chromium não herda HTTPS_PROXY automaticamente; precisa ser passado
+  // explicitamente. O proxy re-termina TLS com sua própria CA, então também
+  // é preciso desabilitar a validação de certificado do Chromium para ela.
+  const proxyServer = process.env.HTTPS_PROXY || process.env.https_proxy;
+  const browser = await chromium.launch({
+    ...(executablePath ? { executablePath } : {}),
+    ...(proxyServer ? { proxy: { server: proxyServer } } : {}),
+  });
   const context = await browser.newContext({
     recordHar: { path: path.join(outDir, `transparencia-${unidade}.har`), content: 'embed' },
+    ignoreHTTPSErrors: true,
   });
   const page = await context.newPage();
 
