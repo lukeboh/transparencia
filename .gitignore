@@ -5,3 +5,5 @@ data/discovery/*.html
 data/discovery/*.json
 data/tse_contratos.json
 data/ranking_responsaveis.csv
+web/node_modules/
+web/.next/

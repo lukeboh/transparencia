@@ -1,0 +1,99 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Tokens no padrão shadcn/ui (nomeados por papel, não por cor).
+ * Os slots --chart-1..6 vêm da paleta categórica validada do projeto
+ * (CVD-safe em ordem fixa; ver README do dashboard) — valores distintos
+ * por modo, não um flip automático.
+ */
+:root {
+  --background: #f9f9f7;
+  --foreground: #0b0b0b;
+  --card: #fcfcfb;
+  --card-foreground: #0b0b0b;
+  --popover: #fcfcfb;
+  --popover-foreground: #0b0b0b;
+  --primary: #171717;
+  --primary-foreground: #fafafa;
+  --secondary: #f0efec;
+  --secondary-foreground: #171717;
+  --muted: #f0efec;
+  --muted-foreground: #52514e;
+  --accent: #f0efec;
+  --accent-foreground: #171717;
+  --border: rgba(11, 11, 11, 0.1);
+  --ring: #898781;
+  --grid: #e1e0d9;
+  --chart-1: #2a78d6;
+  --chart-2: #1baf7a;
+  --chart-3: #eda100;
+  --chart-4: #008300;
+  --chart-5: #4a3aa7;
+  --chart-6: #e34948;
+  --radius: 0.625rem;
+}
+
+.dark {
+  --background: #0d0d0d;
+  --foreground: #fafafa;
+  --card: #1a1a19;
+  --card-foreground: #fafafa;
+  --popover: #1f1f1e;
+  --popover-foreground: #fafafa;
+  --primary: #e5e5e5;
+  --primary-foreground: #171717;
+  --secondary: #262626;
+  --secondary-foreground: #fafafa;
+  --muted: #262626;
+  --muted-foreground: #a3a29b;
+  --accent: #262626;
+  --accent-foreground: #fafafa;
+  --border: rgba(255, 255, 255, 0.1);
+  --ring: #898781;
+  --grid: #2c2c2a;
+  --chart-1: #3987e5;
+  --chart-2: #199e70;
+  --chart-3: #c98500;
+  --chart-4: #008300;
+  --chart-5: #9085e9;
+  --chart-6: #e66767;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-grid: var(--grid);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}

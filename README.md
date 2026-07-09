@@ -11,6 +11,27 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
 - ✅ CLI para gerar o ranking em CSV a partir de um JSON de contratos (`src/tse/cli.js`).
 - ✅ Extração real dos contratos do TSE (`src/tse/scrapeContratos.js`) — testada
   contra a API oficial, 1268 contratos extraídos com sucesso.
+- ✅ Dashboard web (`web/`) — Next.js (App Router) + Tailwind CSS + componentes
+  no padrão shadcn/ui + Recharts, com dados reais agregados.
+
+## Dashboard web
+
+App em `web/`, alimentado por agregados gerados a partir do JSON extraído
+(nunca por fetch em runtime — o dado é versionável e o app é 100% estático):
+
+```bash
+npm run tse:scrape -- TSE data/tse_contratos.json   # 1. extrai (raiz do repo)
+cd web && npm install
+npm run data                                        # 2. gera web/lib/dashboard-data.ts
+npm run dev                                         # 3. http://localhost:3000
+```
+
+Conteúdo: 3 cards de resumo (valor total contratado, contratos vigentes,
+responsáveis designados), gráfico de área com a evolução anual dos gastos
+(rótulo direto no pico; tooltip com crosshair) e donut com a divisão por
+categoria (top 5 + "Outros"; hover sincronizado entre fatia e legenda).
+Tema claro/escuro com toggle; paleta de gráficos validada para daltonismo
+(CVD) nos dois modos, com "Outros" em cinza de de-ênfase.
 
 ## Como os dados são obtidos
 
