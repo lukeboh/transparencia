@@ -5,6 +5,7 @@ import { StatCard } from '@/components/dashboard/stat-card';
 import { RankingChart } from '@/components/dashboard/ranking-chart';
 import { RankingTable } from '@/components/dashboard/ranking-table';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { ThemePicker } from '@/components/theme-picker';
 import { dashboardData } from '@/lib/dashboard-data';
 import { brlCompacto, nomeProprio, numero } from '@/lib/utils';
 
@@ -45,7 +46,10 @@ export default function ResponsaveisPage() {
             · extraído em {extraidoEm}
           </p>
         </div>
-        <ThemeToggle />
+        <div className="flex shrink-0 items-center gap-2">
+          <ThemePicker />
+          <ThemeToggle />
+        </div>
       </header>
 
       <div className="space-y-4">

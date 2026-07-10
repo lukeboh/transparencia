@@ -61,6 +61,81 @@
   --chart-6: #e66767;
 }
 
+/*
+ * Temas alternativos: mudam o chrome (superfícies, acentos, bordas, raio),
+ * nunca os slots --chart-* — a paleta de dados é validada para CVD e é a
+ * mesma nos três temas.
+ */
+[data-theme='institucional'] {
+  --background: #f2f5fa;
+  --card: #fbfcfe;
+  --popover: #fbfcfe;
+  --primary: #1e3a5f;
+  --primary-foreground: #f5f8fc;
+  --secondary: #e3eaf4;
+  --secondary-foreground: #1e3a5f;
+  --muted: #e3eaf4;
+  --muted-foreground: #4d5e75;
+  --accent: #e3eaf4;
+  --accent-foreground: #1e3a5f;
+  --border: rgba(30, 58, 95, 0.14);
+  --ring: #4a6b96;
+  --grid: #d8e0eb;
+  --radius: 0.375rem;
+}
+
+.dark[data-theme='institucional'] {
+  --background: #080d16;
+  --card: #111927;
+  --popover: #16202f;
+  --primary: #9dbce2;
+  --primary-foreground: #0d1522;
+  --secondary: #1c2737;
+  --secondary-foreground: #dbe6f3;
+  --muted: #1c2737;
+  --muted-foreground: #93a5bd;
+  --accent: #1c2737;
+  --accent-foreground: #dbe6f3;
+  --border: rgba(157, 188, 226, 0.12);
+  --ring: #5d7fa6;
+  --grid: #223046;
+}
+
+[data-theme='esmeralda'] {
+  --background: #f3f8f5;
+  --card: #fbfdfc;
+  --popover: #fbfdfc;
+  --primary: #1a6b4f;
+  --primary-foreground: #f2faf6;
+  --secondary: #e2efe8;
+  --secondary-foreground: #1a5c45;
+  --muted: #e2efe8;
+  --muted-foreground: #52685d;
+  --accent: #e2efe8;
+  --accent-foreground: #1a5c45;
+  --border: rgba(26, 107, 79, 0.14);
+  --ring: #3d8b6d;
+  --grid: #d7e5dd;
+  --radius: 0.75rem;
+}
+
+.dark[data-theme='esmeralda'] {
+  --background: #0a100d;
+  --card: #131c17;
+  --popover: #17221c;
+  --primary: #8fd6b5;
+  --primary-foreground: #0e1813;
+  --secondary: #1d2a23;
+  --secondary-foreground: #d9ece2;
+  --muted: #1d2a23;
+  --muted-foreground: #92a89c;
+  --accent: #1d2a23;
+  --accent-foreground: #d9ece2;
+  --border: rgba(143, 214, 181, 0.12);
+  --ring: #4f8f72;
+  --grid: #22332a;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

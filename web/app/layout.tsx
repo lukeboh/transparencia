@@ -12,6 +12,8 @@ try {
   const stored = localStorage.getItem('theme');
   const dark = stored ? stored === 'dark' : true;
   document.documentElement.classList.toggle('dark', dark);
+  const tema = localStorage.getItem('tema');
+  if (tema && tema !== 'neutro') document.documentElement.dataset.theme = tema;
 } catch {}
 `;
 

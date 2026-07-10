@@ -4,6 +4,7 @@ import { StatCards } from '@/components/dashboard/stat-cards';
 import { EvolucaoChart } from '@/components/dashboard/evolucao-chart';
 import { CategoriasChart } from '@/components/dashboard/categorias-chart';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { ThemePicker } from '@/components/theme-picker';
 import { dashboardData } from '@/lib/dashboard-data';
 
 export default function Home() {
@@ -39,6 +40,7 @@ export default function Home() {
             Responsáveis
             <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
           </Link>
+          <ThemePicker />
           <ThemeToggle />
         </div>
       </header>

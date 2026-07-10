@@ -38,7 +38,27 @@ traz o dashboard da primeira funcionalidade do projeto: cards com total de
 responsáveis / maior valor sob responsabilidade / mediana por responsável,
 gráfico de barras horizontais com o top 10 e tabela paginada com o ranking
 completo — todos os responsáveis, 25 por página (papéis como badges; valor de
-cada contrato contado uma única vez por pessoa).
+cada contrato contado uma única vez por pessoa). A tabela tem filtro
+incremental por servidor (sem distinção de acentos/caixa) e ordenação
+clicável nos cabeçalhos Servidor (alfabética), Contratos e Valor consolidado
+(1º clique ordena, 2º inverte, 3º volta à ordem do ranking); a coluna # sempre
+mostra a posição original no ranking por valor.
+
+### Temas
+
+Além do modo claro/escuro, o seletor de paleta (ícone 🎨 no header) oferece
+três temas: **Neutro** (cinzas clássicos), **Institucional** (azul-marinho
+sóbrio, cantos mais retos) e **Esmeralda** (verdes suaves, cantos mais
+arredondados). Os temas mudam apenas o chrome (superfícies, acentos, bordas,
+raio) — os slots de cor dos gráficos (`--chart-*`) são os mesmos nos três,
+porque são a paleta de dados validada para daltonismo. Escolhas persistem em
+`localStorage` e são aplicadas antes do primeiro paint por um script no
+`<head>`.
+
+Nota de implementação: valores compactos ("R$ 17,3 bi") são formatados à mão
+em vez de `Intl … notation: 'compact'` — versões diferentes de ICU (Node do
+build × navegador) divergem no zero à direita, o que causava mismatch de
+hidratação no React e derrubava a classe de tema do `<html>`.
 
 ### Auditabilidade
 
