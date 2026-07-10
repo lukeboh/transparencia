@@ -36,8 +36,29 @@ Tema claro/escuro com toggle; paleta de gráficos validada para daltonismo
 A rota `/responsaveis` (linkada no header e no card "Responsáveis designados")
 traz o dashboard da primeira funcionalidade do projeto: cards com total de
 responsáveis / maior valor sob responsabilidade / mediana por responsável,
-gráfico de barras horizontais com o top 10 e tabela com o top 50 do ranking
-(papéis como badges; valor de cada contrato contado uma única vez por pessoa).
+gráfico de barras horizontais com o top 10 e tabela paginada com o ranking
+completo — todos os responsáveis, 25 por página (papéis como badges; valor de
+cada contrato contado uma única vez por pessoa).
+
+### Auditabilidade
+
+Todo dado do dashboard é auditável contra a fonte oficial:
+
+- **Quando existe consulta equivalente no Compras.gov.br** (a consulta com
+  `unidade=TSE`), o dado é um link direto que abre a consulta pronta em nova
+  aba — caso do card "Valor total contratado".
+- **Quando não existe filtro equivalente via URL** (responsável, ano,
+  categoria, vigência — a consulta pública só aceita `unidade`), o clique abre
+  um modal com a lista dos contratos que compõem aquele dado, e cada linha do
+  modal abre o contrato detalhado na fonte
+  (`/transparencia/contratos/{id}`) em nova aba. Vale para: linhas da tabela
+  de ranking e barras do top 10 (contratos do servidor, com o papel dele em
+  cada um), anos do gráfico de evolução, fatias/legenda do donut de categorias
+  e o card "Contratos vigentes".
+
+Para isso o `dashboard-data.ts` embarca a tabela normalizada dos 1268
+contratos (id, número, objeto e fornecedor truncados, valor, ano, categoria,
+vigência) e cada linha do ranking referencia seus contratos por índice.
 
 ## Como os dados são obtidos
 

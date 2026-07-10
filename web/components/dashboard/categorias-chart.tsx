@@ -18,8 +18,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { ContratosDialog } from '@/components/dashboard/contratos-dialog';
 import { brlCompacto, brlCompleto, numero } from '@/lib/utils';
-import type { FatiaCategoria } from '@/lib/dashboard-data';
+import type { ContratoResumo, FatiaCategoria } from '@/lib/dashboard-data';
 
 // Ordem fixa de slots da paleta categórica validada; "Outros" usa o cinza de
 // de-ênfase em vez de consumir um slot de identidade.
@@ -65,15 +66,39 @@ function FatiaAtiva(props: PieSectorDataItem) {
   return <Sector {...props} outerRadius={outerRadius + 4} />;
 }
 
-export function CategoriasChart({ dados }: { dados: FatiaCategoria[] }) {
+export function CategoriasChart({
+  dados,
+  contratos,
+}: {
+  dados: FatiaCategoria[];
+  contratos: ContratoResumo[];
+}) {
   const [ativa, setAtiva] = useState<number | undefined>(undefined);
+  const [selecionada, setSelecionada] = useState<string | null>(null);
   const total = dados.reduce((s, f) => s + f.valor, 0);
+
+  // "Outros" agrega tudo que não é uma das fatias nomeadas.
+  const nomeadas = new Set(
+    dados.map((f) => f.categoria).filter((c) => c !== 'Outros'),
+  );
+  const contratosDaCategoria = selecionada === null
+    ? []
+    : contratos
+        .filter((c) =>
+          selecionada === 'Outros'
+            ? !nomeadas.has(c.categoria)
+            : c.categoria === selecionada,
+        )
+        .sort((a, b) => b.valorGlobal - a.valorGlobal);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base font-semibold">Divisão por categoria</CardTitle>
-        <CardDescription>Participação no valor total contratado</CardDescription>
+        <CardDescription>
+          Participação no valor total contratado. Clique em uma categoria para
+          auditar os contratos na fonte.
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-2">
         <div className="relative h-[190px] w-full">
@@ -94,6 +119,7 @@ export function CategoriasChart({ dados }: { dados: FatiaCategoria[] }) {
                 activeShape={FatiaAtiva}
                 onMouseEnter={(_, index) => setAtiva(index)}
                 onMouseLeave={() => setAtiva(undefined)}
+                onClick={(_, index) => setSelecionada(dados[index].categoria)}
               >
                 {dados.map((fatia, index) => (
                   <Cell
@@ -119,7 +145,8 @@ export function CategoriasChart({ dados }: { dados: FatiaCategoria[] }) {
               key={fatia.categoria}
               onMouseEnter={() => setAtiva(index)}
               onMouseLeave={() => setAtiva(undefined)}
-              className="flex items-center gap-2 rounded-sm px-1.5 py-1 transition-colors duration-150 hover:bg-accent/50"
+              onClick={() => setSelecionada(fatia.categoria)}
+              className="flex cursor-pointer items-center gap-2 rounded-sm px-1.5 py-1 transition-colors duration-150 hover:bg-accent/50"
             >
               <span
                 aria-hidden
@@ -138,6 +165,15 @@ export function CategoriasChart({ dados }: { dados: FatiaCategoria[] }) {
             </li>
           ))}
         </ul>
+
+        {selecionada !== null && (
+          <ContratosDialog
+            titulo={`Categoria: ${selecionada}`}
+            contratos={contratosDaCategoria}
+            open
+            onClose={() => setSelecionada(null)}
+          />
+        )}
       </CardContent>
     </Card>
   );

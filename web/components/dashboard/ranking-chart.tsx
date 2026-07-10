@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -17,8 +18,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { ContratosDialog } from '@/components/dashboard/contratos-dialog';
+import { contratosDoResponsavel } from '@/components/dashboard/ranking-table';
 import { brlCompacto, brlCompleto, nomeProprio, numero } from '@/lib/utils';
-import type { LinhaRanking } from '@/lib/dashboard-data';
+import type { ContratoResumo, LinhaRanking } from '@/lib/dashboard-data';
 
 const SERIE = 'var(--chart-1)';
 const MAX_BARRAS = 10;
@@ -66,8 +69,15 @@ function NomeTick({ x, y, payload }: TickProps) {
   );
 }
 
-export function RankingChart({ ranking }: { ranking: LinhaRanking[] }) {
+export function RankingChart({
+  ranking,
+  contratos,
+}: {
+  ranking: LinhaRanking[];
+  contratos: ContratoResumo[];
+}) {
   const dados = ranking.slice(0, MAX_BARRAS);
+  const [selecionado, setSelecionado] = useState<LinhaRanking | null>(null);
 
   return (
     <Card>
@@ -77,7 +87,8 @@ export function RankingChart({ ranking }: { ranking: LinhaRanking[] }) {
         </CardTitle>
         <CardDescription>
           Top {dados.length} servidores por valor consolidado dos contratos em que
-          atuam como fiscal ou gestor
+          atuam como fiscal ou gestor. Clique em uma barra para auditar os contratos
+          na fonte.
         </CardDescription>
       </CardHeader>
       <CardContent className="h-[420px]">
@@ -104,6 +115,8 @@ export function RankingChart({ ranking }: { ranking: LinhaRanking[] }) {
               barSize={18}
               radius={[0, 4, 4, 0]}
               activeBar={{ fillOpacity: 0.8 }}
+              className="cursor-pointer"
+              onClick={(_, index) => setSelecionado(dados[index])}
             >
               <LabelList
                 dataKey="valorConsolidado"
@@ -116,6 +129,15 @@ export function RankingChart({ ranking }: { ranking: LinhaRanking[] }) {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
+
+        {selecionado && (
+          <ContratosDialog
+            titulo={nomeProprio(selecionado.nome)}
+            contratos={contratosDoResponsavel(selecionado, contratos)}
+            open
+            onClose={() => setSelecionado(null)}
+          />
+        )}
       </CardContent>
     </Card>
   );

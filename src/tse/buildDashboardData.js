@@ -13,7 +13,6 @@ const entrada = process.argv[2] ?? path.join(raiz, 'data/tse_contratos.json');
 const saida = process.argv[3] ?? path.join(raiz, 'web/lib/dashboard-data.ts');
 
 const MAX_FATIAS = 5; // demais categorias somadas em "Outros"
-const MAX_RANKING = 50; // linhas do ranking de responsáveis embarcadas no app
 
 function anoDe(dataBr) {
   const m = /(\d{4})$/.exec(dataBr ?? '');
@@ -70,6 +69,23 @@ async function main() {
       }]
     : principais;
 
+  // Tabela normalizada de contratos para auditoria: cada modal do dashboard
+  // filtra esta lista e cada linha abre o contrato detalhado no Comprasnet
+  // (/transparencia/contratos/{id}). Campos longos truncados para a UI.
+  const truncar = (texto, max) =>
+    (texto ?? '').length > max ? `${texto.slice(0, max - 1)}…` : (texto ?? '');
+  const contratosResumo = contratos.map((c) => ({
+    id: c.id,
+    numero: c.numero,
+    objeto: truncar(c.objeto, 140),
+    fornecedor: truncar(c.fornecedor, 80),
+    valorGlobal: c.valorGlobal,
+    ano: anoDe(c.vigenciaInicio) ?? null,
+    categoria: c.categoria || 'Não informada',
+    vigente: (paraDataISO(c.vigenciaFim) ?? '') >= hoje,
+  }));
+  const indicePorId = new Map(contratos.map((c, i) => [c.id, i]));
+
   const rankingCompleto = rankResponsaveis(contratos);
   const valores = rankingCompleto.map((r) => r.valorConsolidado).sort((a, b) => a - b);
   const meio = Math.floor(valores.length / 2);
@@ -81,11 +97,14 @@ async function main() {
   const responsaveisVigentes = new Set(
     vigentes.flatMap((c) => c.responsaveis.map((r) => r.matricula || r.nome)),
   );
-  const ranking = rankingCompleto.slice(0, MAX_RANKING).map((r) => ({
+  const ranking = rankingCompleto.map((r) => ({
     nome: r.nome,
     papeis: r.papeis,
     valorConsolidado: r.valorConsolidado,
     quantidadeContratos: r.quantidadeContratos,
+    contratos: r.contratos
+      .filter((c) => indicePorId.has(c.id))
+      .map((c) => ({ i: indicePorId.get(c.id), papeis: c.papeis })),
   }));
 
   const dados = {
@@ -100,6 +119,7 @@ async function main() {
     },
     evolucao,
     categorias,
+    contratos: contratosResumo,
     responsaveis: {
       total: rankingCompleto.length,
       emContratosVigentes: responsaveisVigentes.size,
@@ -132,11 +152,29 @@ export interface FatiaCategoria {
   contratos: number;
 }
 
+export interface ContratoResumo {
+  id: string;
+  numero: string;
+  objeto: string;
+  fornecedor: string;
+  valorGlobal: number;
+  ano: number | null;
+  categoria: string;
+  vigente: boolean;
+}
+
+export interface ContratoDoResponsavel {
+  /** Índice na tabela DashboardData.contratos. */
+  i: number;
+  papeis: string[];
+}
+
 export interface LinhaRanking {
   nome: string;
   papeis: string[];
   valorConsolidado: number;
   quantidadeContratos: number;
+  contratos: ContratoDoResponsavel[];
 }
 
 export interface ResponsaveisData {
@@ -152,10 +190,16 @@ export interface DashboardData {
   resumo: ResumoTSE;
   evolucao: PontoEvolucao[];
   categorias: FatiaCategoria[];
+  contratos: ContratoResumo[];
   responsaveis: ResponsaveisData;
 }
 
-export const dashboardData: DashboardData = ${JSON.stringify(dados, null, 2)};
+/** URL do contrato detalhado na consulta pública do Comprasnet. */
+export function urlContrato(id: string) {
+  return \`https://contratos.comprasnet.gov.br/transparencia/contratos/\${id}\`;
+}
+
+export const dashboardData: DashboardData = ${JSON.stringify(dados)};
 `;
 
   await writeFile(saida, ts, 'utf8');
