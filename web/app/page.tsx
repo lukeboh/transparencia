@@ -7,7 +7,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { dashboardData } from '@/lib/dashboard-data';
 
 export default function Home() {
-  const { resumo, evolucao, categorias, fonte, geradoEm } = dashboardData;
+  const { resumo, evolucao, categorias, contratos, fonte, geradoEm } = dashboardData;
   const extraidoEm = new Date(geradoEm).toLocaleDateString('pt-BR');
 
   return (
@@ -44,10 +44,10 @@ export default function Home() {
       </header>
 
       <div className="space-y-4">
-        <StatCards resumo={resumo} />
+        <StatCards resumo={resumo} contratos={contratos} fonte={fonte} />
         <div className="grid gap-4 lg:grid-cols-3">
-          <EvolucaoChart dados={evolucao} />
-          <CategoriasChart dados={categorias} />
+          <EvolucaoChart dados={evolucao} contratos={contratos} />
+          <CategoriasChart dados={categorias} contratos={contratos} />
         </div>
       </div>
 

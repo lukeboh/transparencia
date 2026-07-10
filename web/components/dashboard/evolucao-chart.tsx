@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -17,8 +18,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { ContratosDialog } from '@/components/dashboard/contratos-dialog';
 import { brlCompacto, brlCompleto, numero } from '@/lib/utils';
-import type { PontoEvolucao } from '@/lib/dashboard-data';
+import type { ContratoResumo, PontoEvolucao } from '@/lib/dashboard-data';
 
 const SERIE = 'var(--chart-1)';
 
@@ -59,23 +61,44 @@ function PicoLabel({ x, y, index, picoIndex, valor }: PicoLabelProps) {
   );
 }
 
-export function EvolucaoChart({ dados }: { dados: PontoEvolucao[] }) {
+export function EvolucaoChart({
+  dados,
+  contratos,
+}: {
+  dados: PontoEvolucao[];
+  contratos: ContratoResumo[];
+}) {
+  const [anoSelecionado, setAnoSelecionado] = useState<number | null>(null);
   const picoIndex = dados.reduce(
     (max, p, i) => (p.valor > dados[max].valor ? i : max),
     0,
   );
+  const contratosDoAno = anoSelecionado === null
+    ? []
+    : contratos
+        .filter((c) => c.ano === anoSelecionado)
+        .sort((a, b) => b.valorGlobal - a.valorGlobal);
 
   return (
     <Card className="lg:col-span-2">
       <CardHeader>
         <CardTitle className="text-base font-semibold">Evolução dos gastos</CardTitle>
         <CardDescription>
-          Valor global dos contratos por ano de início de vigência
+          Valor global dos contratos por ano de início de vigência. Clique em um ano
+          para auditar os contratos na fonte.
         </CardDescription>
       </CardHeader>
       <CardContent className="h-[320px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={dados} margin={{ top: 24, right: 12, left: 12, bottom: 0 }}>
+          <AreaChart
+            data={dados}
+            margin={{ top: 24, right: 12, left: 12, bottom: 0 }}
+            className="cursor-pointer"
+            onClick={(state) => {
+              const ano = Number(state?.activeLabel);
+              if (Number.isFinite(ano)) setAnoSelecionado(ano);
+            }}
+          >
             <defs>
               <linearGradient id="fillEvolucao" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={SERIE} stopOpacity={0.16} />
@@ -122,6 +145,15 @@ export function EvolucaoChart({ dados }: { dados: PontoEvolucao[] }) {
             />
           </AreaChart>
         </ResponsiveContainer>
+
+        {anoSelecionado !== null && (
+          <ContratosDialog
+            titulo={`Contratos iniciados em ${anoSelecionado}`}
+            contratos={contratosDoAno}
+            open
+            onClose={() => setAnoSelecionado(null)}
+          />
+        )}
       </CardContent>
     </Card>
   );

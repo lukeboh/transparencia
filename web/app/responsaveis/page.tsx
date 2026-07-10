@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default function ResponsaveisPage() {
-  const { responsaveis, fonte, geradoEm } = dashboardData;
+  const { responsaveis, contratos, fonte, geradoEm } = dashboardData;
   const extraidoEm = new Date(geradoEm).toLocaleDateString('pt-BR');
   const topUm = responsaveis.ranking[0];
 
@@ -70,8 +70,8 @@ export default function ResponsaveisPage() {
           />
         </div>
 
-        <RankingChart ranking={responsaveis.ranking} />
-        <RankingTable ranking={responsaveis.ranking} />
+        <RankingChart ranking={responsaveis.ranking} contratos={contratos} />
+        <RankingTable ranking={responsaveis.ranking} contratos={contratos} />
       </div>
 
       <footer className="mt-8 text-xs text-muted-foreground">
