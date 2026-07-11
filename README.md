@@ -65,13 +65,16 @@ mostra a posição original no ranking por valor.
 ### Temas
 
 Além do modo claro/escuro, o seletor de paleta (ícone 🎨 no header) oferece
-três temas: **Neutro** (cinzas clássicos), **Institucional** (azul-marinho
-sóbrio, cantos mais retos) e **Esmeralda** (verdes suaves, cantos mais
-arredondados). Os temas mudam apenas o chrome (superfícies, acentos, bordas,
-raio) — os slots de cor dos gráficos (`--chart-*`) são os mesmos nos três,
-porque são a paleta de dados validada para daltonismo. Escolhas persistem em
-`localStorage` e são aplicadas antes do primeiro paint por um script no
-`<head>`.
+seis temas: **Neutro** (cinzas clássicos), **Institucional** (azul-marinho
+sóbrio, cantos mais retos), **Esmeralda** (verdes suaves, cantos mais
+arredondados), **Violeta** (gradiente índigo com cartões navy), **Lagoa**
+(gradiente turquesa→verde) e **Ardósia** (flat carvão + teal, cantos retos).
+Os temas mudam apenas o chrome (superfícies, acentos, bordas, raio e, nos
+gradientes, o fundo da página) — os slots de cor dos gráficos (`--chart-*`)
+são os mesmos em todos, porque são a paleta de dados validada para
+daltonismo (revalidada por script contra cada superfície escura nova).
+Escolhas persistem em `localStorage` e são aplicadas antes do primeiro paint
+por um script no `<head>`.
 
 Nota de implementação: valores compactos ("R$ 17,3 bi") são formatados à mão
 em vez de `Intl … notation: 'compact'` — versões diferentes de ICU (Node do

@@ -23,6 +23,24 @@ const TEMAS = [
     descricao: 'Verdes suaves',
     amostra: ['#131c17', '#8fd6b5', '#1a6b4f'],
   },
+  {
+    id: 'violeta',
+    nome: 'Violeta',
+    descricao: 'Gradiente índigo',
+    amostra: ['#1d1c5a', '#9c9bf7', '#4a49d8'],
+  },
+  {
+    id: 'lagoa',
+    nome: 'Lagoa',
+    descricao: 'Gradiente turquesa',
+    amostra: ['#0d2422', '#63d6c2', '#0e7f70'],
+  },
+  {
+    id: 'ardosia',
+    nome: 'Ardósia',
+    descricao: 'Flat carvão e teal',
+    amostra: ['#21242e', '#45c4b5', '#2b3040'],
+  },
 ] as const;
 
 type TemaId = (typeof TEMAS)[number]['id'];
