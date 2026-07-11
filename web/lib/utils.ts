@@ -40,6 +40,15 @@ export function numero(valor: number) {
   return inteiro.format(valor);
 }
 
+/**
+ * "2026-07-10T11:39:00.000Z" → "10/07/2026", sem passar por Date/fuso — o
+ * mesmo texto no prerender (Node, UTC) e no navegador, evitando mismatch de
+ * hidratação perto da meia-noite.
+ */
+export function dataUTC(iso: string) {
+  return iso.slice(0, 10).split('-').reverse().join('/');
+}
+
 const PARTICULAS = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
 
 /** "RAFAEL FERNANDES DE BARROS" → "Rafael Fernandes de Barros". */

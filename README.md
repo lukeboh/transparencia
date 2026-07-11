@@ -16,14 +16,32 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
 
 ## Dashboard web
 
-App em `web/`, alimentado por agregados gerados a partir do JSON extraído
-(nunca por fetch em runtime — o dado é versionável e o app é 100% estático):
+App em `web/`, com **carga automática de dados**: basta rodar o app —
+nenhum script manual é necessário.
 
 ```bash
-npm run tse:scrape -- TSE data/tse_contratos.json   # 1. extrai (raiz do repo)
 cd web && npm install
-npm run data                                        # 2. gera web/lib/dashboard-data.ts
-npm run dev                                         # 3. http://localhost:3000
+npm run dev        # http://localhost:3000
+```
+
+Como funciona a carga: a página abre instantaneamente com um snapshot
+embutido no build; ao carregar, o cliente chama `/api/tse/dados?atualizar=1`
+e o **servidor do app** faz o scrape da fonte em background (com cache em
+disco em `web/.cache/`, TTL de 6h e trava contra execuções simultâneas),
+enquanto o header mostra o progresso ("atualizando da fonte 600/1272"); ao
+concluir, a UI troca para os dados frescos.
+
+O scrape não pode rodar no navegador do usuário: a fonte não envia
+cabeçalhos CORS e o fluxo exige cookie de sessão `httponly` + token CSRF,
+inacessíveis cross-origin — por isso a rota de API do próprio app faz esse
+papel, reutilizando o mesmo pipeline de `src/tse/`.
+
+Os scripts CLI continuam existindo para uso avulso (gerar CSV do ranking,
+atualizar o snapshot embutido):
+
+```bash
+npm run tse:scrape -- TSE data/tse_contratos.json   # extrai (raiz do repo)
+cd web && npm run data                              # regrava o snapshot embutido
 ```
 
 Conteúdo: 3 cards de resumo (valor total contratado, contratos vigentes,
