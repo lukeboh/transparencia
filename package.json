@@ -8,7 +8,8 @@
     "tse:discover": "node src/tse/discover.js",
     "tse:scrape": "node src/tse/scrapeContratos.js",
     "tse:rank": "node src/tse/cli.js",
-    "test": "node --test \"test/**/*.test.js\""
+    "data": "node src/tse/buildDashboardData.js",
+    "test": "node --test"
   },
   "dependencies": {
     "playwright": "^1.56.1"

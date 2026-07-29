@@ -20,9 +20,10 @@ App em `web/`, alimentado por agregados gerados a partir do JSON extraído
 (nunca por fetch em runtime — o dado é versionável e o app é 100% estático):
 
 ```bash
-npm run tse:scrape -- TSE data/tse_contratos.json   # 1. extrai (raiz do repo)
-cd web && npm install
-npm run data                                        # 2. gera web/lib/dashboard-data.ts
+npm run tse:scrape -- TSE data/tse_contratos.json   # 1. extrai contratos (na raiz do repo)
+cd web
+npm install
+npm run data                                        # 2. gera web/lib/dashboard-data.ts (usa fallback se tse_contratos.json não existir)
 npm run dev                                         # 3. http://localhost:3000
 ```
 

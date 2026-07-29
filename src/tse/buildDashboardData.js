@@ -4,12 +4,13 @@
 //
 // Uso: node src/tse/buildDashboardData.js [entrada] [saida]
 import { readFile, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { rankResponsaveis } from './rankResponsaveis.js';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const entrada = process.argv[2] ?? path.join(raiz, 'data/tse_contratos.json');
+let entrada = process.argv[2] ?? path.join(raiz, 'data/tse_contratos.json');
 const saida = process.argv[3] ?? path.join(raiz, 'web/lib/dashboard-data.ts');
 
 const MAX_FATIAS = 5; // demais categorias somadas em "Outros"
@@ -25,6 +26,16 @@ function paraDataISO(dataBr) {
 }
 
 async function main() {
+  if (!existsSync(entrada)) {
+    const exemplo = path.join(raiz, 'data/tse_contratos.exemplo.json');
+    if (existsSync(exemplo) && !process.argv[2]) {
+      console.warn(`[Aviso] '${entrada}' não foi encontrado. Utilizando '${exemplo}' como fallback...`);
+      entrada = exemplo;
+    } else {
+      throw new Error(`Arquivo de entrada não encontrado: ${entrada}`);
+    }
+  }
+
   const contratos = JSON.parse(await readFile(entrada, 'utf8'));
   const hoje = new Date().toISOString().slice(0, 10);
 

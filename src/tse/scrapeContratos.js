@@ -10,6 +10,7 @@
 // "Responsáveis" — exatamente os fiscais/gestores do contrato).
 import { writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const BASE = 'https://contratos.comprasnet.gov.br/transparencia';
 
@@ -144,7 +145,12 @@ async function main() {
   console.log(`Salvo em ${out} (${contratos.length} contratos).`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const isMain = Boolean(
+  process.argv[1] &&
+  fileURLToPath(import.meta.url).toLowerCase() === path.resolve(process.argv[1]).toLowerCase()
+);
+
+if (isMain) {
   main().catch((err) => {
     console.error('Falha na extração:', err);
     process.exit(1);
