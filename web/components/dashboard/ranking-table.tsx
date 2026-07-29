@@ -37,7 +37,7 @@ import type { ContratoResumo, LinhaRanking } from '@/lib/dashboard-data';
 const LINHAS_POR_PAGINA = 25;
 const MAX_PAPEIS_VISIVEIS = 2;
 
-type CampoOrdenavel = 'nome' | 'contratos' | 'valor';
+type CampoOrdenavel = 'nome' | 'contratos' | 'valor' | 'empenhado' | 'pago';
 type DirecaoOrdenacao = 'asc' | 'desc';
 
 interface Ordenacao {
@@ -45,12 +45,12 @@ interface Ordenacao {
   direcao: DirecaoOrdenacao;
 }
 
-// Direção inicial ao ativar cada campo: nomes em ordem alfabética,
-// métricas do maior para o menor.
 const DIRECAO_INICIAL: Record<CampoOrdenavel, DirecaoOrdenacao> = {
   nome: 'asc',
   contratos: 'desc',
   valor: 'desc',
+  empenhado: 'desc',
+  pago: 'desc',
 };
 
 /** Busca sem acento e sem caixa: "jose" encontra "José". */
@@ -167,6 +167,10 @@ export function RankingTable({
           return fator * (a.linha.quantidadeContratos - b.linha.quantidadeContratos);
         case 'valor':
           return fator * (a.linha.valorConsolidado - b.linha.valorConsolidado);
+        case 'empenhado':
+          return fator * ((a.linha.valorEmpenhadoConsolidado || 0) - (b.linha.valorEmpenhadoConsolidado || 0));
+        case 'pago':
+          return fator * ((a.linha.valorPagoConsolidado || 0) - (b.linha.valorPagoConsolidado || 0));
       }
     });
   }, [ranking, busca, ordenacao]);
@@ -193,9 +197,8 @@ export function RankingTable({
       <CardHeader>
         <CardTitle className="text-base font-semibold">Ranking completo</CardTitle>
         <CardDescription>
-          Todos os {numero(ranking.length)} responsáveis, por valor consolidado — o
-          valor de um contrato conta uma única vez por pessoa, mesmo com múltiplos
-          papéis. Clique em um servidor para auditar seus contratos na fonte.
+          Todos os {numero(ranking.length)} responsáveis, com valores Globais, Empenhados (Emp.) e Pagos (Pg) — o
+          valor de um contrato conta uma única vez por pessoa. Clique em um servidor para auditar seus contratos.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -258,8 +261,24 @@ export function RankingTable({
               </TableHead>
               <TableHead className="text-right">
                 <CabecalhoOrdenavel
-                  rotulo="Valor consolidado"
+                  rotulo="Valor Global"
                   campo="valor"
+                  ordenacao={ordenacao}
+                  onOrdenar={ordenarPor}
+                />
+              </TableHead>
+              <TableHead className="text-right">
+                <CabecalhoOrdenavel
+                  rotulo="Empenhado"
+                  campo="empenhado"
+                  ordenacao={ordenacao}
+                  onOrdenar={ordenarPor}
+                />
+              </TableHead>
+              <TableHead className="text-right">
+                <CabecalhoOrdenavel
+                  rotulo="Pago"
+                  campo="pago"
                   ordenacao={ordenacao}
                   onOrdenar={ordenarPor}
                 />
@@ -269,7 +288,7 @@ export function RankingTable({
           <TableBody>
             {linhas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                   Nenhum servidor encontrado para &ldquo;{busca}&rdquo;
                 </TableCell>
               </TableRow>
@@ -292,6 +311,12 @@ export function RankingTable({
                   </TableCell>
                   <TableCell className="text-right font-medium tabular-nums">
                     {brlCompleto(linha.valorConsolidado)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                    {brlCompleto(linha.valorEmpenhadoConsolidado || 0)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                    {brlCompleto(linha.valorPagoConsolidado || 0)}
                   </TableCell>
                 </TableRow>
               ))

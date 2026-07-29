@@ -33,21 +33,29 @@ async function main() {
 
 export interface ResumoTSE {
   totalContratado: number;
+  totalEmpenhado: number;
+  totalPago: number;
   totalContratos: number;
   contratosVigentes: number;
   valorVigente: number;
+  valorVigenteEmpenhado: number;
+  valorVigentePago: number;
   totalResponsaveis: number;
 }
 
 export interface PontoEvolucao {
   ano: number;
   valor: number;
+  valorEmpenhado: number;
+  valorPago: number;
   contratos: number;
 }
 
 export interface FatiaCategoria {
   categoria: string;
   valor: number;
+  valorEmpenhado: number;
+  valorPago: number;
   contratos: number;
 }
 
@@ -57,6 +65,8 @@ export interface ContratoResumo {
   objeto: string;
   fornecedor: string;
   valorGlobal: number;
+  valorEmpenhado: number;
+  valorPago: number;
   ano: number | null;
   categoria: string;
   vigente: boolean;
@@ -72,6 +82,8 @@ export interface LinhaRanking {
   nome: string;
   papeis: string[];
   valorConsolidado: number;
+  valorEmpenhadoConsolidado: number;
+  valorPagoConsolidado: number;
   quantidadeContratos: number;
   contratos: ContratoDoResponsavel[];
 }
@@ -80,6 +92,8 @@ export interface ResponsaveisData {
   total: number;
   emContratosVigentes: number;
   medianaValor: number;
+  medianaEmpenhado: number;
+  medianaPago: number;
   ranking: LinhaRanking[];
 }
 

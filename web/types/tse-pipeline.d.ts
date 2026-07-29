@@ -4,6 +4,8 @@
 declare module '*src/tse/scrapeContratos.js' {
   export interface OpcoesScrape {
     pageSize?: number;
+    concurrency?: number;
+    cacheContratos?: unknown[];
     onProgress?: (feitos: number, total: number) => void;
   }
   export function scrapeContratos(

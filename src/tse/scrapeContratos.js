@@ -30,6 +30,7 @@ const COL = {
   VIG_INICIO: 19,
   VIG_FIM: 20,
   VALOR_GLOBAL: 21,
+  EMPENHOS: 28,
   RESPONSAVEIS: 33,
   ACOES: 38,
 };
@@ -43,9 +44,28 @@ function stripHtml(html) {
 }
 
 function parseValorBRL(texto) {
-  const limpo = texto.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
+  const limpo = (texto || '').replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.');
   const valor = parseFloat(limpo);
   return Number.isFinite(valor) ? valor : 0;
+}
+
+function parseEmpenhos(cellHtml) {
+  const trMatches = [...(cellHtml || '').matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)];
+  let valorEmpenhado = 0;
+  let valorPago = 0;
+
+  for (const tr of trMatches) {
+    const tds = [...tr[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((m) => stripHtml(m[1]));
+    if (tds.length >= 8) {
+      const emp = parseValorBRL(tds[4]);
+      const pg = parseValorBRL(tds[7]);
+      const rpPg = tds.length >= 12 ? parseValorBRL(tds[11]) : 0;
+      valorEmpenhado += emp;
+      valorPago += (pg + rpPg);
+    }
+  }
+
+  return { valorEmpenhado, valorPago };
 }
 
 function parseResponsaveis(cellHtml) {
@@ -68,6 +88,7 @@ function idDoContrato(acoesHtml) {
 }
 
 function linhaParaContrato(row) {
+  const { valorEmpenhado, valorPago } = parseEmpenhos(row[COL.EMPENHOS]);
   return {
     id: idDoContrato(row[COL.ACOES]),
     numero: stripHtml(row[COL.NUMERO]),
@@ -78,6 +99,8 @@ function linhaParaContrato(row) {
     categoria: stripHtml(row[COL.CATEGORIA]),
     fornecedor: stripHtml(row[COL.FORNECEDOR]),
     valorGlobal: parseValorBRL(stripHtml(row[COL.VALOR_GLOBAL])),
+    valorEmpenhado,
+    valorPago,
     vigenciaInicio: stripHtml(row[COL.VIG_INICIO]),
     vigenciaFim: stripHtml(row[COL.VIG_FIM]),
     orgao: stripHtml(row[COL.ORGAO]),
@@ -222,4 +245,4 @@ if (isMain) {
   });
 }
 
-export { scrapeContratos, linhaParaContrato, parseValorBRL, parseResponsaveis, stripHtml };
+export { scrapeContratos, linhaParaContrato, parseValorBRL, parseEmpenhos, parseResponsaveis, stripHtml };

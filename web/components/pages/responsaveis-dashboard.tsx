@@ -59,13 +59,13 @@ export function ResponsaveisDashboard() {
           <StatCard
             titulo="Maior valor sob responsabilidade"
             valor={brlCompacto(topUm?.valorConsolidado ?? 0)}
-            detalhe={topUm ? nomeProprio(topUm.nome) : '—'}
+            detalhe={topUm ? `${nomeProprio(topUm.nome)} (Emp: ${brlCompacto(topUm.valorEmpenhadoConsolidado || 0)})` : '—'}
             icone={<Crown className="h-4 w-4" aria-hidden />}
           />
           <StatCard
             titulo="Mediana por responsável"
             valor={brlCompacto(responsaveis.medianaValor)}
-            detalhe="metade dos servidores responde por menos que isso"
+            detalhe={`Emp: ${brlCompacto(responsaveis.medianaEmpenhado || 0)} · Pg: ${brlCompacto(responsaveis.medianaPago || 0)}`}
             icone={<Scale className="h-4 w-4" aria-hidden />}
           />
         </div>

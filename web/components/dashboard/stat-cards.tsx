@@ -35,7 +35,7 @@ export function StatCards({
         <StatCard
           titulo="Valor total contratado"
           valor={brlCompacto(resumo.totalContratado)}
-          detalhe={`${numero(resumo.totalContratos)} contratos · abrir consulta na fonte`}
+          detalhe={`Emp: ${brlCompacto(resumo.totalEmpenhado || 0)} · Pg: ${brlCompacto(resumo.totalPago || 0)}`}
           icone={
             <span className="flex items-center gap-1">
               <Landmark className="h-4 w-4" aria-hidden />
@@ -55,7 +55,7 @@ export function StatCards({
         <StatCard
           titulo="Contratos vigentes"
           valor={numero(resumo.contratosVigentes)}
-          detalhe={`${brlCompacto(resumo.valorVigente)} em vigência · ver lista`}
+          detalhe={`${brlCompacto(resumo.valorVigente)} vigentes (Emp: ${brlCompacto(resumo.valorVigenteEmpenhado || 0)})`}
           icone={<FileCheck2 className="h-4 w-4" aria-hidden />}
         />
       </button>

@@ -33,6 +33,8 @@ function rankResponsaveis(contratos, { papeis } = {}) {
 
   for (const contrato of contratos) {
     const valor = Number(contrato.valorGlobal) || 0;
+    const valorEmpenhado = Number(contrato.valorEmpenhado) || 0;
+    const valorPago = Number(contrato.valorPago) || 0;
     const responsaveis = contrato.responsaveis ?? [];
 
     const responsaveisRelevantes = papeis
@@ -62,6 +64,8 @@ function rankResponsaveis(contratos, { papeis } = {}) {
           matricula: info.matricula,
           papeis: new Set(),
           valorConsolidado: 0,
+          valorEmpenhadoConsolidado: 0,
+          valorPagoConsolidado: 0,
           quantidadeContratos: 0,
           contratos: [],
         });
@@ -69,6 +73,8 @@ function rankResponsaveis(contratos, { papeis } = {}) {
       const acumulado = porPessoa.get(chave);
       for (const papel of info.papeis) acumulado.papeis.add(papel);
       acumulado.valorConsolidado += valor;
+      acumulado.valorEmpenhadoConsolidado += valorEmpenhado;
+      acumulado.valorPagoConsolidado += valorPago;
       acumulado.quantidadeContratos += 1;
       acumulado.contratos.push({
         id: contrato.id,
@@ -76,6 +82,8 @@ function rankResponsaveis(contratos, { papeis } = {}) {
         objeto: contrato.objeto,
         fornecedor: contrato.fornecedor,
         valorGlobal: valor,
+        valorEmpenhado,
+        valorPago,
         papeis: [...info.papeis],
       });
     }

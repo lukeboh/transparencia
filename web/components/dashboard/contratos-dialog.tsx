@@ -31,7 +31,9 @@ export function ContratosDialog({
   open,
   onClose,
 }: ContratosDialogProps) {
-  const total = contratos.reduce((s, c) => s + c.valorGlobal, 0);
+  const totalGlobal = contratos.reduce((s, c) => s + (c.valorGlobal || 0), 0);
+  const totalEmpenhado = contratos.reduce((s, c) => s + (c.valorEmpenhado || 0), 0);
+  const totalPago = contratos.reduce((s, c) => s + (c.valorPago || 0), 0);
 
   return (
     <Dialog open={open} onClose={onClose}>
@@ -39,32 +41,32 @@ export function ContratosDialog({
         titulo={titulo}
         descricao={
           descricao ??
-          `${numero(contratos.length)} contrato${contratos.length === 1 ? '' : 's'} · ${brlCompleto(total)}`
+          `${numero(contratos.length)} contrato${contratos.length === 1 ? '' : 's'} · Global: ${brlCompleto(totalGlobal)} | Emp: ${brlCompleto(totalEmpenhado)} | Pg: ${brlCompleto(totalPago)}`
         }
         onClose={onClose}
       />
-      <ul className="max-h-[60vh] overflow-y-auto p-2">
+      <ul className="max-h-[60vh] overflow-y-auto p-2 divide-y divide-border/40">
         {contratos.map((c) => (
           <li key={c.id}>
             <a
               href={urlContrato(c.id)}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-start gap-3 rounded-md px-2.5 py-2 transition-colors hover:bg-accent"
+              className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-md px-2.5 py-2.5 transition-colors hover:bg-accent"
             >
               <span className="min-w-0 flex-1">
-                <span className="flex items-baseline gap-2">
+                <span className="flex items-baseline gap-2 flex-wrap">
                   <span className="text-sm font-medium tabular-nums">{c.numero}</span>
                   {c.ano !== null && (
                     <span className="text-xs text-muted-foreground">{c.ano}</span>
                   )}
                   {c.vigente && (
-                    <span className="rounded-sm bg-secondary px-1 py-px text-[10px] uppercase tracking-wide text-secondary-foreground">
+                    <span className="rounded-sm bg-secondary px-1 py-px text-[10px] uppercase tracking-wide text-secondary-foreground font-semibold">
                       vigente
                     </span>
                   )}
                   {c.papeisNoContrato && (
-                    <span className="truncate text-xs text-muted-foreground">
+                    <span className="truncate text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                       {c.papeisNoContrato.join(', ')}
                     </span>
                   )}
@@ -76,14 +78,16 @@ export function ContratosDialog({
                   {c.objeto}
                 </span>
               </span>
-              <span className="flex shrink-0 items-center gap-1.5 pt-0.5">
-                <span className="text-sm font-medium tabular-nums">
-                  {brlCompleto(c.valorGlobal)}
+              <span className="flex shrink-0 flex-col sm:items-end text-xs font-mono gap-0.5 border-t sm:border-t-0 pt-1 sm:pt-0 border-border/50">
+                <span className="text-sm font-semibold text-foreground flex items-center gap-1">
+                  <span>Global: {brlCompleto(c.valorGlobal)}</span>
+                  <ExternalLink
+                    className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                    aria-hidden
+                  />
                 </span>
-                <ExternalLink
-                  className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
-                  aria-hidden
-                />
+                <span className="text-muted-foreground">Emp: {brlCompleto(c.valorEmpenhado || 0)}</span>
+                <span className="text-muted-foreground">Pg: {brlCompleto(c.valorPago || 0)}</span>
               </span>
             </a>
           </li>

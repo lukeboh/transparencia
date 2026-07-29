@@ -18,20 +18,27 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { MetricaSelector, type TipoMetrica, LABELS_METRICA } from '@/components/dashboard/metrica-selector';
 import { ContratosDialog } from '@/components/dashboard/contratos-dialog';
 import { brlCompacto, brlCompleto, numero } from '@/lib/utils';
 import type { ContratoResumo, PontoEvolucao } from '@/lib/dashboard-data';
 
-const SERIE = 'var(--chart-1)';
+const CORES: Record<TipoMetrica, string> = {
+  global: 'var(--chart-1)',
+  empenhado: 'var(--chart-2)',
+  pago: 'var(--chart-3)',
+};
 
 function EvolucaoTooltip({ active, payload }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null;
   const ponto = payload[0].payload as PontoEvolucao;
   return (
-    <div className="rounded-md border border-border bg-popover px-3 py-2 text-popover-foreground shadow-md">
-      <p className="text-xs text-muted-foreground">{ponto.ano}</p>
-      <p className="text-sm font-semibold">{brlCompleto(ponto.valor)}</p>
-      <p className="text-xs text-muted-foreground">
+    <div className="rounded-md border border-border bg-popover px-3 py-2 text-popover-foreground shadow-md text-xs space-y-1">
+      <p className="font-semibold text-foreground text-sm">{ponto.ano}</p>
+      <p><span className="text-muted-foreground font-medium">Global:</span> <span className="font-semibold">{brlCompleto(ponto.valor)}</span></p>
+      <p><span className="text-muted-foreground font-medium">Empenhado:</span> <span className="font-semibold">{brlCompleto(ponto.valorEmpenhado || 0)}</span></p>
+      <p><span className="text-muted-foreground font-medium">Pago:</span> <span className="font-semibold">{brlCompleto(ponto.valorPago || 0)}</span></p>
+      <p className="text-muted-foreground pt-1 border-t border-border">
         {numero(ponto.contratos)} contrato{ponto.contratos === 1 ? '' : 's'} iniciados
       </p>
     </div>
@@ -46,7 +53,6 @@ interface PicoLabelProps {
   valor: string;
 }
 
-/** Rótulo direto apenas no ponto de máximo — os demais valores ficam no eixo e no tooltip. */
 function PicoLabel({ x, y, index, picoIndex, valor }: PicoLabelProps) {
   if (index !== picoIndex || x === undefined || y === undefined) return null;
   return (
@@ -68,25 +74,39 @@ export function EvolucaoChart({
   dados: PontoEvolucao[];
   contratos: ContratoResumo[];
 }) {
+  const [metrica, setMetrica] = useState<TipoMetrica>('global');
   const [anoSelecionado, setAnoSelecionado] = useState<number | null>(null);
+
+  const keyMap: Record<TipoMetrica, keyof PontoEvolucao> = {
+    global: 'valor',
+    empenhado: 'valorEmpenhado',
+    pago: 'valorPago',
+  };
+  const dataKey = keyMap[metrica];
+
   const picoIndex = dados.reduce(
-    (max, p, i) => (p.valor > dados[max].valor ? i : max),
+    (max, p, i) => (Number(p[dataKey] || 0) > Number(dados[max]?.[dataKey] || 0) ? i : max),
     0,
   );
+
   const contratosDoAno = anoSelecionado === null
     ? []
     : contratos
         .filter((c) => c.ano === anoSelecionado)
         .sort((a, b) => b.valorGlobal - a.valorGlobal);
 
+  const corAtiva = CORES[metrica];
+
   return (
     <Card className="lg:col-span-2">
-      <CardHeader>
-        <CardTitle className="text-base font-semibold">Evolução dos gastos</CardTitle>
-        <CardDescription>
-          Valor global dos contratos por ano de início de vigência. Clique em um ano
-          para auditar os contratos na fonte.
-        </CardDescription>
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <CardTitle className="text-base font-semibold">Evolução dos gastos</CardTitle>
+          <CardDescription>
+            {LABELS_METRICA[metrica].nome} por ano de início de vigência. Clique em um ano para auditar os contratos.
+          </CardDescription>
+        </div>
+        <MetricaSelector valor={metrica} onChange={setMetrica} />
       </CardHeader>
       <CardContent className="h-[320px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -101,8 +121,8 @@ export function EvolucaoChart({
           >
             <defs>
               <linearGradient id="fillEvolucao" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={SERIE} stopOpacity={0.16} />
-                <stop offset="100%" stopColor={SERIE} stopOpacity={0.02} />
+                <stop offset="0%" stopColor={corAtiva} stopOpacity={0.2} />
+                <stop offset="100%" stopColor={corAtiva} stopOpacity={0.02} />
               </linearGradient>
             </defs>
             <CartesianGrid
@@ -131,15 +151,15 @@ export function EvolucaoChart({
             />
             <Area
               type="monotone"
-              dataKey="valor"
-              stroke={SERIE}
+              dataKey={dataKey}
+              stroke={corAtiva}
               strokeWidth={2}
               fill="url(#fillEvolucao)"
               activeDot={{ r: 4.5, strokeWidth: 2, stroke: 'var(--card)' }}
               label={
                 <PicoLabel
                   picoIndex={picoIndex}
-                  valor={brlCompacto(dados[picoIndex]?.valor ?? 0)}
+                  valor={brlCompacto(Number(dados[picoIndex]?.[dataKey] || 0))}
                 />
               }
             />

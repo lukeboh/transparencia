@@ -70,10 +70,12 @@ test('filtra por papel quando informado', () => {
 
 test('agrupa por nome normalizado quando não há matrícula', () => {
   const contratos = [
-    { id: 'a', numero: '1', valorGlobal: 100, responsaveis: [{ nome: 'josé  da silva', papel: 'Fiscal Titular' }] },
-    { id: 'b', numero: '2', valorGlobal: 200, responsaveis: [{ nome: 'José da Silva', papel: 'Fiscal Titular' }] },
+    { id: 'a', numero: '1', valorGlobal: 100, valorEmpenhado: 80, valorPago: 50, responsaveis: [{ nome: 'josé  da silva', papel: 'Fiscal Titular' }] },
+    { id: 'b', numero: '2', valorGlobal: 200, valorEmpenhado: 150, valorPago: 120, responsaveis: [{ nome: 'José da Silva', papel: 'Fiscal Titular' }] },
   ];
   const ranking = rankResponsaveis(contratos);
   assert.equal(ranking.length, 1);
   assert.equal(ranking[0].valorConsolidado, 300);
+  assert.equal(ranking[0].valorEmpenhadoConsolidado, 230);
+  assert.equal(ranking[0].valorPagoConsolidado, 170);
 });

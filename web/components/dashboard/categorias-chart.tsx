@@ -18,12 +18,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { MetricaSelector, type TipoMetrica, LABELS_METRICA } from '@/components/dashboard/metrica-selector';
 import { ContratosDialog } from '@/components/dashboard/contratos-dialog';
 import { brlCompacto, brlCompleto, numero } from '@/lib/utils';
 import type { ContratoResumo, FatiaCategoria } from '@/lib/dashboard-data';
 
-// Ordem fixa de slots da paleta categórica validada; "Outros" usa o cinza de
-// de-ênfase em vez de consumir um slot de identidade.
 const CORES_SLOTS = [
   'var(--chart-1)',
   'var(--chart-2)',
@@ -50,17 +49,18 @@ function CategoriaTooltip({ active, payload }: TooltipProps<number, string>) {
   if (!active || !payload?.length) return null;
   const fatia = payload[0].payload as FatiaCategoria;
   return (
-    <div className="rounded-md border border-border bg-popover px-3 py-2 text-popover-foreground shadow-md">
-      <p className="text-xs text-muted-foreground">{fatia.categoria}</p>
-      <p className="text-sm font-semibold">{brlCompleto(fatia.valor)}</p>
-      <p className="text-xs text-muted-foreground">
+    <div className="rounded-md border border-border bg-popover px-3 py-2 text-popover-foreground shadow-md text-xs space-y-1">
+      <p className="font-semibold text-foreground text-sm">{fatia.categoria}</p>
+      <p><span className="text-muted-foreground font-medium">Global:</span> <span className="font-semibold">{brlCompleto(fatia.valor)}</span></p>
+      <p><span className="text-muted-foreground font-medium">Empenhado:</span> <span className="font-semibold">{brlCompleto(fatia.valorEmpenhado || 0)}</span></p>
+      <p><span className="text-muted-foreground font-medium">Pago:</span> <span className="font-semibold">{brlCompleto(fatia.valorPago || 0)}</span></p>
+      <p className="text-muted-foreground pt-1 border-t border-border">
         {numero(fatia.contratos)} contrato{fatia.contratos === 1 ? '' : 's'}
       </p>
     </div>
   );
 }
 
-/** Fatia ativa "levanta" 4px no hover, mantendo o anel de 2px na cor da superfície. */
 function FatiaAtiva(props: PieSectorDataItem) {
   const { outerRadius = 0 } = props;
   return <Sector {...props} outerRadius={outerRadius + 4} />;
@@ -73,11 +73,19 @@ export function CategoriasChart({
   dados: FatiaCategoria[];
   contratos: ContratoResumo[];
 }) {
+  const [metrica, setMetrica] = useState<TipoMetrica>('global');
   const [ativa, setAtiva] = useState<number | undefined>(undefined);
   const [selecionada, setSelecionada] = useState<string | null>(null);
-  const total = dados.reduce((s, f) => s + f.valor, 0);
 
-  // "Outros" agrega tudo que não é uma das fatias nomeadas.
+  const keyMap: Record<TipoMetrica, keyof FatiaCategoria> = {
+    global: 'valor',
+    empenhado: 'valorEmpenhado',
+    pago: 'valorPago',
+  };
+  const dataKey = keyMap[metrica];
+
+  const total = dados.reduce((s, f) => s + Number(f[dataKey] || 0), 0);
+
   const nomeadas = new Set(
     dados.map((f) => f.categoria).filter((c) => c !== 'Outros'),
   );
@@ -93,12 +101,14 @@ export function CategoriasChart({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base font-semibold">Divisão por categoria</CardTitle>
-        <CardDescription>
-          Participação no valor total contratado. Clique em uma categoria para
-          auditar os contratos na fonte.
-        </CardDescription>
+      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <CardTitle className="text-base font-semibold">Divisão por categoria</CardTitle>
+          <CardDescription>
+            Participação no {LABELS_METRICA[metrica].nome.toLowerCase()}. Clique para auditar.
+          </CardDescription>
+        </div>
+        <MetricaSelector valor={metrica} onChange={setMetrica} />
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-2">
         <div className="relative h-[190px] w-full">
@@ -107,7 +117,7 @@ export function CategoriasChart({
               <Tooltip content={<CategoriaTooltip />} />
               <Pie
                 data={dados}
-                dataKey="valor"
+                dataKey={dataKey}
                 nameKey="categoria"
                 innerRadius="68%"
                 outerRadius="92%"
@@ -131,39 +141,42 @@ export function CategoriasChart({
               </Pie>
             </PieChart>
           </ResponsiveContainer>
-          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
             <span className="text-xl font-semibold tracking-tight">
               {brlCompacto(total)}
             </span>
-            <span className="text-xs text-muted-foreground">total</span>
+            <span className="text-xs text-muted-foreground">{LABELS_METRICA[metrica].sigla}</span>
           </div>
         </div>
 
         <ul className="w-full space-y-1.5 text-sm" aria-label="Legenda por categoria">
-          {dados.map((fatia, index) => (
-            <li
-              key={fatia.categoria}
-              onMouseEnter={() => setAtiva(index)}
-              onMouseLeave={() => setAtiva(undefined)}
-              onClick={() => setSelecionada(fatia.categoria)}
-              className="flex cursor-pointer items-center gap-2 rounded-sm px-1.5 py-1 transition-colors duration-150 hover:bg-accent/50"
-            >
-              <span
-                aria-hidden
-                className="h-2.5 w-2.5 shrink-0 rounded-[3px]"
-                style={{ backgroundColor: corDaFatia(fatia, index) }}
-              />
-              <span title={fatia.categoria} className="truncate text-muted-foreground">
-                {fatia.categoria}
-              </span>
-              <span className="ml-auto font-medium tabular-nums">
-                {brlCompacto(fatia.valor)}
-              </span>
-              <span className="w-12 text-right text-xs text-muted-foreground tabular-nums">
-                {percentual(fatia.valor, total)}
-              </span>
-            </li>
-          ))}
+          {dados.map((fatia, index) => {
+            const v = Number(fatia[dataKey] || 0);
+            return (
+              <li
+                key={fatia.categoria}
+                onMouseEnter={() => setAtiva(index)}
+                onMouseLeave={() => setAtiva(undefined)}
+                onClick={() => setSelecionada(fatia.categoria)}
+                className="flex cursor-pointer items-center gap-2 rounded-sm px-1.5 py-1 transition-colors duration-150 hover:bg-accent/50"
+              >
+                <span
+                  aria-hidden
+                  className="h-2.5 w-2.5 shrink-0 rounded-[3px]"
+                  style={{ backgroundColor: corDaFatia(fatia, index) }}
+                />
+                <span title={fatia.categoria} className="truncate text-muted-foreground">
+                  {fatia.categoria}
+                </span>
+                <span className="ml-auto font-medium tabular-nums">
+                  {brlCompacto(v)}
+                </span>
+                <span className="w-12 text-right text-xs text-muted-foreground tabular-nums">
+                  {percentual(v, total)}
+                </span>
+              </li>
+            );
+          })}
         </ul>
 
         {selecionada !== null && (
