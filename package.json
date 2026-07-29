@@ -9,6 +9,7 @@
     "tse:scrape": "node src/tse/scrapeContratos.js",
     "tse:rank": "node src/tse/cli.js",
     "data": "node src/tse/buildDashboardData.js",
+    "start": "node src/tse/buildDashboardData.js && npm run dev --prefix web",
     "test": "node --test"
   },
   "dependencies": {

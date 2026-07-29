@@ -19,6 +19,27 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
 App em `web/`, com **carga automática de dados**: basta rodar o app —
 nenhum script manual é necessário.
 
+### Inicialização Rápida com Scripts de Carga
+
+Na raiz do repositório, você pode usar os scripts que verificam dependências, atualizam todos os dados brutos e iniciam o portal:
+
+**Windows (PowerShell):**
+```powershell
+.\start.ps1
+```
+
+**Linux / macOS (Bash):**
+```bash
+chmod +x ./start.sh
+./start.sh
+```
+
+**Ou diretamente via npm na raiz:**
+```bash
+npm start
+```
+
+### Inicialização Manual do Web App
 ```bash
 cd web
 npm install
