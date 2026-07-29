@@ -114,28 +114,93 @@ async function buscarPagina({ csrf, cookieHeader }, unidade, start, length) {
   return res.json();
 }
 
-async function scrapeContratos(unidade = 'TSE', { pageSize = 200, onProgress } = {}) {
+async function scrapeContratos(
+  unidade = 'TSE',
+  { pageSize = 200, concurrency = 4, cacheContratos, onProgress } = {},
+) {
   const sessao = await obterSessao();
   const primeira = await buscarPagina(sessao, unidade, 0, pageSize);
   const total = primeira.recordsFiltered;
-  const linhas = [...primeira.data];
-  onProgress?.(linhas.length, total);
+  const primeiraContratos = primeira.data.map(linhaParaContrato);
 
-  for (let start = pageSize; start < total; start += pageSize) {
-    const pagina = await buscarPagina(sessao, unidade, start, pageSize);
-    linhas.push(...pagina.data);
-    onProgress?.(linhas.length, total);
+  // Verificação incremental: se já temos cache com a mesma quantidade total
+  // e todos os contratos mais recentes da página 0 batem, reutilizamos o cache
+  // apenas atualizando eventuais edições da página 0.
+  if (Array.isArray(cacheContratos) && cacheContratos.length === total) {
+    const idsCache = new Set(cacheContratos.map((c) => c.id));
+    const todosPrimeiraExistem = primeiraContratos.every((c) => idsCache.has(c.id));
+
+    if (todosPrimeiraExistem) {
+      onProgress?.(total, total);
+      const mapa = new Map(cacheContratos.map((c) => [c.id, c]));
+      for (const c of primeiraContratos) {
+        mapa.set(c.id, c);
+      }
+      return [...mapa.values()];
+    }
   }
 
-  return linhas.map(linhaParaContrato);
+  const tarefas = [];
+  for (let start = pageSize; start < total; start += pageSize) {
+    tarefas.push(start);
+  }
+
+  const paginas = new Map();
+  paginas.set(0, primeira.data);
+  let feitos = primeira.data.length;
+  onProgress?.(feitos, total);
+
+  // Executa em lotes paralelos (concurrency) para máxima performance
+  for (let i = 0; i < tarefas.length; i += concurrency) {
+    const lote = tarefas.slice(i, i + concurrency);
+    const resultados = await Promise.all(
+      lote.map(async (start) => {
+        const res = await buscarPagina(sessao, unidade, start, pageSize);
+        return { start, data: res.data };
+      }),
+    );
+    for (const r of resultados) {
+      paginas.set(r.start, r.data);
+      feitos += r.data.length;
+    }
+    onProgress?.(Math.min(feitos, total), total);
+  }
+
+  // Monta o resultado garantindo a ordem original das páginas
+  const ordenados = [];
+  for (let start = 0; start < total; start += pageSize) {
+    const data = paginas.get(start);
+    if (data) ordenados.push(...data);
+  }
+
+  const novosContratos = ordenados.map(linhaParaContrato);
+
+  if (Array.isArray(cacheContratos) && cacheContratos.length > 0) {
+    const mapa = new Map(cacheContratos.map((c) => [c.id, c]));
+    for (const c of novosContratos) {
+      mapa.set(c.id, c);
+    }
+    return [...mapa.values()];
+  }
+
+  return novosContratos;
 }
 
 async function main() {
   const unidade = process.argv[2] ?? 'TSE';
   const out = process.argv[3] ?? 'data/tse_contratos.json';
 
+  let cacheExistente;
+  try {
+    const { readFile } = await import('node:fs/promises');
+    cacheExistente = JSON.parse(await readFile(out, 'utf8'));
+  } catch {
+    // sem cache prévio
+  }
+
   console.log(`Extraindo contratos da unidade ${unidade}...`);
   const contratos = await scrapeContratos(unidade, {
+    cacheContratos: cacheExistente,
     onProgress: (feitos, total) => process.stdout.write(`\r${feitos}/${total} contratos`),
   });
   console.log();

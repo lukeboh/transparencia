@@ -70,6 +70,7 @@ function iniciarAtualizacao(e: EstadoCache) {
   void (async () => {
     try {
       const contratos = await scrapeContratos('TSE', {
+        cacheContratos: e.dados?.contratos,
         onProgress: (feitos: number, total: number) => {
           e.progresso = { feitos, total };
         },
