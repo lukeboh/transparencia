@@ -14,6 +14,9 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
 - ✅ Dashboard web (`web/`) — Next.js (App Router) + Tailwind CSS + componentes
   no padrão shadcn/ui + Recharts, com dados reais agregados.
 
+O rodapé de cada página traz um identificador de versão do app
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.1**.
+
 ## Dashboard web
 
 App em `web/`, com **carga automática de dados**: basta rodar o app —

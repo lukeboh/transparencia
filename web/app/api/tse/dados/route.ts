@@ -19,8 +19,17 @@ interface Progresso {
   total: number;
 }
 
+interface CachePersistido {
+  dados: DashboardData;
+  // Contratos "crus" (schema completo do scraper, com `responsaveis` etc.),
+  // separados de `dados.contratos` — que é só o resumo truncado para a UI e
+  // não serve de entrada para um novo scrape incremental (ver iniciarAtualizacao).
+  contratosBrutos: unknown[];
+}
+
 interface EstadoCache {
   dados: DashboardData | null;
+  contratosBrutos: unknown[] | null;
   carregouDisco: boolean;
   atualizando: boolean;
   progresso: Progresso | null;
@@ -35,6 +44,7 @@ const g = globalThis as typeof globalThis & { __tseEstado?: EstadoCache };
 function estado(): EstadoCache {
   g.__tseEstado ??= {
     dados: null,
+    contratosBrutos: null,
     carregouDisco: false,
     atualizando: false,
     progresso: null,
@@ -48,7 +58,17 @@ async function carregarDoDisco(e: EstadoCache) {
   if (e.carregouDisco) return;
   e.carregouDisco = true;
   try {
-    e.dados = JSON.parse(await fs.readFile(ARQUIVO_CACHE, 'utf8')) as DashboardData;
+    const bruto = JSON.parse(await fs.readFile(ARQUIVO_CACHE, 'utf8'));
+    // Compatibilidade com caches gravados antes de existir `contratosBrutos`
+    // (formato antigo: o próprio DashboardData na raiz do arquivo).
+    if (bruto && typeof bruto === 'object' && 'dados' in bruto) {
+      const persistido = bruto as CachePersistido;
+      e.dados = persistido.dados;
+      e.contratosBrutos = persistido.contratosBrutos ?? null;
+    } else {
+      e.dados = bruto as DashboardData;
+      e.contratosBrutos = null;
+    }
   } catch {
     // sem cache em disco: o cliente segue com o snapshot embutido no bundle
   }
@@ -70,14 +90,16 @@ function iniciarAtualizacao(e: EstadoCache) {
   void (async () => {
     try {
       const contratos = await scrapeContratos('TSE', {
-        cacheContratos: e.dados?.contratos,
+        cacheContratos: e.contratosBrutos ?? undefined,
         onProgress: (feitos: number, total: number) => {
           e.progresso = { feitos, total };
         },
       });
       e.dados = agregarDashboard(contratos) as DashboardData;
+      e.contratosBrutos = contratos;
       await fs.mkdir(path.dirname(ARQUIVO_CACHE), { recursive: true });
-      await fs.writeFile(ARQUIVO_CACHE, JSON.stringify(e.dados), 'utf8');
+      const persistido: CachePersistido = { dados: e.dados, contratosBrutos: contratos };
+      await fs.writeFile(ARQUIVO_CACHE, JSON.stringify(persistido), 'utf8');
     } catch (err) {
       e.erro = err instanceof Error ? err.message : String(err);
       console.error('[tse/dados] falha na atualização:', err);

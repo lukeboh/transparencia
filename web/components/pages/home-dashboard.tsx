@@ -6,6 +6,7 @@ import { StatCards } from '@/components/dashboard/stat-cards';
 import { EvolucaoChart } from '@/components/dashboard/evolucao-chart';
 import { CategoriasChart } from '@/components/dashboard/categorias-chart';
 import { DadosStatus } from '@/components/dashboard/dados-status';
+import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
@@ -61,6 +62,7 @@ export function HomeDashboard() {
         contratos refletem tetos nacionais de compras centralizadas pelo TSE para
         toda a Justiça Eleitoral (ex.: urnas eletrônicas), não apenas gasto próprio
         do órgão.
+        <AppVersion />
       </footer>
     </main>
   );

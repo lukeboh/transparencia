@@ -8,6 +8,7 @@ import { RankingChart } from '@/components/dashboard/ranking-chart';
 import { RankingTable } from '@/components/dashboard/ranking-table';
 import { PapeisFilter } from '@/components/dashboard/papeis-filter';
 import { DadosStatus } from '@/components/dashboard/dados-status';
+import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
@@ -187,6 +188,7 @@ export function ResponsaveisDashboard() {
         O valor consolidado soma o &ldquo;Valor Global&rdquo; de cada contrato em que
         o servidor aparece como responsável nos papéis selecionados, contando cada contrato
         uma única vez por pessoa.
+        <AppVersion />
       </footer>
     </main>
   );

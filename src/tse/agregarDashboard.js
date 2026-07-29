@@ -24,8 +24,11 @@ function agregarDashboard(contratos) {
   const totalPago = contratos.reduce((s, c) => s + (c.valorPago || 0), 0);
 
   const vigentes = contratos.filter((c) => (paraDataISO(c.vigenciaFim) ?? '') >= hoje);
+  // Contratos vindos de um cache incompleto (ex.: resumo truncado, sem a
+  // coluna de responsáveis) podem chegar sem esse campo — trata como vazio
+  // em vez de estourar.
   const responsaveis = new Set(
-    contratos.flatMap((c) => c.responsaveis.map((r) => r.matricula || r.nome)),
+    contratos.flatMap((c) => (c.responsaveis ?? []).map((r) => r.matricula || r.nome)),
   );
 
   const porAno = new Map();
@@ -95,7 +98,7 @@ function agregarDashboard(contratos) {
   const medianaPago = calcMediana(rankingCompleto.map((r) => r.valorPagoConsolidado || 0));
 
   const responsaveisVigentes = new Set(
-    vigentes.flatMap((c) => c.responsaveis.map((r) => r.matricula || r.nome)),
+    vigentes.flatMap((c) => (c.responsaveis ?? []).map((r) => r.matricula || r.nome)),
   );
   const ranking = rankingCompleto.map((r) => ({
     nome: r.nome,
