@@ -16,15 +16,34 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
 
 ## Dashboard web
 
-App em `web/`, alimentado por agregados gerados a partir do JSON extraído
-(nunca por fetch em runtime — o dado é versionável e o app é 100% estático):
+App em `web/`, com **carga automática de dados**: basta rodar o app —
+nenhum script manual é necessário.
 
 ```bash
-npm run tse:scrape -- TSE data/tse_contratos.json   # 1. extrai contratos (na raiz do repo)
 cd web
 npm install
-npm run data                                        # 2. gera web/lib/dashboard-data.ts (usa fallback se tse_contratos.json não existir)
-npm run dev                                         # 3. http://localhost:3000
+npm run dev                                         # http://localhost:3000
+```
+
+Como funciona a carga: a página abre instantaneamente com um snapshot
+embutido no build; ao carregar, o cliente chama `/api/tse/dados?atualizar=1`
+e o **servidor do app** faz o scrape da fonte em background (com cache em
+disco em `web/.cache/`, TTL de 6h e trava contra execuções simultâneas),
+enquanto o header mostra o progresso ("atualizando da fonte 600/1272"); ao
+concluir, a UI troca para os dados frescos.
+
+O scrape não pode rodar no navegador do usuário: a fonte não envia
+cabeçalhos CORS e o fluxo exige cookie de sessão `httponly` + token CSRF,
+inacessíveis cross-origin — por isso a rota de API do próprio app faz esse
+papel, reutilizando o mesmo pipeline de `src/tse/`.
+
+Os scripts CLI continuam existindo para uso avulso (gerar CSV do ranking,
+atualizar o snapshot embutido):
+
+```bash
+npm run tse:scrape -- TSE data/tse_contratos.json   # extrai (raiz do repo)
+cd web && npm run data                              # regrava o snapshot embutido
+>>>>>>> origin/claude/tse-contract-transparency-sed1nw
 ```
 
 Conteúdo: 3 cards de resumo (valor total contratado, contratos vigentes,
@@ -39,7 +58,30 @@ traz o dashboard da primeira funcionalidade do projeto: cards com total de
 responsáveis / maior valor sob responsabilidade / mediana por responsável,
 gráfico de barras horizontais com o top 10 e tabela paginada com o ranking
 completo — todos os responsáveis, 25 por página (papéis como badges; valor de
-cada contrato contado uma única vez por pessoa).
+cada contrato contado uma única vez por pessoa). A tabela tem filtro
+incremental por servidor (sem distinção de acentos/caixa) e ordenação
+clicável nos cabeçalhos Servidor (alfabética), Contratos e Valor consolidado
+(1º clique ordena, 2º inverte, 3º volta à ordem do ranking); a coluna # sempre
+mostra a posição original no ranking por valor.
+
+### Temas
+
+Além do modo claro/escuro, o seletor de paleta (ícone 🎨 no header) oferece
+seis temas: **Neutro** (cinzas clássicos), **Institucional** (azul-marinho
+sóbrio, cantos mais retos), **Esmeralda** (verdes suaves, cantos mais
+arredondados), **Violeta** (gradiente índigo com cartões navy), **Lagoa**
+(gradiente turquesa→verde) e **Ardósia** (flat carvão + teal, cantos retos).
+Os temas mudam apenas o chrome (superfícies, acentos, bordas, raio e, nos
+gradientes, o fundo da página) — os slots de cor dos gráficos (`--chart-*`)
+são os mesmos em todos, porque são a paleta de dados validada para
+daltonismo (revalidada por script contra cada superfície escura nova).
+Escolhas persistem em `localStorage` e são aplicadas antes do primeiro paint
+por um script no `<head>`.
+
+Nota de implementação: valores compactos ("R$ 17,3 bi") são formatados à mão
+em vez de `Intl … notation: 'compact'` — versões diferentes de ICU (Node do
+build × navegador) divergem no zero à direita, o que causava mismatch de
+hidratação no React e derrubava a classe de tema do `<html>`.
 
 ### Auditabilidade
 

@@ -61,6 +61,209 @@
   --chart-6: #e66767;
 }
 
+/*
+ * Temas alternativos: mudam o chrome (superfícies, acentos, bordas, raio),
+ * nunca os slots --chart-* — a paleta de dados é validada para CVD e é a
+ * mesma nos três temas.
+ */
+[data-theme='institucional'] {
+  --background: #f2f5fa;
+  --card: #fbfcfe;
+  --popover: #fbfcfe;
+  --primary: #1e3a5f;
+  --primary-foreground: #f5f8fc;
+  --secondary: #e3eaf4;
+  --secondary-foreground: #1e3a5f;
+  --muted: #e3eaf4;
+  --muted-foreground: #4d5e75;
+  --accent: #e3eaf4;
+  --accent-foreground: #1e3a5f;
+  --border: rgba(30, 58, 95, 0.14);
+  --ring: #4a6b96;
+  --grid: #d8e0eb;
+  --radius: 0.375rem;
+}
+
+.dark[data-theme='institucional'] {
+  --background: #080d16;
+  --card: #111927;
+  --popover: #16202f;
+  --primary: #9dbce2;
+  --primary-foreground: #0d1522;
+  --secondary: #1c2737;
+  --secondary-foreground: #dbe6f3;
+  --muted: #1c2737;
+  --muted-foreground: #93a5bd;
+  --accent: #1c2737;
+  --accent-foreground: #dbe6f3;
+  --border: rgba(157, 188, 226, 0.12);
+  --ring: #5d7fa6;
+  --grid: #223046;
+}
+
+[data-theme='esmeralda'] {
+  --background: #f3f8f5;
+  --card: #fbfdfc;
+  --popover: #fbfdfc;
+  --primary: #1a6b4f;
+  --primary-foreground: #f2faf6;
+  --secondary: #e2efe8;
+  --secondary-foreground: #1a5c45;
+  --muted: #e2efe8;
+  --muted-foreground: #52685d;
+  --accent: #e2efe8;
+  --accent-foreground: #1a5c45;
+  --border: rgba(26, 107, 79, 0.14);
+  --ring: #3d8b6d;
+  --grid: #d7e5dd;
+  --radius: 0.75rem;
+}
+
+.dark[data-theme='esmeralda'] {
+  --background: #0a100d;
+  --card: #131c17;
+  --popover: #17221c;
+  --primary: #8fd6b5;
+  --primary-foreground: #0e1813;
+  --secondary: #1d2a23;
+  --secondary-foreground: #d9ece2;
+  --muted: #1d2a23;
+  --muted-foreground: #92a89c;
+  --accent: #1d2a23;
+  --accent-foreground: #d9ece2;
+  --border: rgba(143, 214, 181, 0.12);
+  --ring: #4f8f72;
+  --grid: #22332a;
+}
+
+/* Violeta — gradiente índigo com cartões navy (ref.: painel "Gradient Dashboard"). */
+[data-theme='violeta'] {
+  --background: #eeeefb;
+  --card: #fbfbfe;
+  --popover: #fbfbfe;
+  --primary: #4a49d8;
+  --primary-foreground: #f5f5ff;
+  --secondary: #e3e3f8;
+  --secondary-foreground: #35349b;
+  --muted: #e3e3f8;
+  --muted-foreground: #5c5b8a;
+  --accent: #e3e3f8;
+  --accent-foreground: #35349b;
+  --border: rgba(74, 73, 216, 0.16);
+  --ring: #7c7be0;
+  --grid: #dcdcf0;
+  --radius: 0.625rem;
+}
+
+.dark[data-theme='violeta'] {
+  --background: #14133f;
+  --card: #1d1c5a;
+  --popover: #232269;
+  --primary: #9c9bf7;
+  --primary-foreground: #14133f;
+  --secondary: #2a2975;
+  --secondary-foreground: #e0e0fa;
+  --muted: #2a2975;
+  --muted-foreground: #a7a6d9;
+  --accent: #2a2975;
+  --accent-foreground: #e0e0fa;
+  --border: rgba(156, 155, 247, 0.16);
+  --ring: #6b6ad0;
+  --grid: #302f80;
+}
+
+html[data-theme='violeta'] body {
+  background-image: linear-gradient(160deg, #f4f4fd 0%, #e4e4f9 55%, #dbdaf6 100%);
+  background-attachment: fixed;
+}
+
+html.dark[data-theme='violeta'] body {
+  background-image: linear-gradient(160deg, #3d3cb4 0%, #232283 45%, #14133f 100%);
+  background-attachment: fixed;
+}
+
+/* Lagoa — gradiente turquesa→verde com cartões claros (ref.: painel teal/green). */
+[data-theme='lagoa'] {
+  --background: #e7f6f0;
+  --card: #fcfefd;
+  --popover: #fcfefd;
+  --primary: #0e7f70;
+  --primary-foreground: #f0fbf7;
+  --secondary: #d9efe8;
+  --secondary-foreground: #0c6355;
+  --muted: #d9efe8;
+  --muted-foreground: #47685f;
+  --accent: #d9efe8;
+  --accent-foreground: #0c6355;
+  --border: rgba(14, 127, 112, 0.16);
+  --ring: #3ba38f;
+  --grid: #d2e7de;
+  --radius: 0.5rem;
+}
+
+.dark[data-theme='lagoa'] {
+  --background: #071b19;
+  --card: #0d2422;
+  --popover: #122e2b;
+  --primary: #63d6c2;
+  --primary-foreground: #07211e;
+  --secondary: #163834;
+  --secondary-foreground: #d5efe7;
+  --muted: #163834;
+  --muted-foreground: #8db4a9;
+  --accent: #163834;
+  --accent-foreground: #d5efe7;
+  --border: rgba(99, 214, 194, 0.14);
+  --ring: #3f8f7c;
+  --grid: #1b423c;
+}
+
+html[data-theme='lagoa'] body {
+  background-image: linear-gradient(150deg, #d3f0f4 0%, #d9f3e3 60%, #d2f0d8 100%);
+  background-attachment: fixed;
+}
+
+html.dark[data-theme='lagoa'] body {
+  background-image: linear-gradient(150deg, #0b3a3d 0%, #0a2e28 55%, #071b19 100%);
+  background-attachment: fixed;
+}
+
+/* Ardósia — flat carvão + teal sobre cinza-claro (ref.: painel "Payments Received"). */
+[data-theme='ardosia'] {
+  --background: #e9ebee;
+  --card: #ffffff;
+  --popover: #ffffff;
+  --primary: #2b3040;
+  --primary-foreground: #f4f5f7;
+  --secondary: #eef0f3;
+  --secondary-foreground: #2b3040;
+  --muted: #eef0f3;
+  --muted-foreground: #697180;
+  --accent: #e4f4f2;
+  --accent-foreground: #17796d;
+  --border: rgba(35, 39, 51, 0.14);
+  --ring: #2ab7a9;
+  --grid: #e0e3e8;
+  --radius: 0.25rem;
+}
+
+.dark[data-theme='ardosia'] {
+  --background: #14161d;
+  --card: #21242e;
+  --popover: #272b37;
+  --primary: #45c4b5;
+  --primary-foreground: #10201d;
+  --secondary: #2c303c;
+  --secondary-foreground: #dee1e8;
+  --muted: #2c303c;
+  --muted-foreground: #99a0af;
+  --accent: #23383c;
+  --accent-foreground: #7fd9cd;
+  --border: rgba(255, 255, 255, 0.1);
+  --ring: #35a496;
+  --grid: #2e323e;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
