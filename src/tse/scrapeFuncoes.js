@@ -81,7 +81,14 @@ function extrairCorpoTexto(html) {
   const m =
     html.match(/<div class="leg-compilada-corpo">([\s\S]*?)<div class="leg-compilada-referencia"/) ||
     html.match(/<div class="leg-compilada-corpo">([\s\S]*?)<\/section>/);
-  return m ? m[1] : '';
+  const corpo = m ? m[1] : '';
+  // A legislação compilada marca com tachado (`text-decoration: line-through`)
+  // trechos de itens que foram "tornados sem efeito" por uma portaria
+  // posterior — texto que nunca chegou a valer e não deve virar movimento
+  // (ex.: portaria 68/2016, item III do Art. 1º, tornado sem efeito pela
+  // Portaria nº 75/2016). Remover o span inteiro antes de extrair os
+  // parágrafos evita que esse texto anulado seja lido como designação real.
+  return corpo.replace(/<span[^>]*text-decoration:\s*line-through[^>]*>[\s\S]*?<\/span>/gi, '');
 }
 
 function extrairDataDOU(html) {
@@ -97,6 +104,16 @@ function extrairDataDOU(html) {
 // Regra de nível (FC-1..FC-6 / CJ-1..CJ-4): valida a faixa; fora dela é
 // tratado como ruído de parsing (ex.: erro de digitação na fonte) e ignorado.
 const NIVEL_MAX = { FC: 6, CJ: 4 };
+
+// Cláusulas administrativas que às vezes abrem o item antes do nome de fato
+// ("I - A partir de 27 de janeiro de 2020, Fulano de Tal, ...", "I) A
+// contar de 13 de setembro de 2012, Fulano de Tal, ...", "I - a pedido,
+// Fulano de Tal, ..." ou "Dispensar, por solicitação do Senhor Ministro
+// Fulano, Beltrana de Tal, ..."). Por ser o início do item, a cláusula sai
+// capitalizada tanto quanto um nome próprio sairia, então maiúscula/
+// minúscula sozinha não distingue os dois casos — daí a lista explícita
+// (case-insensitive) em vez de uma heurística de capitalização.
+const CLAUSULA_INICIAL = /^(?:a partir de\s+[^,]+|a contar de\s+[^,]+|a pedido|de of[ií]cio|por solicita[cç][aã]o d[oa]\s+[^,]+|por indica[cç][aã]o d[oa]\s+[^,]+)\s*,\s*/i;
 
 /**
  * Interpreta o corpo de uma portaria como uma sequência de parágrafos. Cada
@@ -120,9 +137,15 @@ function extrairMovimentos(html, portariaRef) {
     // Duas redações equivalentes na fonte: a forma passiva ("Fica(m)
     // dispensado(s)/designados") e, em portarias mais novas, o imperativo
     // logo após o número do artigo ("Art. 1º Dispensar Fulano..." / "Art. 2º
-    // Designar:").
+    // Designar:"). O imperativo também aparece com pronome oblíquo colado
+    // quando o parágrafo retoma a pessoa do parágrafo anterior em vez de
+    // repetir o nome ("Art. 2º Designá-la para exercer ...") — reconhecer
+    // essa forma evita herdar o modo (início/fim) errado do parágrafo
+    // anterior; como o nome não está neste parágrafo, o item acaba sem
+    // `nomeCandidato` válido e é descartado mais abaixo (ver comentário na
+    // validação do nome).
     const verbMatch = paragrafo.match(
-      /Fica(?:m)?\s+(dispensad[oa]s?|exonerad[oa]s?|designad[oa]s?|nomead[oa]s?)|Art\.?\s*\d+º?\s*(Dispensar|Exonerar|Designar|Nomear)\b/i,
+      /Fica(?:m)?\s+(dispensad[oa]s?|exonerad[oa]s?|designad[oa]s?|nomead[oa]s?)|Art\s*\.?\s*\d+º?\s*(Dispensar|Exonerar|Designar|Nomear|Dispensa|Exonera|Designa|Nomeia|Dispens[áa]-l[ao]s?|Exoner[áa]-l[ao]s?|Design[áa]-l[ao]s?|Nome[áa]-l[ao]s?)\b/i,
     );
     let itemTexto;
     if (verbMatch) {
@@ -130,19 +153,65 @@ function extrairMovimentos(html, portariaRef) {
       modoAtual = /dispens|exonera/i.test(verbo) ? 'fim' : 'inicio';
       itemTexto = paragrafo.slice(verbMatch.index + verbMatch[0].length).replace(/^\s*:\s*/, '').trim();
     } else {
-      itemTexto = paragrafo.replace(/^[IVXLCDM]+\s*-\s*/, '').trim();
+      itemTexto = paragrafo;
     }
+    // Marcador de item: numeral romano seguido de hífen ("I - "), travessão
+    // ("I – ", "I — ") ou parêntese fechando ("I) "), variações usadas em
+    // diferentes portarias — e, por erro de digitação da fonte em alguns
+    // casos raros, sem pontuação nenhuma entre o numeral e o nome ("XXIV
+    // ALEXANDRE GOMES MACHADO", ver portaria 168/2022). Exigir espaço
+    // (`\s+`) nesse último caso evita confundir com um nome real que por
+    // coincidência começa com letras romanas (ex.: "LIMA, ..." não tem
+    // espaço logo após "LI"), risco checado contra a base já validada antes
+    // de habilitar essa variante. Pode aparecer isolado num parágrafo
+    // próprio ou logo após o verbo, quando o primeiro item vem colado no
+    // mesmo parágrafo ("Art. 1º Dispensar: I) Fulano, ...") — por isso a
+    // remoção roda nos dois casos. Aplicada duas vezes porque a numeração às
+    // vezes vem duplicada por erro de digitação da fonte ("I I- Fulano" em
+    // vez de "II - Fulano", ver portaria 2/2025) — a segunda passada é
+    // inofensiva quando não sobra nenhum marcador.
+    const removerMarcador = (t) => t.replace(/^[IVXLCDM]+(?:\s*[-–—)]\s*|\s+)/, '');
+    // Uma vírgula solta pode aparecer tanto ANTES do marcador ("Dispensar, I
+    // - Fulano...", ver portaria 385/2017 — o verbo termina em vírgula em
+    // vez de dois-pontos) quanto DEPOIS dele, quando o que sobra é uma
+    // cláusula inserida antes do nome ("Dispensar, por solicitação de
+    // ...") — sem essa vírgula, CLAUSULA_INICIAL não a reconheceria por não
+    // estar mais no início da string. Por isso a limpeza de vírgula roda
+    // nas duas pontas da remoção de marcador.
+    itemTexto = removerMarcador(removerMarcador(itemTexto.trim().replace(/^,\s*/, '')))
+      .trim()
+      .replace(/^,\s*/, '')
+      .replace(CLAUSULA_INICIAL, '');
     if (!itemTexto || !modoAtual) continue;
 
     const nivelMatch = itemTexto.match(
       /(?:Fun[cç][aã]o Comissionada de|Cargo em Comiss[aã]o de)\s*([^,]+),\s*N[ií]vel\s*(FC|CJ)[\s-]*?(\d)/i,
     );
     if (!nivelMatch) continue;
-    // Alguns itens trazem uma cláusula em minúsculas antes do nome ("I - a
-    // pedido, Fulano de Tal, ..."). O nome de pessoa sempre começa com
-    // maiúscula, então uma eventual cláusula inicial em minúscula é pulada.
-    const nomeMatch = itemTexto.match(/^(?:[a-zà-ÿ][^,]*,\s*)?([A-ZÀ-Ý][^,]+),/);
-    if (!nomeMatch) continue;
+    // Duas redações para o texto entre o nome e o nível: a maioria intercala
+    // cargo efetivo/área em cláusulas separadas por vírgula antes de "da
+    // função comissionada de"/"do cargo em comissão de" (nesse caso o nome é
+    // só o trecho até a primeira vírgula); outras emendam o verbo direto no
+    // nome, sem vírgula nenhuma antes do conector ("Dispensar FULANO da
+    // função comissionada de ...", "FULANO para exercer o cargo em comissão
+    // de ...") — nesse caso não há vírgula antes do nível e o nome é o texto
+    // inteiro antes do conector.
+    const antesDoNivel = itemTexto.slice(0, nivelMatch.index).replace(/\s*(?:do|da|para exercer o|para exercer a)\s*$/i, '');
+    const primeiraVirgula = antesDoNivel.indexOf(',');
+    // O verbo pode aparecer duplicado por erro de digitação da fonte ("Art.
+    // 2º Designar Designar FULANO, ..." — ver portaria 1.102/2016): a
+    // primeira ocorrência já é consumida por verbMatch, então só a segunda
+    // sobra colada ao nome.
+    const nomeCandidato = (primeiraVirgula === -1 ? antesDoNivel : antesDoNivel.slice(0, primeiraVirgula))
+      .trim()
+      .replace(/^(?:Dispensar|Exonerar|Designar|Nomear)\s+/i, '');
+    // Nome inválido: nem começa com maiúscula (sobrou cláusula/pronome sem
+    // nome, caso não coberto por CLAUSULA_INICIAL ou pelas formas de verbo
+    // reconhecidas) nem pode conter referência a artigo ("Art. Nº") — sinal
+    // de que o parágrafo é uma retificação/remissão a outra portaria (não
+    // uma designação de fato) ou que o verbo veio grafado de um jeito ainda
+    // não reconhecido. Preferível descartar o item a gravar um nome errado.
+    if (!/^[A-ZÀ-Ý]/.test(nomeCandidato) || /\bArt\.?\s*\d/i.test(nomeCandidato)) continue;
 
     const func = nivelMatch[2].toUpperCase();
     const nivel = Number(nivelMatch[3]);
@@ -161,7 +230,7 @@ function extrairMovimentos(html, portariaRef) {
       nivel,
       cargoTitulo: nivelMatch[1].trim(),
       unidade,
-      nome: nomeMatch[1].trim(),
+      nome: nomeCandidato,
       portaria: portariaRef,
       dataEfetiva,
     });

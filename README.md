@@ -20,7 +20,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   própria abaixo.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.5**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.7**.
 
 ## Dashboard web
 
@@ -347,48 +347,103 @@ alertas de contratos perto do vencimento, etc.
   a cada lote de portarias baixadas) permitiria que uma reinicialização
   retome de onde parou, ou pelo menos com perda mínima de esforço.
 
-### Bugs conhecidos no parser de nomes (`scrapeFuncoes.js`) — registrados, não corrigidos
+### Bugs corrigidos no parser de nomes (`scrapeFuncoes.js`)
 
-`extrairMovimentos` erra o campo `nome` em pelo menos três situações reais
-(confirmadas na fonte, mantidas como estão até correção futura):
+`extrairMovimentos` errava o campo `nome` (ou inventava um movimento que não
+existiu) em várias situações reais da fonte, todas corrigidas nesta rodada:
 
-- **Cláusula inicial maiúscula antes do nome.** O item às vezes começa com uma
-  cláusula administrativa antes do nome de fato — "I - **A partir de** 27 de
-  janeiro de 2020, GEOFLÁVIA GUILARDUCCI DE ALVARENGA, ..." ([portaria
-  61/2020](https://www.tse.jus.br/legislacao/compilada/prt/2020/portaria-no-61-de-29-de-janeiro-de-2020))
-  ou "I - **A pedido**, Ana Cláudia Braga Mendonça, ..." ([portaria
-  718/2022](https://www.tse.jus.br/legislacao/compilada/prt/2022/portaria-no-718-de-5-de-agosto-de-2022)).
-  O parser já pula uma cláusula inicial em **minúscula** (ver comentário em
-  `extrairMovimentos`), mas essas vêm capitalizadas — por serem o início do
-  item, o português capitaliza a cláusula tanto quanto capitalizaria um nome
-  próprio, então maiúscula/minúscula sozinha não dá pra distinguir os dois
-  casos. `A partir de 27 de janeiro de 2020` e `A pedido` acabam extraídos
-  como se fossem o nome do servidor.
-- **Marcador de item "N)" em vez de "N - ".** Algumas portarias numeram os
-  itens com número romano + parêntese fechando, sem hífen — "XVI)", "LI)",
-  "XXXVIII)" — em vez do "I - " que o parser reconhece (ver [portaria
-  158/2022](https://www.tse.jus.br/legislacao/compilada/prt/2022/portaria-no-158-de-22-de-fevereiro-de-2022),
-  com pelo menos 6 itens nesse formato). Como só o padrão `N -` é removido do
-  início do texto do item, o numeral+parêntese vaza para dentro do campo
-  `nome` (ex.: `nome: "LI) WENDEL SOUSA DE LIMA"`); como esses numerais vêm em
-  minúsculas nama fonte para alguns itens, `nomeProprio()` (título-caso na
-  exibição) ainda capitaliza a primeira letra do numeral, produzindo nomes
-  como "Li) Wendel Sousa de Lima" ou "Xxxviii) Marcelo Pierri Bouchardet" na
-  UI.
+- **Cláusula administrativa antes do nome.** O item às vezes começa com uma
+  cláusula antes do nome de fato — "I - **A partir de** 27 de janeiro de
+  2020, GEOFLÁVIA GUILARDUCCI DE ALVARENGA, ..." ([portaria
+  61/2020](https://www.tse.jus.br/legislacao/compilada/prt/2020/portaria-no-61-de-29-de-janeiro-de-2020)),
+  "I - **A pedido**, Ana Cláudia Braga Mendonça, ..." ([portaria
+  718/2022](https://www.tse.jus.br/legislacao/compilada/prt/2022/portaria-no-718-de-5-de-agosto-de-2022))
+  "I) **A contar de** 13 de setembro de 2012, GUSTAVO MINUCCI DE MOURA
+  LEITE, ..." ([portaria
+  502/2012](https://www.tse.jus.br/legislacao/compilada/prt/2012/portaria-no-502-de-13-setembro-de-2012))
+  ou "Dispensar, **por solicitação do Senhor Ministro** Luis Felipe Salomão,
+  KELEN COUTINHO ..." ([portaria
+  143/2020](https://www.tse.jus.br/legislacao/compilada/prt/2020/portaria-no-143-de-28-de-fevereiro-de-2020)).
+  Como maiúscula/minúscula sozinha não distingue cláusula de nome próprio,
+  `CLAUSULA_INICIAL` em `extrairMovimentos` lista as cláusulas conhecidas a
+  pular (case-insensitive): "a partir de ...", "a contar de ...", "a
+  pedido", "de ofício", "por solicitação d[oa] ...", "por indicação d[oa]
+  ...".
+- **Nome colado direto ao verbo ou ao cargo, sem vírgula.** Bom número de
+  portarias não intercala cargo efetivo/área entre o nome e a função — vai
+  direto do nome para o conector: "Exonerar Adaíres Aguiar Lima **do cargo em
+  comissão de** Coordenador, ..." ou "ALEXANDRE GOMES MACHADO **da função
+  comissionada de** Assistente III, ..." ([portaria
+  513/2014](https://www.tse.jus.br/legislacao/compilada/prt/2014/portaria-no-513-de-19-de-agosto-de-2014),
+  [portaria
+  874/2016](https://www.tse.jus.br/legislacao/compilada/prt/2016/portaria-no-874-de-18-de-agosto-de-2016)).
+  Sem vírgula delimitando o nome, o parser antigo engolia a cláusula inteira
+  como se fosse o nome. A correção determina o fim do nome pela posição do
+  próprio conector ("do"/"da"/"para exercer o"/"para exercer a" logo antes de
+  "cargo em comissão de"/"função comissionada de"), e só usa a primeira
+  vírgula como limite quando ela aparece antes desse ponto.
+- **Marcador de item em variações não reconhecidas.** Além de "N - ", a fonte
+  usa parêntese fechando ("XVI)", "LI)" — [portaria
+  158/2022](https://www.tse.jus.br/legislacao/compilada/prt/2022/portaria-no-158-de-22-de-fevereiro-de-2022)),
+  travessão ("I – Jean Carla ..." — [portaria
+  781/2024](https://www.tse.jus.br/legislacao/compilada/prt/2024/portaria-no-781-de-2-de-outubro-de-2024)),
+  numeral colado direto ao verbo no mesmo parágrafo ("Dispensar: I) ..." —
+  [portaria
+  659/2012](https://www.tse.jus.br/legislacao/compilada/prt/2012/portaria-no-659-de-17-de-dezembro-de-2012)),
+  ou, por erro de digitação da própria fonte, sem pontuação nenhuma ("XXIV
+  ALEXANDRE GOMES MACHADO" — [portaria
+  168/2022](https://www.tse.jus.br/legislacao/compilada/prt/2022/portaria-no-168-de-22-de-fevereiro-de-2022))
+  ou numeração duplicada ("I I- Mari Matsuoka Tomikawa" — [portaria
+  2/2025](https://www.tse.jus.br/legislacao/compilada/prt/2025/portaria-no-2-de-7-de-janeiro-de-2025)).
+  A remoção de marcador agora cobre hífen, travessão/travessão longo,
+  parêntese e (exigindo espaço, para não confundir com um nome real que por
+  coincidência começa com letras romanas, tipo "LIMA") o caso sem pontuação;
+  roda duas vezes seguidas para lidar com numeração duplicada.
+- **Verbo com pronome oblíquo ou no presente, não reconhecido.** "Art. 2º
+  **Designá-la** para exercer a função comissionada de Assistente VI, ..."
+  ([portaria
+  143/2020](https://www.tse.jus.br/legislacao/compilada/prt/2020/portaria-no-143-de-28-de-fevereiro-de-2020))
+  retoma a pessoa do parágrafo anterior em vez de repetir o nome; sem
+  reconhecer essa forma, o parser herdava o modo (início/fim) errado do
+  parágrafo anterior e ainda produzia um nome-lixo. A correção reconhece as
+  formas com pronome ("Designá-la/-lo", "Dispensá-la/-lo", etc.) e no
+  presente ("Designa", "Nomeia", ...), e também tolera "Art ." com espaço
+  antes do ponto (erro de digitação visto em portarias de 2006-2008). Como o
+  nome de fato não está nesses parágrafos (só no anterior), o item é
+  descartado (nenhum movimento gerado) em vez de gravar um nome errado —
+  essa pessoa continua sem o registro desse evento específico até o parser
+  ganhar resolução de referência entre parágrafos.
+- **Itens riscados ("tornado sem efeito") tratados como válidos.** A
+  legislação compilada marca com tachado HTML (`text-decoration:
+  line-through`) itens anulados por portaria posterior — "III - ~~EDUARDO
+  CAMARGO DOS REIS, ...~~ (Tornado sem efeito pela Portaria nº 75/2016)" ([portaria
+  68/2016](https://www.tse.jus.br/legislacao/compilada/prt/2016/portaria-no-68-de-2-de-fevereiro-de-2016)).
+  O parser lia esse texto normalmente, registrando uma designação que nunca
+  chegou a valer. `extrairCorpoTexto` agora remove o `<span>` tachado inteiro
+  antes de dividir em parágrafos.
+- **Verbo duplicado por erro de digitação.** "Art. 2º **Designar Designar**
+  ANDERSON VIDAL CORRÊA, ..." ([portaria
+  1.102/2016](https://www.tse.jus.br/legislacao/compilada/prt/2016/portaria-no-1-102-de-31-de-outubro-de-2016)) —
+  só a primeira ocorrência é consumida pelo reconhecimento de verbo, a
+  segunda sobra colada ao nome; agora é removida.
+- **Vírgula solta logo após o verbo, antes do marcador.** "Art. 1º
+  Dispensar, I - GEORGE HENRIQUE ..." ([portaria
+  385/2017](https://www.tse.jus.br/legislacao/compilada/prt/2017/portaria-no-385-de-17-de-maio-de-2017))
+  usa vírgula em vez de dois-pontos depois do verbo; a limpeza de vírgula
+  solta agora roda antes e depois da remoção de marcador.
+- **Rede de segurança geral.** Como salvaguarda contra formas de erro ainda
+  não catalogadas (tipicamente parágrafos de retificação que citam "cargo em
+  comissão de"/"nível" ao corrigir outra portaria, sem ser uma designação de
+  fato), qualquer candidato a nome que contenha uma referência a artigo
+  ("Art. Nº") é descartado em vez de virar um registro errado.
 
-Qualquer correção futura deve evitar decidir "é cláusula ou é nome" só pela
-capitalização — melhor caminho provável é uma lista explícita de cláusulas
-conhecidas a pular ("a partir de ...", "a pedido", "de ofício", etc.,
-case-insensitive) combinada com um regex de marcador de item mais abrangente
-(`^[IVXLCDM]+\s*[-)]\s*`, cobrindo tanto "N - " quanto "N) ").
-
-Efeito colateral visível: como esses "nomes" fantasma ("A partir de 27 de
-janeiro de 2020", "A pedido") não existem na relação atual de agentes
-públicos, a reconciliação entre as duas fontes (ver seção "Funções
-comissionadas" acima) os sinaliza como "não consta na relação atual" — o que
-é logicamente correto (de fato não constam), mas mascara a causa real
-(bug de parsing, não um servidor que saiu do TSE). Corrigir o parser deve
-fazer esses registros fantasma desaparecerem da lista de observações.
+Todos os ~1.550 movimentos já extraídos com algum desses bugs (registrados em
+`data/tse_funcoes.json`) foram reprocessados com o parser corrigido — a base
+inteira (todas as portarias relevantes de 1999 a hoje) foi raspada de novo do
+zero para garantir que nenhum caso silenciosamente errado (como os itens
+riscados, que produziam um nome com aparência normal) ficasse para trás. Os
+"nomes" fantasma que antes apareciam na lista de "não consta na relação
+atual" (ver seção "Funções comissionadas") não devem mais ocorrer.
 
 ### Problema operacional conhecido: erros ENOENT no `next dev`
 
