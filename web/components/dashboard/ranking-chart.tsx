@@ -100,8 +100,8 @@ export function RankingChart({
 
   return (
     <Card>
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
           <CardTitle className="text-base font-semibold">
             Maiores valores sob responsabilidade
           </CardTitle>

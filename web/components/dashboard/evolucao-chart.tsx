@@ -99,8 +99,8 @@ export function EvolucaoChart({
 
   return (
     <Card className="lg:col-span-2">
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
           <CardTitle className="text-base font-semibold">Evolução dos gastos</CardTitle>
           <CardDescription>
             {LABELS_METRICA[metrica].nome} por ano de início de vigência. Clique em um ano para auditar os contratos.

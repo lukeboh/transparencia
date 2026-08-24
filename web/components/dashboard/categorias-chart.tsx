@@ -101,8 +101,8 @@ export function CategoriasChart({
 
   return (
     <Card>
-      <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
           <CardTitle className="text-base font-semibold">Divisão por categoria</CardTitle>
           <CardDescription>
             Participação no {LABELS_METRICA[metrica].nome.toLowerCase()}. Clique para auditar.
@@ -114,7 +114,7 @@ export function CategoriasChart({
         <div className="relative h-[190px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Tooltip content={<CategoriaTooltip />} />
+              <Tooltip content={<CategoriaTooltip />} wrapperStyle={{ zIndex: 30 }} />
               <Pie
                 data={dados}
                 dataKey={dataKey}
