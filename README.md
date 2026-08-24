@@ -13,11 +13,14 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   contra a API oficial, 1268 contratos extraídos com sucesso.
 - ✅ Dashboard web (`web/`) — Next.js (App Router) + Tailwind CSS + componentes
   no padrão shadcn/ui + Recharts, com dados reais agregados.
-- ✅ Funções comissionadas FC/CJ por servidor (`src/tse/scrapeFuncoes.js`,
-  `/funcoes`) — testado contra a fonte real (ver seção própria abaixo).
+- ✅ Funções comissionadas FC/CJ por servidor (`/funcoes`) — fonte primária:
+  relação atual de agentes públicos (`src/tse/scrapeAgentesPublicos.js`);
+  fonte secundária/histórico: portarias (`src/tse/scrapeFuncoes.js`).
+  Reconciliação entre as duas com observações de inconsistência — ver seção
+  própria abaixo.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.4**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.5**.
 
 ## Dashboard web
 
@@ -224,69 +227,98 @@ consolidado e quantidade de contratos.
 
 ## Funções comissionadas (FC/CJ)
 
-A rota `/funcoes` (linkada no header) traz **todo servidor do TSE que já
-ocupou uma Função Comissionada (FC-1 a FC-6) ou um Cargo em Comissão (CJ-1 a
-CJ-4)**, fiscalizando contrato ou não — histórico completo de nomeação e
-exoneração de cada função, com data e link da portaria correspondente.
-Servidores que nunca aparecem como fiscal/gestor de nenhum contrato recebem a
-tag **"Zero Fiscal"**. Filtro por tipo/nível de função e busca por nome,
-mesmo padrão da tabela de Responsáveis. Também é possível ver, para quem
-fiscaliza algum contrato, a lista desses contratos (reaproveitando o mesmo
-modal auditável da página de Responsáveis) — e, na própria página de
-Responsáveis, cada contrato listado no modal de um fiscal mostra uma tag
-(ex.: "FC-6") com a função que esse fiscal ocupava durante a vigência
-daquele contrato específico, quando houver.
+A rota `/funcoes` (linkada no header) traz **todo servidor do TSE que tem ou
+já teve uma Função Comissionada (FC-1 a FC-6) ou um Cargo em Comissão (CJ-1 a
+CJ-4)**, fiscalizando contrato ou não — matrícula, cargo, lotação, função
+vigente e histórico de nomeação/exoneração com data e link da portaria
+correspondente. Servidores que nunca aparecem como fiscal/gestor de nenhum
+contrato recebem a tag **"Zero Fiscal"**. Filtro por tipo/nível de função e
+busca por nome, mesmo padrão da tabela de Responsáveis. Também é possível
+ver, para quem fiscaliza algum contrato, a lista desses contratos
+(reaproveitando o mesmo modal auditável da página de Responsáveis) — e, na
+própria página de Responsáveis, cada contrato listado no modal de um fiscal
+mostra uma tag (ex.: "FC-6") com a função que esse fiscal ocupava durante a
+vigência daquele contrato específico, quando houver.
 
-### Fonte e extração
+### Duas fontes: primária (estado atual) + secundária (histórico)
 
-A fonte é o índice de legislação compilada do TSE:
-[`https://www.tse.jus.br/legislacao/compilada/prt`](https://www.tse.jus.br/legislacao/compilada/prt),
-com uma subpágina por ano (`.../prt/{ano}`) desde 1999. Cada subpágina de ano
-é HTML estático com uma tabela `Portaria | Ementa/Assunto` — `scrapeFuncoes.js`
-usa a ementa para pré-filtrar candidatas (`/função comissionada|cargo em
-comissão/i`, excluindo `/substitu/i` — cobertura eventual de férias/licença,
-que não é uma designação titular) antes de abrir cada portaria.
+- **Primária — Relação de agentes públicos**
+  ([`transparencia.tse.jus.br/.../relacao-agentes-publicos`](https://transparencia.tse.jus.br/transparenciaDadosServidores/smvc/relatorios/servidor/relacao-agentes-publicos),
+  `src/tse/scrapeAgentesPublicos.js`): uma única página HTML estática,
+  pública, sem sessão nem paginação, com todo agente público do TSE (~920
+  linhas) — nome, matrícula, cargo efetivo, função/cargo em comissão atual
+  (quando houver), lotação e o ato de provimento mais recente. Rápida (uma
+  requisição) e é quem manda no que a UI mostra como "vigente hoje" — mas não
+  tem histórico algum, só a foto de agora.
+- **Secundária — Portarias do TSE**
+  ([`tse.jus.br/legislacao/compilada/prt`](https://www.tse.jus.br/legislacao/compilada/prt),
+  `src/tse/scrapeFuncoes.js`): usada só para reconstruir o **histórico**
+  (quando cada mandato começou/terminou e por qual portaria) e enriquecer o
+  que a fonte primária já disse que é verdade agora. Roda depois da
+  primária — é bem mais cara (milhares de páginas desde 1999 vs. uma
+  página), então a ordem de execução importa: primeiro o estado atual
+  (rápido), depois o histórico (lento).
 
-O texto integral de cada portaria (também HTML estático) traz um ou mais
-"movimentos" — "Fica(m) dispensado(s)/exonerado(s)" (fim de uma função) e
-"Fica(m) designado(s)/nomeado(s)" (início) — cada um com nome do servidor,
-cargo efetivo, título da função/cargo, nível (FC-N ou CJ-N) e unidade.
-`agregarFuncoes.js` pareia esses movimentos cronologicamente por pessoa em
-"mandatos" (início → fim), cruzando com os contratos via
-`rankResponsaveis`/`normalizeNome` (mesma chave de nome normalizado — ver
-"Regras de agregação" acima) para decidir `zeroFiscal` e anexar a função
-correta a cada contrato fiscalizado, por sobreposição de vigência.
+`agregarFuncoes.js` faz a reconciliação: o universo de servidores parte de
+quem tem função na relação atual (primária); quem só aparece no histórico de
+portarias e não está mais na relação atual entra como registro à parte,
+sinalizado (`naRelacaoAtual: false`). Para cada servidor, se a função vigente
+da fonte primária e o mandato "em aberto" do histórico de portarias não
+baterem (ou um dos dois não existir), isso vira uma **observação** no
+registro do servidor — a página exibe um ícone de alerta ao lado do nome e o
+detalhe completo no histórico — em vez de decidir sozinho qual fonte está
+certa.
+
+Extração de cada portaria (texto integral, HTML estático): um ou mais
+"movimentos" — "Fica(m) dispensado(s)/exonerado(s)" ou o imperativo
+"Dispensar"/"Exonerar" (fim) e "Fica(m) designado(s)/nomeado(s)" ou
+"Designar"/"Nomear" (início) — cada um com nome do servidor, cargo efetivo,
+título da função/cargo, nível (FC-N ou CJ-N) e unidade. `agregarFuncoes.js`
+pareia esses movimentos cronologicamente por pessoa em "mandatos" (início →
+fim), cruzando com os contratos via `rankResponsaveis`/`normalizeNome`
+(mesma chave de nome normalizado — ver "Regras de agregação" acima) para
+decidir `zeroFiscal` e anexar a função correta a cada contrato fiscalizado,
+por sobreposição de vigência.
 
 **Limitações conhecidas:**
 
-- **Cruzamento só por nome.** A fonte de portarias não expõe CPF nem
-  matrícula — diferente do CPF mascarado que identifica os fiscais de
-  contrato. Homônimos podem gerar vínculos incorretos entre uma portaria e um
-  fiscal de contrato.
-- **Pareamento início/fim é uma heurística FIFO por pessoa** — assume que
-  ninguém acumula duas funções comissionadas ao mesmo tempo (regra geral no
-  serviço público, mas não uma garantia absoluta da fonte).
-- **Data efetiva** é a da publicação no Diário Oficial da União, referenciada
-  no rodapé de cada portaria (a maioria diz apenas "entra em vigor na data de
-  publicação"); cláusulas de vigência retroativa por item não são tratadas.
+- **Cruzamento só por nome, nas duas pontas.** Nem a relação de agentes
+  públicos, nem as portarias, nem os contratos (que usam CPF mascarado)
+  compartilham um identificador comum — tudo é casado por nome normalizado.
+  Homônimos podem gerar vínculos incorretos entre qualquer par dessas fontes.
+- **Pareamento início/fim (histórico) é uma heurística FIFO por pessoa** —
+  assume que ninguém acumula duas funções comissionadas ao mesmo tempo
+  (regra geral no serviço público, mas não uma garantia absoluta da fonte).
+- **Data efetiva** (histórico) é a da publicação no Diário Oficial da União,
+  referenciada no rodapé de cada portaria (a maioria diz apenas "entra em
+  vigor na data de publicação"); cláusulas de vigência retroativa por item
+  não são tratadas.
 - **Retificações** de portarias anteriores não são reconciliadas com o
   movimento original — cada portaria é interpretada isoladamente.
+- **Cobertura do histórico é parcial** (2020–hoje, no momento) — quem foi
+  dispensado antes disso pode aparecer só como "não consta na relação atual"
+  sem histórico de mandato nenhum. Ver roadmap para rodar o backfill
+  completo (1999–hoje).
 
 ### Rodando a extração
 
 ```bash
+npm run tse:scrape-agentes                    # relação atual (rápido, ~1 requisição) em data/tse_agentes.json
 npm run tse:scrape-funcoes                    # histórico completo (1999–hoje) em data/tse_funcoes.json
 npm run tse:scrape-funcoes -- 2024 2026       # só um intervalo de anos, útil para testar
-npm run data                                  # regrava o snapshot embutido com contratos + funções
+npm run data                                  # regrava o snapshot embutido com contratos + agentes + histórico
 ```
 
-A primeira execução do histórico completo baixa e interpreta milhares de
-páginas (uma por portaria relevante desde 1999) e pode levar dezenas de
-minutos; execuções seguintes são incrementais — os resultados já
-processados ficam em cache por URL de portaria, então só os índices de ano
-(baratos) e as poucas portarias novas são buscados de novo. O app web faz
-isso automaticamente em segundo plano (mesmo mecanismo de atualização dos
-contratos, ver acima), persistindo o cache em `web/.cache/`.
+A extração da relação de agentes públicos é rápida (uma única página) e roda
+a cada atualização automática do app, junto com os contratos. O histórico de
+portarias é o oposto: a primeira execução completa baixa e interpreta
+milhares de páginas e pode levar dezenas de minutos; execuções seguintes são
+incrementais — os resultados já processados ficam em cache por URL de
+portaria, então só os índices de ano (baratos) e as poucas portarias novas
+são buscados de novo. O app web faz as três coisas automaticamente em
+segundo plano (mesmo mecanismo de atualização dos contratos, ver acima),
+nessa ordem — contratos, agentes públicos, portarias — persistindo o cache
+em `web/.cache/`.
 
 ## Próximas funcionalidades (roadmap)
 
@@ -349,6 +381,14 @@ capitalização — melhor caminho provável é uma lista explícita de cláusul
 conhecidas a pular ("a partir de ...", "a pedido", "de ofício", etc.,
 case-insensitive) combinada com um regex de marcador de item mais abrangente
 (`^[IVXLCDM]+\s*[-)]\s*`, cobrindo tanto "N - " quanto "N) ").
+
+Efeito colateral visível: como esses "nomes" fantasma ("A partir de 27 de
+janeiro de 2020", "A pedido") não existem na relação atual de agentes
+públicos, a reconciliação entre as duas fontes (ver seção "Funções
+comissionadas" acima) os sinaliza como "não consta na relação atual" — o que
+é logicamente correto (de fato não constam), mas mascara a causa real
+(bug de parsing, não um servidor que saiu do TSE). Corrigir o parser deve
+fazer esses registros fantasma desaparecerem da lista de observações.
 
 ### Problema operacional conhecido: erros ENOENT no `next dev`
 

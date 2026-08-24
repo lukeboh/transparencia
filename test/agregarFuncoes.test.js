@@ -16,6 +16,20 @@ function movimento(overrides) {
   };
 }
 
+function agentePublico(overrides) {
+  return {
+    nome: 'Fulano de Tal',
+    matricula: '12345',
+    cargo: 'Analista Judiciário',
+    funcao: { tipo: 'FC', nivel: 6, cargoTitulo: 'Chefe de Seção' },
+    lotacao: 'Secretaria de Administração',
+    atoProvimento: 'PORTARIA nº 1/2020',
+    dataPublicacao: '01/01/2020',
+    observacoes: [],
+    ...overrides,
+  };
+}
+
 test('construirMandatos: pareia início e fim em um único mandato encerrado', () => {
   const movs = [
     movimento({ tipo: 'inicio', dataEfetiva: '2020-01-01', portaria: { numero: '1', url: 'https://x/1' } }),
@@ -105,9 +119,18 @@ const contratosExemplo = [
   },
 ];
 
+test('agregarFuncoes: usa a relação de agentes públicos como universo primário (só quem tem função)', () => {
+  const agentes = [agentePublico(), agentePublico({ nome: 'Sem Funcao Nenhuma', funcao: null })];
+  const { servidores } = agregarFuncoes(agentes, [], []);
+  assert.equal(servidores.length, 1);
+  assert.equal(servidores[0].nome, 'Fulano de Tal');
+  assert.equal(servidores[0].naRelacaoAtual, true);
+  assert.deepEqual(servidores[0].funcaoAtual, { tipo: 'FC', nivel: 6, cargoTitulo: 'Chefe de Seção' });
+});
+
 test('agregarFuncoes: marca zeroFiscal para quem não aparece nos contratos', () => {
-  const movs = [movimento({ nome: 'Ciclano Sem Contrato', tipo: 'inicio', dataEfetiva: '2020-01-01' })];
-  const { servidores } = agregarFuncoes(movs, contratosExemplo);
+  const agentes = [agentePublico({ nome: 'Ciclano Sem Contrato' })];
+  const { servidores } = agregarFuncoes(agentes, [], contratosExemplo);
   const ciclano = servidores.find((s) => s.nome === 'Ciclano Sem Contrato');
   assert.equal(ciclano.zeroFiscal, true);
 });
@@ -117,10 +140,10 @@ test('agregarFuncoes: anexa a função correta ao contrato coberto pela vigênci
     movimento({ nome: 'Fulano de Tal', tipo: 'inicio', dataEfetiva: '2020-01-01', nivel: 6 }),
     movimento({ nome: 'Fulano de Tal', tipo: 'fim', dataEfetiva: '2021-01-01', nivel: 6 }),
   ];
-  const { servidores, rankingComFuncao } = agregarFuncoes(movs, contratosExemplo);
+  const agentes = [agentePublico({ funcao: null })]; // já dispensado hoje, sem função atual
+  const { servidores, rankingComFuncao } = agregarFuncoes(agentes, movs, contratosExemplo);
 
   const fulano = servidores.find((s) => s.nome === 'Fulano de Tal');
-  assert.equal(fulano.zeroFiscal, false);
   assert.equal(fulano.mandatos.length, 1);
 
   const linha = rankingComFuncao.find((r) => r.nome === 'Fulano de Tal');
@@ -128,4 +151,36 @@ test('agregarFuncoes: anexa a função correta ao contrato coberto pela vigênci
   const contrato2 = linha.contratos.find((c) => c.id === '2');
   assert.deepEqual(contrato1.funcaoNoContrato, { tipo: 'FC', nivel: 6, cargoTitulo: 'Chefe de Seção' });
   assert.equal(contrato2.funcaoNoContrato, null);
+});
+
+test('agregarFuncoes: quem só aparece no histórico de portarias (não está mais na relação atual) entra sinalizado', () => {
+  const movs = [movimento({ nome: 'Saiu Do Tse', tipo: 'inicio', dataEfetiva: '2020-01-01' })];
+  const { servidores } = agregarFuncoes([], movs, []);
+  const s = servidores.find((x) => x.nome === 'Saiu Do Tse');
+  assert.equal(s.naRelacaoAtual, false);
+  assert.equal(s.funcaoAtual, null);
+  assert.ok(s.observacoes.some((o) => o.includes('Não consta na relação atual')));
+});
+
+test('agregarFuncoes: registra observação quando a fonte atual tem função mas o histórico de portarias não confirma nenhuma vigente', () => {
+  const agentes = [agentePublico()]; // funcaoAtual FC-6, sem nenhum movimento de portaria
+  const { servidores } = agregarFuncoes(agentes, [], []);
+  const s = servidores.find((x) => x.nome === 'Fulano de Tal');
+  assert.ok(s.observacoes.some((o) => o.includes('nenhuma portaria de nomeação vigente')));
+});
+
+test('agregarFuncoes: registra observação quando o nível vigente das duas fontes diverge', () => {
+  const agentes = [agentePublico({ funcao: { tipo: 'FC', nivel: 6, cargoTitulo: 'Chefe de Seção' } })];
+  const movs = [movimento({ nome: 'Fulano de Tal', tipo: 'inicio', nivel: 3, dataEfetiva: '2020-01-01' })];
+  const { servidores } = agregarFuncoes(agentes, movs, []);
+  const s = servidores.find((x) => x.nome === 'Fulano de Tal');
+  assert.ok(s.observacoes.some((o) => o.includes('Divergência entre fontes')));
+});
+
+test('agregarFuncoes: registra observação quando o histórico indica vigente mas a fonte atual não mostra função', () => {
+  const movs = [movimento({ nome: 'Fulano de Tal', tipo: 'inicio', dataEfetiva: '2020-01-01' })];
+  const agentes = [agentePublico({ funcao: null })];
+  const { servidores } = agregarFuncoes(agentes, movs, []);
+  const s = servidores.find((x) => x.nome === 'Fulano de Tal');
+  assert.ok(s.observacoes.some((o) => o.includes('a relação atual de agentes públicos não mostra função')));
 });

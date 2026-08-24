@@ -5,6 +5,7 @@ import path from 'node:path';
 // servidor do app porque a fonte não envia CORS nem expõe o cookie/CSRF a
 // outros domínios — o navegador não conseguiria fazê-lo diretamente.
 import { scrapeContratos } from '../../../../../src/tse/scrapeContratos.js';
+import { scrapeAgentesPublicos } from '../../../../../src/tse/scrapeAgentesPublicos.js';
 import { scrapeFuncoes } from '../../../../../src/tse/scrapeFuncoes.js';
 import { agregarDashboard } from '../../../../../src/tse/agregarDashboard.js';
 import type { DashboardData } from '@/lib/dashboard-data';
@@ -16,10 +17,11 @@ const INTERVALO_ERRO_MS = 10 * 60 * 1000; // espera após falha antes de tentar 
 const ARQUIVO_CACHE = path.join(process.cwd(), '.cache', 'tse-dados.json');
 
 interface Progresso {
-  // 'funcoes' é o histórico completo de portarias (1999–hoje): a primeira
-  // execução baixa milhares de páginas e pode levar dezenas de minutos; as
-  // seguintes são incrementais (só portarias novas) e rápidas.
-  fase: 'contratos' | 'funcoes';
+  // 'agentes' é a fonte primária (relação atual de agentes públicos) — uma
+  // única página, rápida. 'funcoes' é o histórico secundário de portarias
+  // (1999–hoje): a primeira execução baixa milhares de páginas e pode levar
+  // dezenas de minutos; as seguintes são incrementais (só portarias novas).
+  fase: 'contratos' | 'agentes' | 'funcoes';
   feitos: number;
   total: number;
 }
@@ -30,6 +32,9 @@ interface CachePersistido {
   // separados de `dados.contratos` — que é só o resumo truncado para a UI e
   // não serve de entrada para um novo scrape incremental (ver iniciarAtualizacao).
   contratosBrutos: unknown[];
+  // Agentes públicos "crus" (ver scrapeAgentesPublicos.js) — fonte primária,
+  // sempre buscada por inteiro (é uma única página rápida, sem cache incremental).
+  agentesPublicosBrutos: unknown[];
   // Movimentos "crus" de função comissionada (ver scrapeFuncoes.js),
   // persistidos para que o backfill histórico completo só precise rodar uma
   // vez — execuções seguintes só buscam portarias novas.
@@ -39,6 +44,7 @@ interface CachePersistido {
 interface EstadoCache {
   dados: DashboardData | null;
   contratosBrutos: unknown[] | null;
+  agentesPublicosBrutos: unknown[] | null;
   movimentosFuncoesBrutos: unknown[] | null;
   carregouDisco: boolean;
   atualizando: boolean;
@@ -55,6 +61,7 @@ function estado(): EstadoCache {
   g.__tseEstado ??= {
     dados: null,
     contratosBrutos: null,
+    agentesPublicosBrutos: null,
     movimentosFuncoesBrutos: null,
     carregouDisco: false,
     atualizando: false,
@@ -76,10 +83,12 @@ async function carregarDoDisco(e: EstadoCache) {
       const persistido = bruto as CachePersistido;
       e.dados = persistido.dados;
       e.contratosBrutos = persistido.contratosBrutos ?? null;
+      e.agentesPublicosBrutos = persistido.agentesPublicosBrutos ?? null;
       e.movimentosFuncoesBrutos = persistido.movimentosFuncoesBrutos ?? null;
     } else {
       e.dados = bruto as DashboardData;
       e.contratosBrutos = null;
+      e.agentesPublicosBrutos = null;
       e.movimentosFuncoesBrutos = null;
     }
   } catch {
@@ -110,10 +119,19 @@ function iniciarAtualizacao(e: EstadoCache) {
       });
       e.contratosBrutos = contratos;
 
-      // Histórico completo de portarias (1999–hoje): a primeira execução é
-      // um backfill pesado (milhares de páginas); com `movimentosFuncoesBrutos`
-      // já persistido, as próximas só buscam os índices de ano (baratos) e as
-      // poucas portarias novas.
+      // Fonte PRIMÁRIA para função comissionada: relação atual de agentes
+      // públicos, uma única página rápida — roda primeiro, sem cache
+      // incremental (sempre busca tudo de novo, é barato).
+      e.progresso = { fase: 'agentes', feitos: 0, total: 1 };
+      const agentesPublicos = await scrapeAgentesPublicos();
+      e.agentesPublicosBrutos = agentesPublicos;
+      e.progresso = { fase: 'agentes', feitos: 1, total: 1 };
+
+      // Fonte SECUNDÁRIA, só para histórico: portarias (1999–hoje). Roda
+      // depois da primária, de propósito — a primeira execução é um
+      // backfill pesado (milhares de páginas); com `movimentosFuncoesBrutos`
+      // já persistido, as próximas só buscam os índices de ano (baratos) e
+      // as poucas portarias novas.
       const movimentosFuncoes = await scrapeFuncoes({
         cacheMovimentos: e.movimentosFuncoesBrutos ?? undefined,
         onProgress: (feitos: number, total: number) => {
@@ -122,11 +140,12 @@ function iniciarAtualizacao(e: EstadoCache) {
       });
       e.movimentosFuncoesBrutos = movimentosFuncoes;
 
-      e.dados = agregarDashboard(contratos, movimentosFuncoes) as DashboardData;
+      e.dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos) as DashboardData;
       await fs.mkdir(path.dirname(ARQUIVO_CACHE), { recursive: true });
       const persistido: CachePersistido = {
         dados: e.dados,
         contratosBrutos: contratos,
+        agentesPublicosBrutos: agentesPublicos,
         movimentosFuncoesBrutos: movimentosFuncoes,
       };
       await fs.writeFile(ARQUIVO_CACHE, JSON.stringify(persistido), 'utf8');

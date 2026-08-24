@@ -40,23 +40,25 @@ function rotuloFatia(fatia: FatiaFuncao) {
 /**
  * Quantidade de servidores por função vigente hoje (tipo-nível), em ordem
  * fixa FC-1..6, CJ-1..4, com uma fatia "Sem função" para quem está no grupo
- * mas não tem nenhuma função ativa agora (ex.: um "Zero Fiscal" que só teve
- * função no passado) — assim o donut sempre soma o total do grupo recebido,
- * sem precisar de um número à parte para explicar a diferença.
+ * mas não tem função vigente na fonte primária agora (ex.: um "Zero Fiscal"
+ * que só teve função no passado) — assim o donut sempre soma o total do
+ * grupo recebido, sem precisar de um número à parte para explicar a
+ * diferença. `funcaoAtual` vem da relação atual de agentes públicos (fonte
+ * primária, mais confiável para "hoje" que o histórico de portarias).
  */
 export function contarPorFuncaoAtual(servidores: ServidorFuncoes[]): FatiaFuncao[] {
   const contagem = new Map<string, FatiaFuncao>();
   let semFuncao = 0;
   for (const s of servidores) {
-    const vigente = s.mandatos.find((m) => m.vigente);
-    if (!vigente) {
+    const atual = s.funcaoAtual;
+    if (!atual) {
       semFuncao += 1;
       continue;
     }
-    const chave = `${vigente.tipo}-${vigente.nivel}`;
-    const atual = contagem.get(chave) ?? { tipo: vigente.tipo, nivel: vigente.nivel, quantidade: 0 };
-    atual.quantidade += 1;
-    contagem.set(chave, atual);
+    const chave = `${atual.tipo}-${atual.nivel}`;
+    const fatia = contagem.get(chave) ?? { tipo: atual.tipo, nivel: atual.nivel, quantidade: 0 };
+    fatia.quantidade += 1;
+    contagem.set(chave, fatia);
   }
   const fatias = [...contagem.values()].sort((a, b) =>
     a.tipo === b.tipo ? a.nivel - b.nivel : a.tipo.localeCompare(b.tipo),

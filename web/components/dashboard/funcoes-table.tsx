@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import {
+  AlertTriangle,
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
@@ -48,17 +49,24 @@ function normalizar(texto: string) {
     .toLowerCase();
 }
 
-/** A função vigente, se houver; senão a mais recente encerrada. */
+/**
+ * Função vigente segundo a fonte primária (relação atual de agentes
+ * públicos), quando houver; senão a mais recente do histórico de portarias
+ * (fonte secundária) — cobre quem só consta no histórico.
+ */
 function funcaoDestaque(servidor: ServidorFuncoes) {
+  if (servidor.funcaoAtual) {
+    return { ...servidor.funcaoAtual, vigente: true };
+  }
   const ordenados = [...servidor.mandatos].sort((a, b) =>
     (b.nomeacaoData ?? '').localeCompare(a.nomeacaoData ?? ''),
   );
-  return ordenados.find((m) => m.vigente) ?? ordenados[0] ?? null;
+  return ordenados[0] ?? null;
 }
 
 function FuncoesBadges({ servidor }: { servidor: ServidorFuncoes }) {
   const destaque = funcaoDestaque(servidor);
-  const restantes = servidor.mandatos.length - (destaque ? 1 : 0);
+  const restantes = servidor.mandatos.length - (destaque?.vigente ? 0 : destaque ? 1 : 0);
   if (!destaque) return <span className="text-muted-foreground">—</span>;
   return (
     <span className="flex flex-wrap items-center gap-1">
@@ -252,7 +260,16 @@ export function FuncoesTable({
                   onClick={() => onVerHistorico(servidor)}
                   className="cursor-pointer"
                 >
-                  <TableCell className="font-medium">{nomeProprio(servidor.nome)}</TableCell>
+                  <TableCell className="font-medium">
+                    <span className="inline-flex items-center gap-1.5">
+                      {nomeProprio(servidor.nome)}
+                      {servidor.observacoes.length > 0 && (
+                        <span title={servidor.observacoes.join(' ')}>
+                          <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" aria-hidden />
+                        </span>
+                      )}
+                    </span>
+                  </TableCell>
                   <TableCell>
                     <FuncoesBadges servidor={servidor} />
                   </TableCell>

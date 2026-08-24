@@ -12,6 +12,7 @@ import { agregarDashboard } from './agregarDashboard.js';
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 let entrada = process.argv[2] ?? path.join(raiz, 'data/tse_contratos.json');
 const entradaFuncoes = process.argv[4] ?? path.join(raiz, 'data/tse_funcoes.json');
+const entradaAgentes = process.argv[5] ?? path.join(raiz, 'data/tse_agentes.json');
 const saida = process.argv[3] ?? path.join(raiz, 'web/lib/dashboard-data.ts');
 
 async function main() {
@@ -32,12 +33,22 @@ async function main() {
     movimentosFuncoes = JSON.parse(await readFile(entradaFuncoes, 'utf8'));
   } else {
     console.warn(
-      `[Aviso] '${entradaFuncoes}' não foi encontrado — seção "funcoes" sairá vazia. ` +
+      `[Aviso] '${entradaFuncoes}' não foi encontrado — histórico de função sairá vazio. ` +
       'Rode "npm run tse:scrape-funcoes" para gerá-lo.',
     );
   }
 
-  const dados = agregarDashboard(contratos, movimentosFuncoes);
+  let agentesPublicos = [];
+  if (existsSync(entradaAgentes)) {
+    agentesPublicos = JSON.parse(await readFile(entradaAgentes, 'utf8'));
+  } else {
+    console.warn(
+      `[Aviso] '${entradaAgentes}' não foi encontrado — seção "funcoes" sairá vazia (fonte primária ausente). ` +
+      'Rode "npm run tse:scrape-agentes" para gerá-lo.',
+    );
+  }
+
+  const dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos);
   await escreverDashboardData(dados, saida);
   console.log(
     `  ${contratos.length} contratos · ${dados.evolucao.length} anos · ${dados.categorias.length} fatias de categoria`,
@@ -142,13 +153,35 @@ export interface FuncaoMandato extends FuncaoResumo {
   vigente: boolean;
 }
 
+export interface AtoProvimento {
+  descricao: string | null;
+  data: string | null;
+}
+
 export interface ServidorFuncoes {
   nome: string;
+  /** Matrícula na relação atual de agentes públicos, ou null quando o servidor só consta no histórico de portarias. */
+  matricula: string | null;
+  cargo: string | null;
+  lotacao: string | null;
+  /**
+   * Função vigente segundo a fonte PRIMÁRIA (relação atual de agentes
+   * públicos) — mais confiável para "hoje" que o histórico de portarias.
+   * null quando a fonte atual não mostra função (ex.: só consta no
+   * histórico de portarias, ou foi dispensado).
+   */
+  funcaoAtual: FuncaoResumo | null;
+  atoProvimentoAtual: AtoProvimento | null;
+  /** false quando o servidor só foi encontrado no histórico de portarias (não está na relação atual de agentes públicos). */
+  naRelacaoAtual: boolean;
+  /** Histórico de mandatos reconstruído das portarias (fonte secundária) — pode ficar vazio mesmo com funcaoAtual preenchido. */
+  mandatos: FuncaoMandato[];
   /** true quando a pessoa nunca aparece como fiscal/gestor em nenhum contrato. */
   zeroFiscal: boolean;
-  mandatos: FuncaoMandato[];
   /** Índice em DashboardData.responsaveis.ranking, ou null quando zeroFiscal. */
   responsavelRankingIndex: number | null;
+  /** Inconsistências encontradas (formato inesperado na fonte, divergência entre fonte atual e histórico de portarias, etc.) — para investigação futura, não afetam o resto dos dados. */
+  observacoes: string[];
 }
 
 export interface FuncoesData {

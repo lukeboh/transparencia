@@ -25,6 +25,7 @@ export function FuncoesDashboard() {
   const todasFuncoes = useMemo(() => {
     const set = new Set<string>();
     for (const s of funcoes.servidores) {
+      if (s.funcaoAtual) set.add(`${s.funcaoAtual.tipo}-${s.funcaoAtual.nivel}`);
       for (const m of s.mandatos) set.add(`${m.tipo}-${m.nivel}`);
     }
     return Array.from(set).sort();
@@ -37,7 +38,11 @@ export function FuncoesDashboard() {
       return funcoes.servidores;
     }
     const set = new Set(funcoesSelecionadas);
-    return funcoes.servidores.filter((s) => s.mandatos.some((m) => set.has(`${m.tipo}-${m.nivel}`)));
+    return funcoes.servidores.filter(
+      (s) =>
+        (s.funcaoAtual && set.has(`${s.funcaoAtual.tipo}-${s.funcaoAtual.nivel}`)) ||
+        s.mandatos.some((m) => set.has(`${m.tipo}-${m.nivel}`)),
+    );
   }, [funcoes.servidores, funcoesSelecionadas, todasFuncoes]);
 
   // Seleciona todas as funções assim que a lista carrega (mesmo padrão do
@@ -51,7 +56,7 @@ export function FuncoesDashboard() {
   // Os 3 KPIs (e seus donuts) refletem o filtro de função aplicado acima —
   // "com função" aqui significa vigente hoje, não o histórico completo.
   const vigentesFiltrados = useMemo(
-    () => servidoresFiltrados.filter((s) => s.mandatos.some((m) => m.vigente)),
+    () => servidoresFiltrados.filter((s) => s.funcaoAtual !== null),
     [servidoresFiltrados],
   );
   const zeroFiscalFiltrados = useMemo(
@@ -88,14 +93,23 @@ export function FuncoesDashboard() {
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight">Funções comissionadas</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Histórico de FC-1 a FC-6 e CJ-1 a CJ-4 de cada servidor, a partir das portarias do TSE ·{' '}
+            FC-1 a FC-6 e CJ-1 a CJ-4 de cada servidor ·{' '}
+            <a
+              href="https://transparencia.tse.jus.br/transparenciaDadosServidores/smvc/relatorios/servidor/relacao-agentes-publicos"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
+            >
+              fonte: relação de agentes públicos
+            </a>{' '}
+            + histórico de{' '}
             <a
               href="https://www.tse.jus.br/legislacao/compilada/prt"
               target="_blank"
               rel="noopener noreferrer"
               className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
             >
-              fonte: legislação compilada do TSE
+              portarias do TSE
             </a>{' '}
             · <DadosStatus estado={estado} />
           </p>
@@ -150,12 +164,14 @@ export function FuncoesDashboard() {
       </div>
 
       <footer className="mt-8 text-xs text-muted-foreground">
-        Cruzamento entre portarias e contratos feito pelo nome do servidor (a
-        fonte de portarias não expõe CPF nem matrícula) — homônimos podem gerar
-        vínculos incorretos. Datas de nomeação/exoneração conforme a publicação
-        no Diário Oficial da União; quando a função ainda está em curso, ou a
-        portaria de início/fim não foi localizada, o histórico indica isso
-        explicitamente.
+        Quem tem função hoje vem da relação atual de agentes públicos do TSE
+        (fonte primária, sem histórico); nomeação/exoneração e servidores que
+        já saíram do órgão vêm do histórico de portarias (fonte secundária,
+        cobertura parcial). Cruzamento entre as duas fontes, e com os
+        contratos, é feito pelo nome do servidor — nenhuma delas expõe CPF
+        nem matrícula em comum — então homônimos podem gerar vínculos
+        incorretos. Divergências entre as fontes aparecem como observação no
+        histórico de cada servidor.
         <AppVersion />
       </footer>
 

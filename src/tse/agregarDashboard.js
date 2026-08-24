@@ -8,7 +8,7 @@ import { anoDe, paraDataISO } from './datas.js';
 
 const MAX_FATIAS = 5; // demais categorias somadas em "Outros"
 
-function agregarDashboard(contratos, movimentosFuncoes = []) {
+function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = []) {
   const hoje = new Date().toISOString().slice(0, 10);
 
   const totalContratado = contratos.reduce((s, c) => s + (c.valorGlobal || 0), 0);
@@ -78,7 +78,7 @@ function agregarDashboard(contratos, movimentosFuncoes = []) {
   const indicePorId = new Map(contratos.map((c, i) => [c.id, i]));
 
   const rankingCompleto = rankResponsaveis(contratos);
-  const { servidores: servidoresFuncoes, rankingComFuncao } = agregarFuncoes(movimentosFuncoes, contratos);
+  const { servidores: servidoresFuncoes, rankingComFuncao } = agregarFuncoes(agentesPublicos, movimentosFuncoes, contratos);
   const calcMediana = (arr) => {
     const s = [...arr].sort((a, b) => a - b);
     const m = Math.floor(s.length / 2);
@@ -141,7 +141,11 @@ function agregarDashboard(contratos, movimentosFuncoes = []) {
     funcoes: {
       total: funcoesServidores.length,
       zeroFiscal: funcoesServidores.filter((s) => s.zeroFiscal).length,
-      vigentes: funcoesServidores.filter((s) => s.mandatos.some((m) => m.vigente)).length,
+      // "Vigente" aqui é o que a relação atual de agentes públicos diz — a
+      // fonte primária e mais confiável para o estado de hoje (ver
+      // agregarFuncoes.js); o histórico de portarias entra só como
+      // enriquecimento/checagem, refletido nas observações de cada servidor.
+      vigentes: funcoesServidores.filter((s) => s.funcaoAtual !== null).length,
       servidores: funcoesServidores,
     },
   };
