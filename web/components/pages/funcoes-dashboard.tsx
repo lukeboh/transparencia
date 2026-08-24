@@ -124,21 +124,18 @@ export function FuncoesDashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <FuncaoStatCard
             titulo="Servidores com função"
-            valor={numero(vigentesFiltrados.length)}
             detalhe={`${numero(servidoresFiltrados.length)} no histórico`}
             icone={<Briefcase className="h-4 w-4" aria-hidden />}
             contagens={donutVigentes}
           />
           <FuncaoStatCard
             titulo="Zero Fiscal"
-            valor={numero(zeroFiscalFiltrados.length)}
             detalhe="nunca aparecem como fiscal/gestor de contrato"
             icone={<Ban className="h-4 w-4" aria-hidden />}
             contagens={donutZeroFiscal}
           />
           <FuncaoStatCard
             titulo="Servidores Fiscais"
-            valor={numero(fiscaisFiltrados.length)}
             detalhe="com função comissionada e ao menos um contrato"
             icone={<ShieldCheck className="h-4 w-4" aria-hidden />}
             contagens={donutFiscais}

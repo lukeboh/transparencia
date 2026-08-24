@@ -17,7 +17,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   `/funcoes`) — testado contra a fonte real (ver seção própria abaixo).
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.3**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.4**.
 
 ## Dashboard web
 
@@ -314,3 +314,54 @@ alertas de contratos perto do vencimento, etc.
   luz, reinício, etc.) perde todo o progresso. Salvar incrementalmente (ex.:
   a cada lote de portarias baixadas) permitiria que uma reinicialização
   retome de onde parou, ou pelo menos com perda mínima de esforço.
+
+### Bugs conhecidos no parser de nomes (`scrapeFuncoes.js`) — registrados, não corrigidos
+
+`extrairMovimentos` erra o campo `nome` em pelo menos três situações reais
+(confirmadas na fonte, mantidas como estão até correção futura):
+
+- **Cláusula inicial maiúscula antes do nome.** O item às vezes começa com uma
+  cláusula administrativa antes do nome de fato — "I - **A partir de** 27 de
+  janeiro de 2020, GEOFLÁVIA GUILARDUCCI DE ALVARENGA, ..." ([portaria
+  61/2020](https://www.tse.jus.br/legislacao/compilada/prt/2020/portaria-no-61-de-29-de-janeiro-de-2020))
+  ou "I - **A pedido**, Ana Cláudia Braga Mendonça, ..." ([portaria
+  718/2022](https://www.tse.jus.br/legislacao/compilada/prt/2022/portaria-no-718-de-5-de-agosto-de-2022)).
+  O parser já pula uma cláusula inicial em **minúscula** (ver comentário em
+  `extrairMovimentos`), mas essas vêm capitalizadas — por serem o início do
+  item, o português capitaliza a cláusula tanto quanto capitalizaria um nome
+  próprio, então maiúscula/minúscula sozinha não dá pra distinguir os dois
+  casos. `A partir de 27 de janeiro de 2020` e `A pedido` acabam extraídos
+  como se fossem o nome do servidor.
+- **Marcador de item "N)" em vez de "N - ".** Algumas portarias numeram os
+  itens com número romano + parêntese fechando, sem hífen — "XVI)", "LI)",
+  "XXXVIII)" — em vez do "I - " que o parser reconhece (ver [portaria
+  158/2022](https://www.tse.jus.br/legislacao/compilada/prt/2022/portaria-no-158-de-22-de-fevereiro-de-2022),
+  com pelo menos 6 itens nesse formato). Como só o padrão `N -` é removido do
+  início do texto do item, o numeral+parêntese vaza para dentro do campo
+  `nome` (ex.: `nome: "LI) WENDEL SOUSA DE LIMA"`); como esses numerais vêm em
+  minúsculas nama fonte para alguns itens, `nomeProprio()` (título-caso na
+  exibição) ainda capitaliza a primeira letra do numeral, produzindo nomes
+  como "Li) Wendel Sousa de Lima" ou "Xxxviii) Marcelo Pierri Bouchardet" na
+  UI.
+
+Qualquer correção futura deve evitar decidir "é cláusula ou é nome" só pela
+capitalização — melhor caminho provável é uma lista explícita de cláusulas
+conhecidas a pular ("a partir de ...", "a pedido", "de ofício", etc.,
+case-insensitive) combinada com um regex de marcador de item mais abrangente
+(`^[IVXLCDM]+\s*[-)]\s*`, cobrindo tanto "N - " quanto "N) ").
+
+### Problema operacional conhecido: erros ENOENT no `next dev`
+
+Em uma sessão de teste apareceram erros como:
+
+```
+⨯ [Error: ENOENT: ... open '...\web\.next\prerender-manifest.json']
+⨯ [Error: ENOENT: ... open '...\web\.next\server\app\api\tse\dados\route.js']
+```
+
+Não investigado a fundo, mas a hipótese mais provável é **mais de um `next
+dev` rodando ao mesmo tempo apontando para a mesma pasta `web/.next`** — cada
+instância trata `.next` como cache exclusivo seu, e duas escrevendo/lendo
+esses manifests ao mesmo tempo pode fazer uma delas pegar um arquivo que a
+outra acabou de apagar/recompilar. Se acontecer: parar os `next dev`
+duplicados, apagar `web/.next` e subir de novo com um único processo.
