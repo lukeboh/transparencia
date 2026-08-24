@@ -17,7 +17,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   `/funcoes`) — testado contra a fonte real (ver seção própria abaixo).
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.2**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.3**.
 
 ## Dashboard web
 

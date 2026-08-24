@@ -64,8 +64,11 @@ function candidatasRelevantes(linhas) {
 }
 
 function extrairPortariaRef(html, url) {
+  // O dia 1º do mês é escrito por extenso com o indicador ordinal ("1º"),
+  // não "01" — daí o "º|°" opcional entre o número e "DE". O símbolo depois
+  // de "N" também varia na fonte entre "º" (ordinal) e "°" (grau).
   const m = html.match(
-    /<h1>\s*PORTARIA\s*Nº\s*([^,<]+),\s*DE\s*(\d{1,2})\s*DE\s*([A-ZÇ]+)\s*DE\s*(\d{4})\s*<\/h1>/i,
+    /<h1>\s*PORTARIA\s*N(?:º|°)\s*([^,<]+),\s*DE\s*(\d{1,2})\s*(?:º|°)?\s*DE\s*([A-ZÇ]+)\s*DE\s*(\d{4})\s*<\/h1>/i,
   );
   if (!m) return { numero: null, ano: null, data: null, url };
   const [, numero, dia, mesNome, ano] = m;
@@ -114,12 +117,17 @@ function extrairMovimentos(html, portariaRef) {
   const movimentos = [];
 
   for (const paragrafo of paragrafos) {
+    // Duas redações equivalentes na fonte: a forma passiva ("Fica(m)
+    // dispensado(s)/designados") e, em portarias mais novas, o imperativo
+    // logo após o número do artigo ("Art. 1º Dispensar Fulano..." / "Art. 2º
+    // Designar:").
     const verbMatch = paragrafo.match(
-      /Fica(?:m)?\s+(dispensad[oa]s?|exonerad[oa]s?|designad[oa]s?|nomead[oa]s?)/i,
+      /Fica(?:m)?\s+(dispensad[oa]s?|exonerad[oa]s?|designad[oa]s?|nomead[oa]s?)|Art\.?\s*\d+º?\s*(Dispensar|Exonerar|Designar|Nomear)\b/i,
     );
     let itemTexto;
     if (verbMatch) {
-      modoAtual = /dispens|exonera/i.test(verbMatch[1]) ? 'fim' : 'inicio';
+      const verbo = verbMatch[1] ?? verbMatch[2];
+      modoAtual = /dispens|exonera/i.test(verbo) ? 'fim' : 'inicio';
       itemTexto = paragrafo.slice(verbMatch.index + verbMatch[0].length).replace(/^\s*:\s*/, '').trim();
     } else {
       itemTexto = paragrafo.replace(/^[IVXLCDM]+\s*-\s*/, '').trim();

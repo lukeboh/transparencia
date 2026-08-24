@@ -4,7 +4,6 @@ data/discovery/*.png
 data/discovery/*.html
 data/discovery/*.json
 data/tse_contratos.json
-data/tse_funcoes.json
 data/ranking_responsaveis.csv
 web/node_modules/
 web/.next/

@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpRight, Ban, Briefcase, ShieldCheck, Users } from 'lucide-react';
-import { StatCard } from '@/components/dashboard/stat-card';
+import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
+import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
 import { PapeisFilter } from '@/components/dashboard/papeis-filter';
 import { FuncoesTable } from '@/components/dashboard/funcoes-table';
 import { FuncoesHistoricoDialog } from '@/components/dashboard/funcoes-historico-dialog';
@@ -46,6 +47,25 @@ export function FuncoesDashboard() {
       setFuncoesSelecionadas(todasFuncoes);
     }
   }, [todasFuncoes]);
+
+  // Os 3 KPIs (e seus donuts) refletem o filtro de função aplicado acima —
+  // "com função" aqui significa vigente hoje, não o histórico completo.
+  const vigentesFiltrados = useMemo(
+    () => servidoresFiltrados.filter((s) => s.mandatos.some((m) => m.vigente)),
+    [servidoresFiltrados],
+  );
+  const zeroFiscalFiltrados = useMemo(
+    () => servidoresFiltrados.filter((s) => s.zeroFiscal),
+    [servidoresFiltrados],
+  );
+  const fiscaisFiltrados = useMemo(
+    () => servidoresFiltrados.filter((s) => !s.zeroFiscal),
+    [servidoresFiltrados],
+  );
+
+  const donutVigentes = useMemo(() => contarPorFuncaoAtual(vigentesFiltrados), [vigentesFiltrados]);
+  const donutZeroFiscal = useMemo(() => contarPorFuncaoAtual(zeroFiscalFiltrados), [zeroFiscalFiltrados]);
+  const donutFiscais = useMemo(() => contarPorFuncaoAtual(fiscaisFiltrados), [fiscaisFiltrados]);
 
   const [historicoAberto, setHistoricoAberto] = useState<ServidorFuncoes | null>(null);
   const [contratosDe, setContratosDe] = useState<ServidorFuncoes | null>(null);
@@ -102,23 +122,26 @@ export function FuncoesDashboard() {
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard
+          <FuncaoStatCard
             titulo="Servidores com função"
-            valor={numero(funcoes.total)}
-            detalhe={`${numero(funcoes.vigentes)} com função vigente hoje`}
+            valor={numero(vigentesFiltrados.length)}
+            detalhe={`${numero(servidoresFiltrados.length)} no histórico`}
             icone={<Briefcase className="h-4 w-4" aria-hidden />}
+            contagens={donutVigentes}
           />
-          <StatCard
+          <FuncaoStatCard
             titulo="Zero Fiscal"
-            valor={numero(funcoes.zeroFiscal)}
+            valor={numero(zeroFiscalFiltrados.length)}
             detalhe="nunca aparecem como fiscal/gestor de contrato"
             icone={<Ban className="h-4 w-4" aria-hidden />}
+            contagens={donutZeroFiscal}
           />
-          <StatCard
-            titulo="Também fiscalizam contrato"
-            valor={numero(funcoes.total - funcoes.zeroFiscal)}
+          <FuncaoStatCard
+            titulo="Servidores Fiscais"
+            valor={numero(fiscaisFiltrados.length)}
             detalhe="com função comissionada e ao menos um contrato"
             icone={<ShieldCheck className="h-4 w-4" aria-hidden />}
+            contagens={donutFiscais}
           />
         </div>
 
