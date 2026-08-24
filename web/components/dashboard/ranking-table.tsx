@@ -133,7 +133,11 @@ export function contratosDoResponsavel(
   contratos: ContratoResumo[],
 ): ContratoAuditavel[] {
   return linha.contratos
-    .map(({ i, papeis }) => ({ ...contratos[i], papeisNoContrato: papeis }))
+    .map(({ i, papeis, funcaoNoContrato }) => ({
+      ...contratos[i],
+      papeisNoContrato: papeis,
+      funcaoNoContrato,
+    }))
     .sort((a, b) => b.valorGlobal - a.valorGlobal);
 }
 

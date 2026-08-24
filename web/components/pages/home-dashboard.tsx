@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowUpRight, Users } from 'lucide-react';
+import { ArrowUpRight, Briefcase, Users } from 'lucide-react';
 import { StatCards } from '@/components/dashboard/stat-cards';
 import { EvolucaoChart } from '@/components/dashboard/evolucao-chart';
 import { CategoriasChart } from '@/components/dashboard/categorias-chart';
@@ -42,6 +42,14 @@ export function HomeDashboard() {
           >
             <Users className="h-4 w-4" aria-hidden />
             Responsáveis
+            <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+          </Link>
+          <Link
+            href="/funcoes"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <Briefcase className="h-4 w-4" aria-hidden />
+            Funções
             <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
           </Link>
           <ThemePicker />

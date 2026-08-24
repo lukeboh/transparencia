@@ -15,5 +15,16 @@ declare module '*src/tse/scrapeContratos.js' {
 }
 
 declare module '*src/tse/agregarDashboard.js' {
-  export function agregarDashboard(contratos: unknown[]): unknown;
+  export function agregarDashboard(contratos: unknown[], movimentosFuncoes?: unknown[]): unknown;
+}
+
+declare module '*src/tse/scrapeFuncoes.js' {
+  export interface OpcoesScrapeFuncoes {
+    anoInicio?: number;
+    anoFim?: number;
+    concurrency?: number;
+    cacheMovimentos?: unknown[];
+    onProgress?: (feitos: number, total: number) => void;
+  }
+  export function scrapeFuncoes(opcoes?: OpcoesScrapeFuncoes): Promise<unknown[]>;
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Crown, Scale, Users } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Briefcase, Crown, Scale, Users } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { RankingChart } from '@/components/dashboard/ranking-chart';
 import { RankingTable } from '@/components/dashboard/ranking-table';
@@ -147,6 +147,14 @@ export function ResponsaveisDashboard() {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <Link
+            href="/funcoes"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <Briefcase className="h-4 w-4" aria-hidden />
+            Funções
+            <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+          </Link>
           <ThemePicker />
           <ThemeToggle />
         </div>

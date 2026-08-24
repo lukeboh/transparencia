@@ -13,9 +13,11 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   contra a API oficial, 1268 contratos extraídos com sucesso.
 - ✅ Dashboard web (`web/`) — Next.js (App Router) + Tailwind CSS + componentes
   no padrão shadcn/ui + Recharts, com dados reais agregados.
+- ✅ Funções comissionadas FC/CJ por servidor (`src/tse/scrapeFuncoes.js`,
+  `/funcoes`) — testado contra a fonte real (ver seção própria abaixo).
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.1**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.2**.
 
 ## Dashboard web
 
@@ -220,9 +222,95 @@ consolidado e quantidade de contratos.
 - `--papeis` filtra quais papéis contam para o ranking (por padrão, todos:
   fiscais e gestores).
 
+## Funções comissionadas (FC/CJ)
+
+A rota `/funcoes` (linkada no header) traz **todo servidor do TSE que já
+ocupou uma Função Comissionada (FC-1 a FC-6) ou um Cargo em Comissão (CJ-1 a
+CJ-4)**, fiscalizando contrato ou não — histórico completo de nomeação e
+exoneração de cada função, com data e link da portaria correspondente.
+Servidores que nunca aparecem como fiscal/gestor de nenhum contrato recebem a
+tag **"Zero Fiscal"**. Filtro por tipo/nível de função e busca por nome,
+mesmo padrão da tabela de Responsáveis. Também é possível ver, para quem
+fiscaliza algum contrato, a lista desses contratos (reaproveitando o mesmo
+modal auditável da página de Responsáveis) — e, na própria página de
+Responsáveis, cada contrato listado no modal de um fiscal mostra uma tag
+(ex.: "FC-6") com a função que esse fiscal ocupava durante a vigência
+daquele contrato específico, quando houver.
+
+### Fonte e extração
+
+A fonte é o índice de legislação compilada do TSE:
+[`https://www.tse.jus.br/legislacao/compilada/prt`](https://www.tse.jus.br/legislacao/compilada/prt),
+com uma subpágina por ano (`.../prt/{ano}`) desde 1999. Cada subpágina de ano
+é HTML estático com uma tabela `Portaria | Ementa/Assunto` — `scrapeFuncoes.js`
+usa a ementa para pré-filtrar candidatas (`/função comissionada|cargo em
+comissão/i`, excluindo `/substitu/i` — cobertura eventual de férias/licença,
+que não é uma designação titular) antes de abrir cada portaria.
+
+O texto integral de cada portaria (também HTML estático) traz um ou mais
+"movimentos" — "Fica(m) dispensado(s)/exonerado(s)" (fim de uma função) e
+"Fica(m) designado(s)/nomeado(s)" (início) — cada um com nome do servidor,
+cargo efetivo, título da função/cargo, nível (FC-N ou CJ-N) e unidade.
+`agregarFuncoes.js` pareia esses movimentos cronologicamente por pessoa em
+"mandatos" (início → fim), cruzando com os contratos via
+`rankResponsaveis`/`normalizeNome` (mesma chave de nome normalizado — ver
+"Regras de agregação" acima) para decidir `zeroFiscal` e anexar a função
+correta a cada contrato fiscalizado, por sobreposição de vigência.
+
+**Limitações conhecidas:**
+
+- **Cruzamento só por nome.** A fonte de portarias não expõe CPF nem
+  matrícula — diferente do CPF mascarado que identifica os fiscais de
+  contrato. Homônimos podem gerar vínculos incorretos entre uma portaria e um
+  fiscal de contrato.
+- **Pareamento início/fim é uma heurística FIFO por pessoa** — assume que
+  ninguém acumula duas funções comissionadas ao mesmo tempo (regra geral no
+  serviço público, mas não uma garantia absoluta da fonte).
+- **Data efetiva** é a da publicação no Diário Oficial da União, referenciada
+  no rodapé de cada portaria (a maioria diz apenas "entra em vigor na data de
+  publicação"); cláusulas de vigência retroativa por item não são tratadas.
+- **Retificações** de portarias anteriores não são reconciliadas com o
+  movimento original — cada portaria é interpretada isoladamente.
+
+### Rodando a extração
+
+```bash
+npm run tse:scrape-funcoes                    # histórico completo (1999–hoje) em data/tse_funcoes.json
+npm run tse:scrape-funcoes -- 2024 2026       # só um intervalo de anos, útil para testar
+npm run data                                  # regrava o snapshot embutido com contratos + funções
+```
+
+A primeira execução do histórico completo baixa e interpreta milhares de
+páginas (uma por portaria relevante desde 1999) e pode levar dezenas de
+minutos; execuções seguintes são incrementais — os resultados já
+processados ficam em cache por URL de portaria, então só os índices de ano
+(baratos) e as poucas portarias novas são buscados de novo. O app web faz
+isso automaticamente em segundo plano (mesmo mecanismo de atualização dos
+contratos, ver acima), persistindo o cache em `web/.cache/`.
+
 ## Próximas funcionalidades (roadmap)
 
 Este é o primeiro módulo de uma aplicação maior de transparência de órgãos
 públicos. Outras ideias ficam para depois de validar esta primeira entrega:
 histórico de aditivos por contrato, comparação de preços entre órgãos,
 alertas de contratos perto do vencimento, etc.
+
+### Melhorias pendentes no scraper de funções (`scrapeFuncoes.js`)
+
+- **Paralelizar também a busca dos índices de ano.** Hoje só o detalhe de
+  cada portaria é buscado em lotes paralelos (`concurrency`); os índices de
+  ano (`.../prt/{ano}`) são buscados um de cada vez, em sequência — dá pra
+  acelerar o backfill histórico paralelizando isso também.
+- **Sincronização incremental "desde a última vez".** Cada execução hoje
+  reconsulta o índice de todos os anos, mesmo os já encerrados (cujas
+  portarias nunca mudam depois de publicadas). Guardar quais anos já foram
+  totalmente sincronizados e, numa atualização incremental, revisitar só
+  o(s) ano(s) em aberto (atual e possivelmente o anterior, por causa de
+  publicação tardia no DOU) evitaria esse trabalho redundante e tornaria as
+  atualizações automáticas do app bem mais rápidas.
+- **Persistir parciais durante a execução, não só no fim.** Hoje nada é
+  gravado em disco até a extração inteira terminar — numa varredura
+  histórica de dezenas de minutos, uma queda do processo no meio (falta de
+  luz, reinício, etc.) perde todo o progresso. Salvar incrementalmente (ex.:
+  a cada lote de portarias baixadas) permitiria que uma reinicialização
+  retome de onde parou, ou pelo menos com perda mínima de esforço.

@@ -8,14 +8,19 @@ import type { EstadoDados } from '@/lib/use-dados';
 export function DadosStatus({ estado }: { estado: EstadoDados }) {
   if (estado.atualizando) {
     const { progresso } = estado;
+    const rotulo =
+      progresso?.fase === 'funcoes' ? 'atualizando funções comissionadas' : 'atualizando da fonte';
     return (
       <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
         <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden />
-        atualizando da fonte
+        {rotulo}
         {progresso && progresso.total > 0 && (
           <span className="tabular-nums">
             {numero(progresso.feitos)}/{numero(progresso.total)}
           </span>
+        )}
+        {progresso?.fase === 'funcoes' && (
+          <span className="hidden sm:inline">(1ª vez pode levar dezenas de minutos)</span>
         )}
       </span>
     );

@@ -11,6 +11,7 @@ import { agregarDashboard } from './agregarDashboard.js';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 let entrada = process.argv[2] ?? path.join(raiz, 'data/tse_contratos.json');
+const entradaFuncoes = process.argv[4] ?? path.join(raiz, 'data/tse_funcoes.json');
 const saida = process.argv[3] ?? path.join(raiz, 'web/lib/dashboard-data.ts');
 
 async function main() {
@@ -25,8 +26,26 @@ async function main() {
   }
 
   const contratos = JSON.parse(await readFile(entrada, 'utf8'));
-  const dados = agregarDashboard(contratos);
 
+  let movimentosFuncoes = [];
+  if (existsSync(entradaFuncoes)) {
+    movimentosFuncoes = JSON.parse(await readFile(entradaFuncoes, 'utf8'));
+  } else {
+    console.warn(
+      `[Aviso] '${entradaFuncoes}' não foi encontrado — seção "funcoes" sairá vazia. ` +
+      'Rode "npm run tse:scrape-funcoes" para gerá-lo.',
+    );
+  }
+
+  const dados = agregarDashboard(contratos, movimentosFuncoes);
+  await escreverDashboardData(dados, saida);
+  console.log(
+    `  ${contratos.length} contratos · ${dados.evolucao.length} anos · ${dados.categorias.length} fatias de categoria`,
+  );
+}
+
+/** Escreve o snapshot embutido em `saida` a partir de um DashboardData já agregado. */
+async function escreverDashboardData(dados, saida) {
   const ts = `// Gerado por src/tse/buildDashboardData.js — não editar manualmente.
 // Fonte: ${dados.fonte}
 // Extraído em: ${dados.geradoEm}
@@ -72,10 +91,18 @@ export interface ContratoResumo {
   vigente: boolean;
 }
 
+export interface FuncaoResumo {
+  tipo: 'FC' | 'CJ';
+  nivel: number;
+  cargoTitulo: string;
+}
+
 export interface ContratoDoResponsavel {
   /** Índice na tabela DashboardData.contratos. */
   i: number;
   papeis: string[];
+  /** Função comissionada que a pessoa ocupava durante a vigência deste contrato, quando houver. */
+  funcaoNoContrato: FuncaoResumo | null;
 }
 
 export interface LinhaRanking {
@@ -97,6 +124,40 @@ export interface ResponsaveisData {
   ranking: LinhaRanking[];
 }
 
+export interface PortariaRef {
+  numero: string | null;
+  ano: number | null;
+  data: string | null;
+  url: string;
+}
+
+export interface FuncaoMandato extends FuncaoResumo {
+  unidade: string;
+  /** Data efetiva (ISO) da nomeação/designação, ou null quando a portaria de início não foi localizada. */
+  nomeacaoData: string | null;
+  nomeacaoPortaria: PortariaRef | null;
+  /** Data efetiva (ISO) da exoneração/dispensa, ou null quando o mandato segue vigente. */
+  exoneracaoData: string | null;
+  exoneracaoPortaria: PortariaRef | null;
+  vigente: boolean;
+}
+
+export interface ServidorFuncoes {
+  nome: string;
+  /** true quando a pessoa nunca aparece como fiscal/gestor em nenhum contrato. */
+  zeroFiscal: boolean;
+  mandatos: FuncaoMandato[];
+  /** Índice em DashboardData.responsaveis.ranking, ou null quando zeroFiscal. */
+  responsavelRankingIndex: number | null;
+}
+
+export interface FuncoesData {
+  total: number;
+  zeroFiscal: number;
+  vigentes: number;
+  servidores: ServidorFuncoes[];
+}
+
 export interface DashboardData {
   geradoEm: string;
   fonte: string;
@@ -105,6 +166,7 @@ export interface DashboardData {
   categorias: FatiaCategoria[];
   contratos: ContratoResumo[];
   responsaveis: ResponsaveisData;
+  funcoes: FuncoesData;
 }
 
 /** URL do contrato detalhado na consulta pública do Comprasnet. */
@@ -117,12 +179,18 @@ export const dashboardData: DashboardData = ${JSON.stringify(dados)};
 
   await writeFile(saida, ts, 'utf8');
   console.log(`Gerado ${saida}`);
-  console.log(
-    `  ${contratos.length} contratos · ${dados.evolucao.length} anos · ${dados.categorias.length} fatias de categoria`,
-  );
 }
 
-main().catch((err) => {
-  console.error('Falha ao gerar dados do dashboard:', err);
-  process.exit(1);
-});
+const isMain = Boolean(
+  process.argv[1] &&
+  fileURLToPath(import.meta.url).toLowerCase() === path.resolve(process.argv[1]).toLowerCase()
+);
+
+if (isMain) {
+  main().catch((err) => {
+    console.error('Falha ao gerar dados do dashboard:', err);
+    process.exit(1);
+  });
+}
+
+export { escreverDashboardData };

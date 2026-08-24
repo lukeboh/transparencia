@@ -3,9 +3,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { dashboardData, type DashboardData } from '@/lib/dashboard-data';
 
+interface Progresso {
+  fase: 'contratos' | 'funcoes';
+  feitos: number;
+  total: number;
+}
+
 interface StatusApi {
   atualizando: boolean;
-  progresso: { feitos: number; total: number } | null;
+  progresso: Progresso | null;
   erro: string | null;
   geradoEm: string | null;
 }
@@ -15,7 +21,7 @@ export interface EstadoDados {
   /** 'embutido' = snapshot do build; 'fonte' = atualizado em runtime pela API. */
   origem: 'embutido' | 'fonte';
   atualizando: boolean;
-  progresso: { feitos: number; total: number } | null;
+  progresso: Progresso | null;
 }
 
 const INTERVALO_POLL_MS = 2500;

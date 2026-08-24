@@ -2,21 +2,13 @@
 // app web. Usada tanto pelo gerador de snapshot (buildDashboardData.js) quanto
 // pela rota de API do app (web/app/api/tse/dados), que atualiza os dados em
 // runtime a partir da fonte.
-import { rankResponsaveis } from './rankResponsaveis.js';
+import { rankResponsaveis, normalizeNome } from './rankResponsaveis.js';
+import { agregarFuncoes } from './agregarFuncoes.js';
+import { anoDe, paraDataISO } from './datas.js';
 
 const MAX_FATIAS = 5; // demais categorias somadas em "Outros"
 
-function anoDe(dataBr) {
-  const m = /(\d{4})$/.exec(dataBr ?? '');
-  return m ? Number(m[1]) : undefined;
-}
-
-function paraDataISO(dataBr) {
-  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dataBr ?? '');
-  return m ? `${m[3]}-${m[2]}-${m[1]}` : undefined;
-}
-
-function agregarDashboard(contratos) {
+function agregarDashboard(contratos, movimentosFuncoes = []) {
   const hoje = new Date().toISOString().slice(0, 10);
 
   const totalContratado = contratos.reduce((s, c) => s + (c.valorGlobal || 0), 0);
@@ -86,6 +78,7 @@ function agregarDashboard(contratos) {
   const indicePorId = new Map(contratos.map((c, i) => [c.id, i]));
 
   const rankingCompleto = rankResponsaveis(contratos);
+  const { servidores: servidoresFuncoes, rankingComFuncao } = agregarFuncoes(movimentosFuncoes, contratos);
   const calcMediana = (arr) => {
     const s = [...arr].sort((a, b) => a - b);
     const m = Math.floor(s.length / 2);
@@ -100,7 +93,7 @@ function agregarDashboard(contratos) {
   const responsaveisVigentes = new Set(
     vigentes.flatMap((c) => (c.responsaveis ?? []).map((r) => r.matricula || r.nome)),
   );
-  const ranking = rankingCompleto.map((r) => ({
+  const ranking = rankingComFuncao.map((r) => ({
     nome: r.nome,
     papeis: r.papeis,
     valorConsolidado: r.valorConsolidado || 0,
@@ -109,7 +102,15 @@ function agregarDashboard(contratos) {
     quantidadeContratos: r.quantidadeContratos,
     contratos: r.contratos
       .filter((c) => indicePorId.has(c.id))
-      .map((c) => ({ i: indicePorId.get(c.id), papeis: c.papeis })),
+      .map((c) => ({ i: indicePorId.get(c.id), papeis: c.papeis, funcaoNoContrato: c.funcaoNoContrato ?? null })),
+  }));
+
+  // Índice do servidor no ranking final (por nome normalizado) — permite ao
+  // front-end abrir os contratos fiscalizados por ele sem recruzar dados.
+  const indicePorNomeRanking = new Map(ranking.map((r, i) => [normalizeNome(r.nome), i]));
+  const funcoesServidores = servidoresFuncoes.map((s) => ({
+    ...s,
+    responsavelRankingIndex: indicePorNomeRanking.get(normalizeNome(s.nome)) ?? null,
   }));
 
   return {
@@ -136,6 +137,12 @@ function agregarDashboard(contratos) {
       medianaEmpenhado,
       medianaPago,
       ranking,
+    },
+    funcoes: {
+      total: funcoesServidores.length,
+      zeroFiscal: funcoesServidores.filter((s) => s.zeroFiscal).length,
+      vigentes: funcoesServidores.filter((s) => s.mandatos.some((m) => m.vigente)).length,
+      servidores: funcoesServidores,
     },
   };
 }

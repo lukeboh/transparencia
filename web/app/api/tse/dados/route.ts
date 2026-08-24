@@ -5,6 +5,7 @@ import path from 'node:path';
 // servidor do app porque a fonte não envia CORS nem expõe o cookie/CSRF a
 // outros domínios — o navegador não conseguiria fazê-lo diretamente.
 import { scrapeContratos } from '../../../../../src/tse/scrapeContratos.js';
+import { scrapeFuncoes } from '../../../../../src/tse/scrapeFuncoes.js';
 import { agregarDashboard } from '../../../../../src/tse/agregarDashboard.js';
 import type { DashboardData } from '@/lib/dashboard-data';
 
@@ -15,6 +16,10 @@ const INTERVALO_ERRO_MS = 10 * 60 * 1000; // espera após falha antes de tentar 
 const ARQUIVO_CACHE = path.join(process.cwd(), '.cache', 'tse-dados.json');
 
 interface Progresso {
+  // 'funcoes' é o histórico completo de portarias (1999–hoje): a primeira
+  // execução baixa milhares de páginas e pode levar dezenas de minutos; as
+  // seguintes são incrementais (só portarias novas) e rápidas.
+  fase: 'contratos' | 'funcoes';
   feitos: number;
   total: number;
 }
@@ -25,11 +30,16 @@ interface CachePersistido {
   // separados de `dados.contratos` — que é só o resumo truncado para a UI e
   // não serve de entrada para um novo scrape incremental (ver iniciarAtualizacao).
   contratosBrutos: unknown[];
+  // Movimentos "crus" de função comissionada (ver scrapeFuncoes.js),
+  // persistidos para que o backfill histórico completo só precise rodar uma
+  // vez — execuções seguintes só buscam portarias novas.
+  movimentosFuncoesBrutos: unknown[];
 }
 
 interface EstadoCache {
   dados: DashboardData | null;
   contratosBrutos: unknown[] | null;
+  movimentosFuncoesBrutos: unknown[] | null;
   carregouDisco: boolean;
   atualizando: boolean;
   progresso: Progresso | null;
@@ -45,6 +55,7 @@ function estado(): EstadoCache {
   g.__tseEstado ??= {
     dados: null,
     contratosBrutos: null,
+    movimentosFuncoesBrutos: null,
     carregouDisco: false,
     atualizando: false,
     progresso: null,
@@ -65,9 +76,11 @@ async function carregarDoDisco(e: EstadoCache) {
       const persistido = bruto as CachePersistido;
       e.dados = persistido.dados;
       e.contratosBrutos = persistido.contratosBrutos ?? null;
+      e.movimentosFuncoesBrutos = persistido.movimentosFuncoesBrutos ?? null;
     } else {
       e.dados = bruto as DashboardData;
       e.contratosBrutos = null;
+      e.movimentosFuncoesBrutos = null;
     }
   } catch {
     // sem cache em disco: o cliente segue com o snapshot embutido no bundle
@@ -84,7 +97,7 @@ function deveAtualizar(e: EstadoCache) {
 function iniciarAtualizacao(e: EstadoCache) {
   e.atualizando = true;
   e.erro = null;
-  e.progresso = { feitos: 0, total: 0 };
+  e.progresso = { fase: 'contratos', feitos: 0, total: 0 };
   e.ultimaTentativa = Date.now();
 
   void (async () => {
@@ -92,13 +105,30 @@ function iniciarAtualizacao(e: EstadoCache) {
       const contratos = await scrapeContratos('TSE', {
         cacheContratos: e.contratosBrutos ?? undefined,
         onProgress: (feitos: number, total: number) => {
-          e.progresso = { feitos, total };
+          e.progresso = { fase: 'contratos', feitos, total };
         },
       });
-      e.dados = agregarDashboard(contratos) as DashboardData;
       e.contratosBrutos = contratos;
+
+      // Histórico completo de portarias (1999–hoje): a primeira execução é
+      // um backfill pesado (milhares de páginas); com `movimentosFuncoesBrutos`
+      // já persistido, as próximas só buscam os índices de ano (baratos) e as
+      // poucas portarias novas.
+      const movimentosFuncoes = await scrapeFuncoes({
+        cacheMovimentos: e.movimentosFuncoesBrutos ?? undefined,
+        onProgress: (feitos: number, total: number) => {
+          e.progresso = { fase: 'funcoes', feitos, total };
+        },
+      });
+      e.movimentosFuncoesBrutos = movimentosFuncoes;
+
+      e.dados = agregarDashboard(contratos, movimentosFuncoes) as DashboardData;
       await fs.mkdir(path.dirname(ARQUIVO_CACHE), { recursive: true });
-      const persistido: CachePersistido = { dados: e.dados, contratosBrutos: contratos };
+      const persistido: CachePersistido = {
+        dados: e.dados,
+        contratosBrutos: contratos,
+        movimentosFuncoesBrutos: movimentosFuncoes,
+      };
       await fs.writeFile(ARQUIVO_CACHE, JSON.stringify(persistido), 'utf8');
     } catch (err) {
       e.erro = err instanceof Error ? err.message : String(err);
