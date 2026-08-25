@@ -34,7 +34,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   direita em qualquer situação).
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.12**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.13**.
 
 ## Dashboard web
 
@@ -131,10 +131,19 @@ arredondados), **Violeta** (gradiente índigo com cartões navy), **Lagoa**
 dos demais temas de acento). Os temas mudam apenas o chrome (superfícies,
 acentos, bordas, raio e, nos gradientes, o fundo da página) — os slots de
 cor dos gráficos (`--chart-*`) são os mesmos em todos, porque são a paleta
-de dados validada para daltonismo — o contraste de cada `--chart-*` contra o
-`--card` escuro de todo tema novo é conferido (razão WCAG) antes de entrar.
-Escolhas persistem em `localStorage` e são aplicadas antes do primeiro paint
-por um script no `<head>`.
+de dados validada para daltonismo, com uma exceção deliberada: o tema TSE
+também sobrescreve `--chart-2` (verde → amarelo-gema, `#fad43d` claro /
+`#f3c920` escuro), porque o próprio sentido do tema é replicar a identidade
+visual real do TSE, que não tem verde. Essa troca reduz a distância
+perceptível sob daltonismo (protanopia/deuteranopia, simulação
+Coblis-style) entre `--chart-2` e `--chart-3` (que já é um âmbar) de
+~185-210 (verde original) para ~70-86 — ainda perceptível, mas bem menor;
+o tom foi escolhido testando várias combinações de matiz/luminosidade para
+maximizar essa distância sem descaracterizar o amarelo-gema. Nos demais
+temas, o contraste de cada `--chart-*` contra o `--card` escuro é conferido
+(razão WCAG) antes de entrar, sem alterar os valores em si. Escolhas
+persistem em `localStorage` e são aplicadas antes do primeiro paint por um
+script no `<head>`.
 
 Nota de implementação: valores compactos ("R$ 17,3 bi") são formatados à mão
 em vez de `Intl … notation: 'compact'` — versões diferentes de ICU (Node do

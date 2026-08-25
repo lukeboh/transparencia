@@ -264,7 +264,19 @@ html.dark[data-theme='lagoa'] body {
   --grid: #2e323e;
 }
 
-/* TSE — azul institucional + dourado do brasão, nas cores do site oficial (tse.jus.br). */
+/*
+ * TSE — azul institucional + dourado do brasão, nas cores do site oficial
+ * (tse.jus.br). Único tema que também sobrescreve um slot de gráfico
+ * (--chart-2, "amarelo-gema" no lugar do verde-padrão): é uma exceção
+ * deliberada à regra geral de que --chart-* não muda por tema (ver seção
+ * "Temas" no README) — só se justifica aqui porque o próprio propósito
+ * deste tema é replicar a identidade visual real do TSE, que não tem verde.
+ * A troca reduz a distância perceptível sob daltonismo (protanopia/
+ * deuteranopia) entre --chart-2 e --chart-3 (que já é um âmbar/dourado) de
+ * ~185-210 (verde original) para ~70-86 — ainda perceptível, mas bem menor;
+ * o tom foi escolhido testando várias combinações de matiz/luminosidade
+ * para maximizar essa distância sem descaracterizar o amarelo-gema.
+ */
 [data-theme='tse'] {
   --background: #eef3fa;
   --card: #ffffff;
@@ -281,6 +293,7 @@ html.dark[data-theme='lagoa'] body {
   --ring: #2e6fd9;
   --grid: #dbe4f0;
   --radius: 0.375rem;
+  --chart-2: #fad43d;
 }
 
 .dark[data-theme='tse'] {
@@ -298,6 +311,7 @@ html.dark[data-theme='lagoa'] body {
   --border: rgba(111, 168, 245, 0.14);
   --ring: #3d7cd6;
   --grid: #1b2f4d;
+  --chart-2: #f3c920;
 }
 
 @theme inline {
