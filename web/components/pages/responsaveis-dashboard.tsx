@@ -13,11 +13,24 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
 import { brlCompacto, nomeProprio, numero } from '@/lib/utils';
-import type { LinhaRanking } from '@/lib/dashboard-data';
+import type { LinhaRanking, ServidorFuncoes } from '@/lib/dashboard-data';
 
 export function ResponsaveisDashboard() {
   const estado = useDadosDashboard();
-  const { responsaveis, contratos, fonte } = estado.dados;
+  const { responsaveis, funcoes, contratos, fonte } = estado.dados;
+
+  // Chave é o nome exato de `responsaveis.ranking[i].nome` — `rankingFiltrado`
+  // (abaixo) copia esse mesmo texto, então o mapa continua válido mesmo com o
+  // filtro de papéis aplicado (que muda os índices, mas não os nomes).
+  const funcoesPorNome = useMemo(() => {
+    const map = new Map<string, ServidorFuncoes>();
+    for (const s of funcoes.servidores) {
+      if (s.responsavelRankingIndex === null) continue;
+      const nomeRanking = responsaveis.ranking[s.responsavelRankingIndex]?.nome;
+      if (nomeRanking) map.set(nomeRanking, s);
+    }
+    return map;
+  }, [funcoes.servidores, responsaveis.ranking]);
 
   const todosPapeis = useMemo(() => {
     const set = new Set<string>();
@@ -189,7 +202,7 @@ export function ResponsaveisDashboard() {
         </div>
 
         <RankingChart ranking={rankingFiltrado} contratos={contratos} />
-        <RankingTable ranking={rankingFiltrado} contratos={contratos} />
+        <RankingTable ranking={rankingFiltrado} contratos={contratos} funcoesPorNome={funcoesPorNome} />
       </div>
 
       <footer className="mt-8 text-xs text-muted-foreground">

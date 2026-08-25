@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import {
   ArrowDown,
   ArrowUp,
@@ -31,8 +32,9 @@ import {
   ContratosDialog,
   type ContratoAuditavel,
 } from '@/components/dashboard/contratos-dialog';
+import { FuncoesBadges } from '@/components/dashboard/funcoes-table';
 import { brlCompleto, cn, nomeProprio, numero } from '@/lib/utils';
-import type { ContratoResumo, LinhaRanking } from '@/lib/dashboard-data';
+import type { ContratoResumo, LinhaRanking, ServidorFuncoes } from '@/lib/dashboard-data';
 
 const LINHAS_POR_PAGINA = 25;
 const MAX_PAPEIS_VISIVEIS = 2;
@@ -144,9 +146,12 @@ export function contratosDoResponsavel(
 export function RankingTable({
   ranking,
   contratos,
+  funcoesPorNome,
 }: {
   ranking: LinhaRanking[];
   contratos: ContratoResumo[];
+  /** Servidor (com função atual + histórico) por nome — mesma string de `linha.nome`, ver responsaveis-dashboard.tsx. */
+  funcoesPorNome: Map<string, ServidorFuncoes>;
 }) {
   const [pagina, setPagina] = useState(0);
   const [busca, setBusca] = useState('');
@@ -202,7 +207,12 @@ export function RankingTable({
         <CardTitle className="text-base font-semibold">Ranking completo</CardTitle>
         <CardDescription>
           Todos os {numero(ranking.length)} responsáveis, com valores Globais, Empenhados (Emp.) e Pagos (Pg) — o
-          valor de um contrato conta uma única vez por pessoa. Clique em um servidor para auditar seus contratos.
+          valor de um contrato conta uma única vez por pessoa. A coluna Função mostra a função comissionada (FC/CJ)
+          que o servidor tem hoje ou já teve (ver detalhe completo em{' '}
+          <Link href="/funcoes" className="underline decoration-border underline-offset-4 hover:text-foreground">
+            /funcoes
+          </Link>
+          ). Clique em um servidor para auditar seus contratos.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -255,6 +265,7 @@ export function RankingTable({
                 />
               </TableHead>
               <TableHead>Papéis</TableHead>
+              <TableHead>Função</TableHead>
               <TableHead className="text-right">
                 <CabecalhoOrdenavel
                   rotulo="Contratos"
@@ -292,7 +303,7 @@ export function RankingTable({
           <TableBody>
             {linhas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                   Nenhum servidor encontrado para &ldquo;{busca}&rdquo;
                 </TableCell>
               </TableRow>
@@ -309,6 +320,16 @@ export function RankingTable({
                   <TableCell className="font-medium">{nomeProprio(linha.nome)}</TableCell>
                   <TableCell>
                     <Papeis papeis={linha.papeis} />
+                  </TableCell>
+                  <TableCell>
+                    {(() => {
+                      const servidor = funcoesPorNome.get(linha.nome);
+                      return servidor ? (
+                        <FuncoesBadges servidor={servidor} />
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {numero(linha.quantidadeContratos)}

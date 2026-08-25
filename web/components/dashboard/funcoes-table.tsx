@@ -54,7 +54,7 @@ function normalizar(texto: string) {
  * públicos), quando houver; senão a mais recente do histórico de portarias
  * (fonte secundária) — cobre quem só consta no histórico.
  */
-function funcaoDestaque(servidor: ServidorFuncoes) {
+export function funcaoDestaque(servidor: ServidorFuncoes) {
   if (servidor.funcaoAtual) {
     return { ...servidor.funcaoAtual, vigente: true };
   }
@@ -64,7 +64,7 @@ function funcaoDestaque(servidor: ServidorFuncoes) {
   return ordenados[0] ?? null;
 }
 
-function FuncoesBadges({ servidor }: { servidor: ServidorFuncoes }) {
+export function FuncoesBadges({ servidor }: { servidor: ServidorFuncoes }) {
   const destaque = funcaoDestaque(servidor);
   const restantes = servidor.mandatos.length - (destaque?.vigente ? 0 : destaque ? 1 : 0);
   if (!destaque) return <span className="text-muted-foreground">—</span>;

@@ -18,9 +18,12 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   fonte secundária/histórico: portarias (`src/tse/scrapeFuncoes.js`).
   Reconciliação entre as duas com observações de inconsistência — ver seção
   própria abaixo.
+- ✅ Correção manual de dados sabidamente errados via arquivo de exceções
+  (`data/tse_excecoes.json`, `src/tse/excecoes.js`) — ver seção "Exceções"
+  abaixo.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.7**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.9**.
 
 ## Dashboard web
 
@@ -87,11 +90,14 @@ traz o dashboard da primeira funcionalidade do projeto: cards com total de
 responsáveis / maior valor sob responsabilidade / mediana por responsável,
 gráfico de barras horizontais com o top 10 e tabela paginada com o ranking
 completo — todos os responsáveis, 25 por página (papéis como badges; valor de
-cada contrato contado uma única vez por pessoa). A tabela tem filtro
-incremental por servidor (sem distinção de acentos/caixa) e ordenação
-clicável nos cabeçalhos Servidor (alfabética), Contratos e Valor consolidado
-(1º clique ordena, 2º inverte, 3º volta à ordem do ranking); a coluna # sempre
-mostra a posição original no ranking por valor.
+cada contrato contado uma única vez por pessoa). A coluna Função mostra, com o
+mesmo badge usado em `/funcoes`, a função comissionada (FC/CJ) que o servidor
+tem hoje ou já teve — cruzada por nome com `funcoes.servidores`, "—" quando
+nunca teve nenhuma. A tabela tem filtro incremental por servidor (sem
+distinção de acentos/caixa) e ordenação clicável nos cabeçalhos Servidor
+(alfabética), Contratos e Valor consolidado (1º clique ordena, 2º inverte, 3º
+volta à ordem do ranking); a coluna # sempre mostra a posição original no
+ranking por valor.
 
 ### Temas
 
@@ -171,6 +177,87 @@ itens como equipamentos de votação e segurança das eleições, então alguns
 contratos refletem tetos nacionais, não apenas gasto do TSE isoladamente. Vale
 ter isso em mente ao interpretar o ranking — ele reflete fielmente a fonte,
 mas a fonte mistura escalas bem diferentes num mesmo campo.
+
+Isso não significa que todo valor na casa dos bilhões seja legítimo — alguns
+já foram checados individualmente contra o SIAC (consulta de contratos do
+próprio TSE) e confirmados como erro da fonte, não teto nacional real; esses
+viram exceção registrada (ver seção abaixo), não uma suposição automática.
+
+### Exceções: correção manual de dados sabidamente errados
+
+Diferente do caso acima (valor real, só em escala diferente da esperada), às
+vezes a própria fonte tem um dado **errado de fato** — não uma peculiaridade
+de como o TSE registra, mas um erro (ex.: dígito a mais por erro de
+digitação). Nesses casos, em vez de alterar o dado extraído na hora do scrape
+(o que apagaria o rastro de "o que a fonte disse"), a correção é registrada
+em `data/tse_excecoes.json` e aplicada como uma camada por cima, com motivo e
+fonte da correção preservados — mantendo a auditabilidade: o dado exibido é o
+corrigido, mas o porquê da divergência com a fonte primária fica visível.
+
+Schema de cada exceção:
+
+```json
+{
+  "id": "id do contrato (mesmo campo `id` do schema de contrato)",
+  "numero": "número do contrato, só para referência humana no arquivo",
+  "overrides": { "campo": "novo valor" },
+  "motivo": "por que o valor extraído está errado",
+  "fonte": "URL da consulta que confirma o valor correto",
+  "registradoEm": "AAAA-MM-DD"
+}
+```
+
+`aplicarExcecoes` (`src/tse/excecoes.js`) casa por `id` e sobrescreve os
+campos listados em `overrides`; é chamada por `agregarDashboard` (cobrindo o
+snapshot embutido e a atualização em runtime da rota `/api/tse/dados`) e por
+`tse:rank`/`cli.js`. Cada campo corrigido aparece em `ContratoResumo.correcoes`
+e o dashboard mostra uma tag "corrigido" (tooltip com motivo e fonte) nos
+modais de auditoria — ver `contratos-dialog.tsx`.
+
+**Casos registrados:**
+
+- Contrato 00031/2015 (DATAINFO, serviços de apoio à TI) aparece na fonte
+  pública
+  ([Compras.gov.br](https://contratos.comprasnet.gov.br/transparencia/contratos?unidade=TSE))
+  com Valor Global de R$ 2.500.000.000,00 (2,5 bilhões) — incompatível com o
+  objeto do contrato. O valor correto, R$ 2.500.000,00 (2,5 milhões), foi
+  confirmado na consulta de contratos do próprio TSE
+  ([SIAC](https://siac-consultas.tse.jus.br/main/contratos/detalhar/00312015/CT)).
+- Contrato 00090/2022 (acordo de cooperação com o Ministério da Defesa, apoio
+  logístico das Forças Armadas às eleições de 2022, já encerrado) aparece com
+  Valor Global de R$ 11.061.452.230,00. O valor correto é R$ 0,00, confirmado
+  no
+  [SIAC](https://siac-consultas.tse.jus.br/main/contratos/detalhar/00902022/SE).
+
+**Sobre automatizar a busca no SIAC:** cogitou-se usar o SIAC
+(`https://siac-consultas.tse.jus.br/main/contratos/listar`) como fonte
+adicional para achar/confirmar esse tipo de divergência automaticamente, mas a
+consulta exige resolver um captcha — não dá para automatizar sem tratar essa
+etapa (ex.: pedir ao usuário que resolva o captcha manualmente quando
+necessário), então por ora essa fonte é só usada como referência manual ao
+registrar uma exceção, não como parte do pipeline de scrape.
+
+### Cruzamento em lote com um export do SIAC
+
+Quando o usuário exporta manualmente (resolvendo o captcha) o CSV da consulta
+`.../main/contratos/listar`, `src/tse/cruzarSiac.js` cruza esse export contra
+`data/tse_contratos.json` inteiro e gera um relatório em Markdown com os
+candidatos a exceção — contratos cujo valor diverge de forma suspeita entre as
+duas fontes:
+
+```bash
+npm run tse:cruzar-siac -- caminho/para/export-siac.csv
+# gera data/siac-divergencias.md
+```
+
+O casamento entre as duas fontes usa número/ano do contrato **e** nome do
+fornecedor normalizado (número/ano sozinho não é chave única — várias
+parcerias diferentes reaproveitam o mesmo par). O script **não** grava
+`tse_excecoes.json` sozinho: numa rodada real, o valor `valorAtualizado` do
+SIAC por vezes também estava errado (2 dos 20 candidatos encontrados tinham o
+valor do SIAC implausível, não o nosso) — cada candidato do relatório precisa
+de conferência manual na página de detalhe do SIAC (o relatório já traz o
+link) antes de virar exceção.
 
 ## Schema intermediário de contrato
 
