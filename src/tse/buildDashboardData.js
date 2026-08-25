@@ -14,6 +14,7 @@ const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 let entrada = process.argv[2] ?? path.join(raiz, 'data/tse_contratos.json');
 const entradaFuncoes = process.argv[4] ?? path.join(raiz, 'data/tse_funcoes.json');
 const entradaAgentes = process.argv[5] ?? path.join(raiz, 'data/tse_agentes.json');
+const entradaTeletrabalho = process.argv[6] ?? path.join(raiz, 'data/tse_teletrabalho.json');
 const saida = process.argv[3] ?? path.join(raiz, 'web/lib/dashboard-data.ts');
 
 async function main() {
@@ -49,8 +50,18 @@ async function main() {
     );
   }
 
+  let movimentosTeletrabalho = [];
+  if (existsSync(entradaTeletrabalho)) {
+    movimentosTeletrabalho = JSON.parse(await readFile(entradaTeletrabalho, 'utf8'));
+  } else {
+    console.warn(
+      `[Aviso] '${entradaTeletrabalho}' não foi encontrado — seção "teletrabalho" sairá vazia. ` +
+      'Rode "npm run tse:scrape-teletrabalho" para gerá-lo.',
+    );
+  }
+
   const excecoes = carregarExcecoes();
-  const dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos, excecoes);
+  const dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos, excecoes, movimentosTeletrabalho);
   await escreverDashboardData(dados, saida);
   console.log(
     `  ${contratos.length} contratos · ${dados.evolucao.length} anos · ${dados.categorias.length} fatias de categoria`,
@@ -204,6 +215,32 @@ export interface FuncoesData {
   servidores: ServidorFuncoes[];
 }
 
+export interface PeriodoTeletrabalho {
+  /** String bruta da fonte, níveis separados por " - ", do menor para o maior. */
+  unidade: string;
+  /** unidade.split(' - ').map(s => s.trim()) — o último item é a unidade de topo (secretaria/gabinete/assessoria). */
+  unidadeNiveis: string[];
+  dataInicio: string | null;
+  /** null = período em aberto (considerar vigente até hoje). */
+  dataFim: string | null;
+  dias: number;
+}
+
+export interface LinhaTeletrabalho {
+  nome: string;
+  /** Soma dos dias de todos os períodos — sem merge de sobreposição, ver agregarTeletrabalho.js. */
+  diasConsolidados: number;
+  periodos: PeriodoTeletrabalho[];
+  /** Índice em DashboardData.responsaveis.ranking, ou null quando a pessoa nunca aparece como fiscal/gestor. */
+  responsavelRankingIndex: number | null;
+}
+
+export interface TeletrabalhoData {
+  total: number;
+  medianaDias: number;
+  ranking: LinhaTeletrabalho[];
+}
+
 export interface DashboardData {
   geradoEm: string;
   fonte: string;
@@ -213,11 +250,28 @@ export interface DashboardData {
   contratos: ContratoResumo[];
   responsaveis: ResponsaveisData;
   funcoes: FuncoesData;
+  teletrabalho: TeletrabalhoData;
 }
 
 /** URL do contrato detalhado na consulta pública do Comprasnet. */
 export function urlContrato(id: string) {
   return \`https://contratos.comprasnet.gov.br/transparencia/contratos/\${id}\`;
+}
+
+/** URL da consulta pública de teletrabalho do TSE, já filtrada por servidor — para conferir a origem dos dados. */
+export function urlTeletrabalho(nome: string) {
+  const hoje = new Date();
+  const hojeBR = \`\${String(hoje.getDate()).padStart(2, '0')}/\${String(hoje.getMonth() + 1).padStart(2, '0')}/\${hoje.getFullYear()}\`;
+  const params = new URLSearchParams({
+    acao: 'teletrabalho',
+    dataInicio: '01/01/2015',
+    dataFim: hojeBR,
+    unidade: '-1',
+    nomeServidor: nome,
+    valida: 'true',
+    toExcel: 'false',
+  });
+  return \`https://transparencia.tse.jus.br/transparenciaDadosServidores/infoServidores?\${params.toString()}\`;
 }
 
 export const dashboardData: DashboardData = ${JSON.stringify(dados)};

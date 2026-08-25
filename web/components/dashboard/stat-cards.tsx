@@ -61,12 +61,12 @@ export function StatCards({
       </button>
 
       <Link
-        href="/responsaveis"
-        aria-label="Ver dashboard de responsáveis"
+        href="/fiscais"
+        aria-label="Ver dashboard de fiscais"
         className="rounded-lg outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring"
       >
         <StatCard
-          titulo="Responsáveis designados"
+          titulo="Fiscais designados"
           valor={numero(resumo.totalResponsaveis)}
           detalhe="ver ranking por valor sob responsabilidade →"
           icone={<Users className="h-4 w-4" aria-hidden />}

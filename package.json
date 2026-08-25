@@ -9,6 +9,7 @@
     "tse:scrape": "node src/tse/scrapeContratos.js",
     "tse:scrape-agentes": "node src/tse/scrapeAgentesPublicos.js",
     "tse:scrape-funcoes": "node src/tse/scrapeFuncoes.js",
+    "tse:scrape-teletrabalho": "node src/tse/scrapeTeletrabalho.js",
     "tse:rank": "node src/tse/cli.js",
     "tse:cruzar-siac": "node src/tse/cruzarSiac.js",
     "data": "node src/tse/buildDashboardData.js",

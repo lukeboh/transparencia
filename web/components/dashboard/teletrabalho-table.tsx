@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import {
   ArrowDown,
   ArrowUp,
@@ -29,18 +28,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  ContratosDialog,
-  type ContratoAuditavel,
-} from '@/components/dashboard/contratos-dialog';
+import { Papeis } from '@/components/dashboard/ranking-table';
 import { FuncoesBadges } from '@/components/dashboard/funcoes-table';
-import { brlCompleto, cn, nomeProprio, numero } from '@/lib/utils';
-import type { ContratoResumo, LinhaRanking, ServidorFuncoes } from '@/lib/dashboard-data';
+import { cn, nomeProprio, numero } from '@/lib/utils';
+import type { LinhaRanking, LinhaTeletrabalho, ServidorFuncoes } from '@/lib/dashboard-data';
 
 const LINHAS_POR_PAGINA = 25;
-const MAX_PAPEIS_VISIVEIS = 2;
 
-type CampoOrdenavel = 'nome' | 'contratos' | 'valor' | 'empenhado' | 'pago';
+type CampoOrdenavel = 'nome' | 'dias' | 'lotacao';
 type DirecaoOrdenacao = 'asc' | 'desc';
 
 interface Ordenacao {
@@ -50,38 +45,21 @@ interface Ordenacao {
 
 const DIRECAO_INICIAL: Record<CampoOrdenavel, DirecaoOrdenacao> = {
   nome: 'asc',
-  contratos: 'desc',
-  valor: 'desc',
-  empenhado: 'desc',
-  pago: 'desc',
+  dias: 'desc',
+  lotacao: 'asc',
 };
 
-/** Busca sem acento e sem caixa: "jose" encontra "José". */
+/** Caminho da lotação do maior nível para o menor (secretaria → coordenadoria → seção) — inverso de `unidadeNiveis` (que vem da fonte do menor para o maior) — para ordenar/agrupar por secretaria primeiro. */
+function caminhoLotacao(niveis: string[] | null): string {
+  if (!niveis || niveis.length === 0) return '';
+  return [...niveis].reverse().join(' › ');
+}
+
 function normalizar(texto: string) {
   return texto
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase();
-}
-
-export function Papeis({ papeis }: { papeis: string[] }) {
-  const visiveis = papeis.slice(0, MAX_PAPEIS_VISIVEIS);
-  const ocultos = papeis.length - visiveis.length;
-  return (
-    <span className="flex flex-wrap items-center gap-1" title={papeis.join(', ')}>
-      {visiveis.map((papel) => (
-        <span
-          key={papel}
-          className="rounded-sm bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground"
-        >
-          {papel}
-        </span>
-      ))}
-      {ocultos > 0 && (
-        <span className="text-xs text-muted-foreground">+{ocultos}</span>
-      )}
-    </span>
-  );
 }
 
 function BotaoPagina({ className, ...props }: React.ComponentProps<'button'>) {
@@ -103,13 +81,11 @@ function CabecalhoOrdenavel({
   campo,
   ordenacao,
   onOrdenar,
-  className,
 }: {
   rotulo: string;
   campo: CampoOrdenavel;
   ordenacao: Ordenacao | null;
   onOrdenar: (campo: CampoOrdenavel) => void;
-  className?: string;
 }) {
   const ativo = ordenacao?.campo === campo;
   const Icone = !ativo ? ArrowUpDown : ordenacao.direcao === 'asc' ? ArrowUp : ArrowDown;
@@ -122,7 +98,6 @@ function CabecalhoOrdenavel({
       className={cn(
         '-mx-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-1 transition-colors hover:bg-accent hover:text-accent-foreground',
         ativo && 'text-foreground',
-        className,
       )}
     >
       {rotulo}
@@ -131,36 +106,29 @@ function CabecalhoOrdenavel({
   );
 }
 
-export function contratosDoResponsavel(
-  linha: LinhaRanking,
-  contratos: ContratoResumo[],
-): ContratoAuditavel[] {
-  return linha.contratos
-    .map(({ i, papeis, funcaoNoContrato }) => ({
-      ...contratos[i],
-      papeisNoContrato: papeis,
-      funcaoNoContrato,
-    }))
-    .sort((a, b) => b.valorGlobal - a.valorGlobal);
-}
-
-export function RankingTable({
+export function TeletrabalhoTable({
   ranking,
-  contratos,
-  funcoesPorNome,
+  funcaoDe,
+  lotacaoDe,
+  responsaveisRanking,
+  onVerDetalhe,
+  onVerContratos,
 }: {
-  ranking: LinhaRanking[];
-  contratos: ContratoResumo[];
-  /** Servidor (com função atual + histórico) por nome — mesma string de `linha.nome`, ver fiscais-dashboard.tsx. */
-  funcoesPorNome: Map<string, ServidorFuncoes>;
+  ranking: LinhaTeletrabalho[];
+  funcaoDe: (linha: LinhaTeletrabalho) => ServidorFuncoes | undefined;
+  /** Níveis da lotação do período mais recente, do menor (seção) para o maior (secretaria/gabinete/assessoria). */
+  lotacaoDe: (linha: LinhaTeletrabalho) => string[] | null;
+  responsaveisRanking: LinhaRanking[];
+  onVerDetalhe: (linha: LinhaTeletrabalho) => void;
+  onVerContratos: (linha: LinhaRanking) => void;
 }) {
   const [pagina, setPagina] = useState(0);
   const [busca, setBusca] = useState('');
   const [ordenacao, setOrdenacao] = useState<Ordenacao | null>(null);
-  const [selecionado, setSelecionado] = useState<LinhaRanking | null>(null);
 
-  // A posição (#) é sempre a do ranking original por valor consolidado,
-  // para que filtro e reordenação não escondam o rank real de ninguém.
+  // A posição (#) é sempre a do ranking original por dias consolidados,
+  // para que filtro e reordenação não escondam o rank real de ninguém
+  // (mesmo padrão de ranking-table.tsx).
   const linhasVisiveis = useMemo(() => {
     const comPosicao = ranking.map((linha, i) => ({ linha, posicao: i + 1 }));
     const termo = normalizar(busca.trim());
@@ -173,17 +141,16 @@ export function RankingTable({
       switch (ordenacao.campo) {
         case 'nome':
           return fator * a.linha.nome.localeCompare(b.linha.nome, 'pt-BR');
-        case 'contratos':
-          return fator * (a.linha.quantidadeContratos - b.linha.quantidadeContratos);
-        case 'valor':
-          return fator * (a.linha.valorConsolidado - b.linha.valorConsolidado);
-        case 'empenhado':
-          return fator * ((a.linha.valorEmpenhadoConsolidado || 0) - (b.linha.valorEmpenhadoConsolidado || 0));
-        case 'pago':
-          return fator * ((a.linha.valorPagoConsolidado || 0) - (b.linha.valorPagoConsolidado || 0));
+        case 'dias':
+          return fator * (a.linha.diasConsolidados - b.linha.diasConsolidados);
+        case 'lotacao':
+          return (
+            fator *
+            caminhoLotacao(lotacaoDe(a.linha)).localeCompare(caminhoLotacao(lotacaoDe(b.linha)), 'pt-BR')
+          );
       }
     });
-  }, [ranking, busca, ordenacao]);
+  }, [ranking, busca, ordenacao, lotacaoDe]);
 
   const totalPaginas = Math.max(1, Math.ceil(linhasVisiveis.length / LINHAS_POR_PAGINA));
   const paginaAtual = Math.min(pagina, totalPaginas - 1);
@@ -194,7 +161,6 @@ export function RankingTable({
     setPagina(0);
     setOrdenacao((atual) => {
       if (atual?.campo !== campo) return { campo, direcao: DIRECAO_INICIAL[campo] };
-      // Segundo clique inverte; terceiro volta à ordem do ranking.
       if (atual.direcao === DIRECAO_INICIAL[campo]) {
         return { campo, direcao: atual.direcao === 'asc' ? 'desc' : 'asc' };
       }
@@ -207,13 +173,8 @@ export function RankingTable({
       <CardHeader>
         <CardTitle className="text-base font-semibold">Ranking completo</CardTitle>
         <CardDescription>
-          Todos os {numero(ranking.length)} responsáveis, com valores Globais, Empenhados (Emp.) e Pagos (Pg) — o
-          valor de um contrato conta uma única vez por pessoa. A coluna Função mostra a função comissionada (FC/CJ)
-          que o servidor tem hoje ou já teve (ver detalhe completo em{' '}
-          <Link href="/funcoes" className="underline decoration-border underline-offset-4 hover:text-foreground">
-            /funcoes
-          </Link>
-          ). Clique em um servidor para auditar seus contratos.
+          Todos os {numero(ranking.length)} servidores com ao menos um período de teletrabalho registrado.
+          Clique em um servidor para ver os períodos e a lotação de cada um.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -258,94 +219,80 @@ export function RankingTable({
             <TableRow>
               <TableHead className="w-10 text-right">#</TableHead>
               <TableHead>
-                <CabecalhoOrdenavel
-                  rotulo="Servidor"
-                  campo="nome"
-                  ordenacao={ordenacao}
-                  onOrdenar={ordenarPor}
-                />
+                <CabecalhoOrdenavel rotulo="Servidor" campo="nome" ordenacao={ordenacao} onOrdenar={ordenarPor} />
               </TableHead>
-              <TableHead>Papéis</TableHead>
               <TableHead>Função</TableHead>
-              <TableHead className="text-right">
-                <CabecalhoOrdenavel
-                  rotulo="Contratos"
-                  campo="contratos"
-                  ordenacao={ordenacao}
-                  onOrdenar={ordenarPor}
-                />
+              <TableHead>Fiscal</TableHead>
+              <TableHead>
+                <CabecalhoOrdenavel rotulo="Lotação" campo="lotacao" ordenacao={ordenacao} onOrdenar={ordenarPor} />
               </TableHead>
               <TableHead className="text-right">
-                <CabecalhoOrdenavel
-                  rotulo="Valor Global"
-                  campo="valor"
-                  ordenacao={ordenacao}
-                  onOrdenar={ordenarPor}
-                />
-              </TableHead>
-              <TableHead className="text-right">
-                <CabecalhoOrdenavel
-                  rotulo="Empenhado"
-                  campo="empenhado"
-                  ordenacao={ordenacao}
-                  onOrdenar={ordenarPor}
-                />
-              </TableHead>
-              <TableHead className="text-right">
-                <CabecalhoOrdenavel
-                  rotulo="Pago"
-                  campo="pago"
-                  ordenacao={ordenacao}
-                  onOrdenar={ordenarPor}
-                />
+                <CabecalhoOrdenavel rotulo="Dias em teletrabalho" campo="dias" ordenacao={ordenacao} onOrdenar={ordenarPor} />
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {linhas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-                  Nenhum servidor encontrado para &ldquo;{busca}&rdquo;
+                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                  Nenhum servidor encontrado{busca ? ` para "${busca}"` : ''}
                 </TableCell>
               </TableRow>
             ) : (
-              linhas.map(({ linha, posicao }) => (
-                <TableRow
-                  key={posicao}
-                  onClick={() => setSelecionado(linha)}
-                  className="cursor-pointer"
-                >
-                  <TableCell className="text-right text-muted-foreground tabular-nums">
-                    {posicao}
-                  </TableCell>
-                  <TableCell className="font-medium">{nomeProprio(linha.nome)}</TableCell>
-                  <TableCell>
-                    <Papeis papeis={linha.papeis} />
-                  </TableCell>
-                  <TableCell>
-                    {(() => {
-                      const servidor = funcoesPorNome.get(linha.nome);
-                      return servidor ? (
+              linhas.map(({ linha, posicao }) => {
+                const linhaResponsavel =
+                  linha.responsavelRankingIndex !== null
+                    ? responsaveisRanking[linha.responsavelRankingIndex]
+                    : null;
+                const servidor = funcaoDe(linha);
+                const caminho = caminhoLotacao(lotacaoDe(linha));
+                return (
+                  <TableRow key={linha.nome} onClick={() => onVerDetalhe(linha)} className="cursor-pointer">
+                    <TableCell className="text-right text-muted-foreground tabular-nums">{posicao}</TableCell>
+                    <TableCell className="font-medium">{nomeProprio(linha.nome)}</TableCell>
+                    <TableCell>
+                      {servidor ? (
                         <FuncoesBadges servidor={servidor} />
                       ) : (
                         <span className="text-muted-foreground">—</span>
-                      );
-                    })()}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {numero(linha.quantidadeContratos)}
-                  </TableCell>
-                  <TableCell className="text-right font-medium tabular-nums">
-                    {brlCompleto(linha.valorConsolidado)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
-                    {brlCompleto(linha.valorEmpenhadoConsolidado || 0)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
-                    {brlCompleto(linha.valorPagoConsolidado || 0)}
-                  </TableCell>
-                </TableRow>
-              ))
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {linhaResponsavel ? (
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          <Papeis papeis={linhaResponsavel.papeis} />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onVerContratos(linhaResponsavel);
+                            }}
+                            className="text-xs text-primary hover:underline font-medium"
+                          >
+                            ver contratos →
+                          </button>
+                        </span>
+                      ) : (
+                        <span className="rounded-sm bg-destructive/10 px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-destructive">
+                          Zero Fiscal
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="max-w-[280px]">
+                      {caminho ? (
+                        <span className="block truncate text-xs text-muted-foreground" title={caminho}>
+                          {caminho}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right font-medium tabular-nums">
+                      {numero(linha.diasConsolidados)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -364,11 +311,7 @@ export function RankingTable({
             )}
           </p>
           <div className="flex items-center gap-1.5">
-            <BotaoPagina
-              onClick={() => setPagina(0)}
-              disabled={paginaAtual === 0}
-              aria-label="Primeira página"
-            >
+            <BotaoPagina onClick={() => setPagina(0)} disabled={paginaAtual === 0} aria-label="Primeira página">
               <ChevronsLeft className="h-4 w-4" aria-hidden />
             </BotaoPagina>
             <BotaoPagina
@@ -397,15 +340,6 @@ export function RankingTable({
             </BotaoPagina>
           </div>
         </div>
-
-        {selecionado && (
-          <ContratosDialog
-            titulo={nomeProprio(selecionado.nome)}
-            contratos={contratosDoResponsavel(selecionado, contratos)}
-            open
-            onClose={() => setSelecionado(null)}
-          />
-        )}
       </CardContent>
     </Card>
   );

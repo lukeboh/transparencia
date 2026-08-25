@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { dashboardData, type DashboardData } from '@/lib/dashboard-data';
 
 interface Progresso {
-  fase: 'contratos' | 'funcoes';
+  fase: 'contratos' | 'agentes' | 'funcoes' | 'teletrabalho';
   feitos: number;
   total: number;
 }

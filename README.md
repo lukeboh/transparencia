@@ -21,6 +21,18 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
 - ✅ Correção manual de dados sabidamente errados via arquivo de exceções
   (`data/tse_excecoes.json`, `src/tse/excecoes.js`) — ver seção "Exceções"
   abaixo.
+- ✅ Dias em regime de teletrabalho por servidor (`/teletrabalho`) —
+  fonte: [Servidores em regime de Teletrabalho (TSE)](https://www.tse.jus.br/transparencia-e-prestacao-de-contas/pessoal/cargos-e-funcoes/servidores-em-regime-de-teletrabalho)
+  (`src/tse/scrapeTeletrabalho.js`), com a estrutura completa da lotação de
+  cada período (seção → coordenadoria → secretaria/gabinete/assessoria,
+  como veio da fonte). Cruzamento com fiscais/gestores e função comissionada
+  por nome normalizado (`src/tse/agregarTeletrabalho.js`), mesma limitação
+  de homônimos das outras fontes sem CPF/matrícula em comum. A fonte também
+  tem um botão "Detalhar" por período que aponta para um suposto
+  detalhamento dia-a-dia — testado manualmente contra vários registros reais
+  e ele nunca retornou dado nenhum, então não é usado aqui.
+- ✅ A antiga página `/responsaveis` foi renomeada para `/fiscais` (rota e
+  label) — nome interno de dados (`DashboardData.responsaveis`) não mudou.
 - ✅ Responsivo em telas de celular (320px+) — testado com Playwright em
   320/375/768px nas 3 páginas. Cabeçalhos quebram para uma segunda linha em
   vez de estourar a tela (nav com só ícone abaixo de `sm:`); tabelas crescem
@@ -34,7 +46,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   direita em qualquer situação).
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.13**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.14**.
 
 ## Dashboard web
 
@@ -96,9 +108,9 @@ categoria (top 5 + "Outros"; hover sincronizado entre fatia e legenda).
 Tema claro/escuro com toggle; paleta de gráficos validada para daltonismo
 (CVD) nos dois modos, com "Outros" em cinza de de-ênfase.
 
-A rota `/responsaveis` (linkada no header e no card "Responsáveis designados")
+A rota `/fiscais` (linkada no header e no card "Fiscais designados")
 traz o dashboard da primeira funcionalidade do projeto: cards com maior valor
-sob responsabilidade e mediana por responsável, e um card "Responsáveis
+sob responsabilidade e mediana por responsável, e um card "Fiscais
 designados" que, em vez de só um número, é um donut (mesmo componente de
 `/funcoes`) com a distribuição por função comissionada (FC/CJ, mais "Sem
 função") de quem está no ranking — restrito aos responsáveis de fato (quem
@@ -352,10 +364,10 @@ CJ-4)**, fiscalizando contrato ou não — matrícula, cargo, lotação, funçã
 vigente e histórico de nomeação/exoneração com data e link da portaria
 correspondente. Servidores que nunca aparecem como fiscal/gestor de nenhum
 contrato recebem a tag **"Zero Fiscal"**. Filtro por tipo/nível de função e
-busca por nome, mesmo padrão da tabela de Responsáveis. Também é possível
+busca por nome, mesmo padrão da tabela de Fiscais. Também é possível
 ver, para quem fiscaliza algum contrato, a lista desses contratos
-(reaproveitando o mesmo modal auditável da página de Responsáveis) — e, na
-própria página de Responsáveis, cada contrato listado no modal de um fiscal
+(reaproveitando o mesmo modal auditável da página de Fiscais) — e, na
+própria página de Fiscais, cada contrato listado no modal de um fiscal
 mostra uma tag (ex.: "FC-6") com a função que esse fiscal ocupava durante a
 vigência daquele contrato específico, quando houver.
 

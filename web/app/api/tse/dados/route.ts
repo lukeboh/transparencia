@@ -7,6 +7,7 @@ import path from 'node:path';
 import { scrapeContratos } from '../../../../../src/tse/scrapeContratos.js';
 import { scrapeAgentesPublicos } from '../../../../../src/tse/scrapeAgentesPublicos.js';
 import { scrapeFuncoes } from '../../../../../src/tse/scrapeFuncoes.js';
+import { scrapeTeletrabalho } from '../../../../../src/tse/scrapeTeletrabalho.js';
 import { agregarDashboard } from '../../../../../src/tse/agregarDashboard.js';
 import { carregarExcecoes } from '../../../../../src/tse/excecoes.js';
 import type { DashboardData } from '@/lib/dashboard-data';
@@ -22,7 +23,8 @@ interface Progresso {
   // única página, rápida. 'funcoes' é o histórico secundário de portarias
   // (1999–hoje): a primeira execução baixa milhares de páginas e pode levar
   // dezenas de minutos; as seguintes são incrementais (só portarias novas).
-  fase: 'contratos' | 'agentes' | 'funcoes';
+  // 'teletrabalho' é uma única página (sem paginação, sem cache incremental).
+  fase: 'contratos' | 'agentes' | 'funcoes' | 'teletrabalho';
   feitos: number;
   total: number;
 }
@@ -40,6 +42,9 @@ interface CachePersistido {
   // persistidos para que o backfill histórico completo só precise rodar uma
   // vez — execuções seguintes só buscam portarias novas.
   movimentosFuncoesBrutos: unknown[];
+  // Períodos "crus" de teletrabalho (ver scrapeTeletrabalho.js) — sempre
+  // buscados por inteiro (página única, sem cache incremental).
+  teletrabalhoBrutos: unknown[];
 }
 
 interface EstadoCache {
@@ -47,6 +52,7 @@ interface EstadoCache {
   contratosBrutos: unknown[] | null;
   agentesPublicosBrutos: unknown[] | null;
   movimentosFuncoesBrutos: unknown[] | null;
+  teletrabalhoBrutos: unknown[] | null;
   carregouDisco: boolean;
   atualizando: boolean;
   progresso: Progresso | null;
@@ -64,6 +70,7 @@ function estado(): EstadoCache {
     contratosBrutos: null,
     agentesPublicosBrutos: null,
     movimentosFuncoesBrutos: null,
+    teletrabalhoBrutos: null,
     carregouDisco: false,
     atualizando: false,
     progresso: null,
@@ -86,11 +93,13 @@ async function carregarDoDisco(e: EstadoCache) {
       e.contratosBrutos = persistido.contratosBrutos ?? null;
       e.agentesPublicosBrutos = persistido.agentesPublicosBrutos ?? null;
       e.movimentosFuncoesBrutos = persistido.movimentosFuncoesBrutos ?? null;
+      e.teletrabalhoBrutos = persistido.teletrabalhoBrutos ?? null;
     } else {
       e.dados = bruto as DashboardData;
       e.contratosBrutos = null;
       e.agentesPublicosBrutos = null;
       e.movimentosFuncoesBrutos = null;
+      e.teletrabalhoBrutos = null;
     }
   } catch {
     // sem cache em disco: o cliente segue com o snapshot embutido no bundle
@@ -145,14 +154,22 @@ function iniciarAtualizacao(e: EstadoCache) {
       });
       e.movimentosFuncoesBrutos = movimentosFuncoes;
 
+      // Teletrabalho: página única, sem cache incremental — barato refazer
+      // por inteiro toda vez, como agentesPublicos.
+      e.progresso = { fase: 'teletrabalho', feitos: 0, total: 1 };
+      const teletrabalho = await scrapeTeletrabalho();
+      e.teletrabalhoBrutos = teletrabalho;
+      e.progresso = { fase: 'teletrabalho', feitos: 1, total: 1 };
+
       const excecoes = carregarExcecoes();
-      e.dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos, excecoes) as DashboardData;
+      e.dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos, excecoes, teletrabalho) as DashboardData;
       await fs.mkdir(path.dirname(ARQUIVO_CACHE), { recursive: true });
       const persistido: CachePersistido = {
         dados: e.dados,
         contratosBrutos: contratos,
         agentesPublicosBrutos: agentesPublicos,
         movimentosFuncoesBrutos: movimentosFuncoes,
+        teletrabalhoBrutos: teletrabalho,
       };
       await fs.writeFile(ARQUIVO_CACHE, JSON.stringify(persistido), 'utf8');
     } catch (err) {

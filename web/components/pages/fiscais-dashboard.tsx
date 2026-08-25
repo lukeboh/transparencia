@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Briefcase, Check, Crown, Scale, Users } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Briefcase, Check, Crown, Laptop, Scale, Users } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
 import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
@@ -17,7 +17,7 @@ import { useDadosDashboard } from '@/lib/use-dados';
 import { brlCompacto, cn, nomeProprio, numero } from '@/lib/utils';
 import type { LinhaRanking, ServidorFuncoes } from '@/lib/dashboard-data';
 
-export function ResponsaveisDashboard() {
+export function FiscaisDashboard() {
   const estado = useDadosDashboard();
   const { responsaveis, funcoes, contratos, fonte } = estado.dados;
 
@@ -161,7 +161,7 @@ export function ResponsaveisDashboard() {
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
             Contratos do TSE
           </Link>
-          <h1 className="text-2xl font-semibold tracking-tight">Responsáveis</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Fiscais</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Servidores fiscais e gestores pelos maiores valores consolidados de
             contratos ·{' '}
@@ -183,6 +183,14 @@ export function ResponsaveisDashboard() {
           >
             <Briefcase className="h-4 w-4" aria-hidden />
             <span className="sr-only sm:not-sr-only">Funções</span>
+            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
+          </Link>
+          <Link
+            href="/teletrabalho"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <Laptop className="h-4 w-4" aria-hidden />
+            <span className="sr-only sm:not-sr-only">Teletrabalho</span>
             <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
           </Link>
           <ThemePicker />
@@ -216,7 +224,7 @@ export function ResponsaveisDashboard() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <FuncaoStatCard
-            titulo="Responsáveis designados"
+            titulo="Fiscais designados"
             detalhe={
               somenteVigentes
                 ? `${numero(rankingFiltrado.length)} com contrato vigente hoje`

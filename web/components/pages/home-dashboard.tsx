@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowUpRight, Briefcase, Users } from 'lucide-react';
+import { ArrowUpRight, Briefcase, Laptop, Users } from 'lucide-react';
 import { StatCards } from '@/components/dashboard/stat-cards';
 import { EvolucaoChart } from '@/components/dashboard/evolucao-chart';
 import { CategoriasChart } from '@/components/dashboard/categorias-chart';
@@ -37,11 +37,11 @@ export function HomeDashboard() {
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-2">
           <Link
-            href="/responsaveis"
+            href="/fiscais"
             className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             <Users className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Responsáveis</span>
+            <span className="sr-only sm:not-sr-only">Fiscais</span>
             <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
           </Link>
           <Link
@@ -50,6 +50,14 @@ export function HomeDashboard() {
           >
             <Briefcase className="h-4 w-4" aria-hidden />
             <span className="sr-only sm:not-sr-only">Funções</span>
+            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
+          </Link>
+          <Link
+            href="/teletrabalho"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <Laptop className="h-4 w-4" aria-hidden />
+            <span className="sr-only sm:not-sr-only">Teletrabalho</span>
             <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
           </Link>
           <ThemePicker />
