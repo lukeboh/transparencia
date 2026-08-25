@@ -10,6 +10,7 @@
     "tse:scrape-agentes": "node src/tse/scrapeAgentesPublicos.js",
     "tse:scrape-funcoes": "node src/tse/scrapeFuncoes.js",
     "tse:rank": "node src/tse/cli.js",
+    "tse:cruzar-siac": "node src/tse/cruzarSiac.js",
     "data": "node src/tse/buildDashboardData.js",
     "start": "node src/tse/scrapeAgentesPublicos.js && node src/tse/buildDashboardData.js && npm run dev --prefix web",
     "test": "node --test"
