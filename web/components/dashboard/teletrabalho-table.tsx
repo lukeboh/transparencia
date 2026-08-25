@@ -35,7 +35,7 @@ import type { LinhaRanking, LinhaTeletrabalho, ServidorFuncoes } from '@/lib/das
 
 const LINHAS_POR_PAGINA = 25;
 
-type CampoOrdenavel = 'nome' | 'dias' | 'lotacao';
+type CampoOrdenavel = 'nome' | 'dias' | 'lotacao' | 'situacao';
 type DirecaoOrdenacao = 'asc' | 'desc';
 
 interface Ordenacao {
@@ -47,6 +47,7 @@ const DIRECAO_INICIAL: Record<CampoOrdenavel, DirecaoOrdenacao> = {
   nome: 'asc',
   dias: 'desc',
   lotacao: 'asc',
+  situacao: 'desc',
 };
 
 /** Caminho da lotação do maior nível para o menor (secretaria → coordenadoria → seção) — inverso de `unidadeNiveis` (que vem da fonte do menor para o maior) — para ordenar/agrupar por secretaria primeiro. */
@@ -110,6 +111,7 @@ export function TeletrabalhoTable({
   ranking,
   funcaoDe,
   lotacaoDe,
+  vigenteDe,
   responsaveisRanking,
   onVerDetalhe,
   onVerContratos,
@@ -118,12 +120,15 @@ export function TeletrabalhoTable({
   funcaoDe: (linha: LinhaTeletrabalho) => ServidorFuncoes | undefined;
   /** Níveis da lotação do período mais recente, do menor (seção) para o maior (secretaria/gabinete/assessoria). */
   lotacaoDe: (linha: LinhaTeletrabalho) => string[] | null;
+  /** true = tem período em aberto hoje (vigente). */
+  vigenteDe: (linha: LinhaTeletrabalho) => boolean;
   responsaveisRanking: LinhaRanking[];
   onVerDetalhe: (linha: LinhaTeletrabalho) => void;
   onVerContratos: (linha: LinhaRanking) => void;
 }) {
   const [pagina, setPagina] = useState(0);
   const [busca, setBusca] = useState('');
+  const [buscaLotacao, setBuscaLotacao] = useState('');
   const [ordenacao, setOrdenacao] = useState<Ordenacao | null>(null);
 
   // A posição (#) é sempre a do ranking original por dias consolidados,
@@ -131,10 +136,13 @@ export function TeletrabalhoTable({
   // (mesmo padrão de ranking-table.tsx).
   const linhasVisiveis = useMemo(() => {
     const comPosicao = ranking.map((linha, i) => ({ linha, posicao: i + 1 }));
-    const termo = normalizar(busca.trim());
-    const filtradas = termo
-      ? comPosicao.filter(({ linha }) => normalizar(linha.nome).includes(termo))
-      : comPosicao;
+    const termoNome = normalizar(busca.trim());
+    const termoLotacao = normalizar(buscaLotacao.trim());
+    const filtradas = comPosicao.filter(({ linha }) => {
+      if (termoNome && !normalizar(linha.nome).includes(termoNome)) return false;
+      if (termoLotacao && !normalizar(caminhoLotacao(lotacaoDe(linha))).includes(termoLotacao)) return false;
+      return true;
+    });
     if (!ordenacao) return filtradas;
     const fator = ordenacao.direcao === 'asc' ? 1 : -1;
     return [...filtradas].sort((a, b) => {
@@ -148,9 +156,11 @@ export function TeletrabalhoTable({
             fator *
             caminhoLotacao(lotacaoDe(a.linha)).localeCompare(caminhoLotacao(lotacaoDe(b.linha)), 'pt-BR')
           );
+        case 'situacao':
+          return fator * (Number(vigenteDe(a.linha)) - Number(vigenteDe(b.linha)));
       }
     });
-  }, [ranking, busca, ordenacao, lotacaoDe]);
+  }, [ranking, busca, buscaLotacao, ordenacao, lotacaoDe, vigenteDe]);
 
   const totalPaginas = Math.max(1, Math.ceil(linhasVisiveis.length / LINHAS_POR_PAGINA));
   const paginaAtual = Math.min(pagina, totalPaginas - 1);
@@ -178,40 +188,77 @@ export function TeletrabalhoTable({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="relative mb-4 max-w-sm">
-          <Search
-            className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <input
-            type="search"
-            value={busca}
-            onChange={(e) => {
-              setBusca(e.target.value);
-              setPagina(0);
-            }}
-            placeholder="Filtrar por servidor…"
-            aria-label="Filtrar por servidor"
-            className={cn(
-              'h-9 w-full rounded-md border border-border bg-card pl-8 pr-8 text-sm text-foreground',
-              'placeholder:text-muted-foreground outline-none transition-colors',
-              'focus-visible:ring-2 focus-visible:ring-ring',
-              '[&::-webkit-search-cancel-button]:hidden',
-            )}
-          />
-          {busca && (
-            <button
-              type="button"
-              onClick={() => {
-                setBusca('');
+        <div className="mb-4 flex flex-wrap gap-3">
+          <div className="relative max-w-sm flex-1 min-w-[220px]">
+            <Search
+              className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+            <input
+              type="search"
+              value={busca}
+              onChange={(e) => {
+                setBusca(e.target.value);
                 setPagina(0);
               }}
-              aria-label="Limpar filtro"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-            >
-              <X className="h-3.5 w-3.5" aria-hidden />
-            </button>
-          )}
+              placeholder="Filtrar por servidor…"
+              aria-label="Filtrar por servidor"
+              className={cn(
+                'h-9 w-full rounded-md border border-border bg-card pl-8 pr-8 text-sm text-foreground',
+                'placeholder:text-muted-foreground outline-none transition-colors',
+                'focus-visible:ring-2 focus-visible:ring-ring',
+                '[&::-webkit-search-cancel-button]:hidden',
+              )}
+            />
+            {busca && (
+              <button
+                type="button"
+                onClick={() => {
+                  setBusca('');
+                  setPagina(0);
+                }}
+                aria-label="Limpar filtro de servidor"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              >
+                <X className="h-3.5 w-3.5" aria-hidden />
+              </button>
+            )}
+          </div>
+          <div className="relative max-w-sm flex-1 min-w-[220px]">
+            <Search
+              className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+            <input
+              type="search"
+              value={buscaLotacao}
+              onChange={(e) => {
+                setBuscaLotacao(e.target.value);
+                setPagina(0);
+              }}
+              placeholder="Filtrar por lotação…"
+              aria-label="Filtrar por lotação"
+              className={cn(
+                'h-9 w-full rounded-md border border-border bg-card pl-8 pr-8 text-sm text-foreground',
+                'placeholder:text-muted-foreground outline-none transition-colors',
+                'focus-visible:ring-2 focus-visible:ring-ring',
+                '[&::-webkit-search-cancel-button]:hidden',
+              )}
+            />
+            {buscaLotacao && (
+              <button
+                type="button"
+                onClick={() => {
+                  setBuscaLotacao('');
+                  setPagina(0);
+                }}
+                aria-label="Limpar filtro de lotação"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              >
+                <X className="h-3.5 w-3.5" aria-hidden />
+              </button>
+            )}
+          </div>
         </div>
 
         <Table>
@@ -220,6 +267,9 @@ export function TeletrabalhoTable({
               <TableHead className="w-10 text-right">#</TableHead>
               <TableHead>
                 <CabecalhoOrdenavel rotulo="Servidor" campo="nome" ordenacao={ordenacao} onOrdenar={ordenarPor} />
+              </TableHead>
+              <TableHead>
+                <CabecalhoOrdenavel rotulo="Situação" campo="situacao" ordenacao={ordenacao} onOrdenar={ordenarPor} />
               </TableHead>
               <TableHead>Função</TableHead>
               <TableHead>Fiscal</TableHead>
@@ -234,8 +284,9 @@ export function TeletrabalhoTable({
           <TableBody>
             {linhas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                   Nenhum servidor encontrado{busca ? ` para "${busca}"` : ''}
+                  {buscaLotacao ? ` na lotação "${buscaLotacao}"` : ''}
                 </TableCell>
               </TableRow>
             ) : (
@@ -246,10 +297,20 @@ export function TeletrabalhoTable({
                     : null;
                 const servidor = funcaoDe(linha);
                 const caminho = caminhoLotacao(lotacaoDe(linha));
+                const vigente = vigenteDe(linha);
                 return (
                   <TableRow key={linha.nome} onClick={() => onVerDetalhe(linha)} className="cursor-pointer">
                     <TableCell className="text-right text-muted-foreground tabular-nums">{posicao}</TableCell>
                     <TableCell className="font-medium">{nomeProprio(linha.nome)}</TableCell>
+                    <TableCell>
+                      {vigente ? (
+                        <span className="rounded-sm bg-secondary px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-secondary-foreground">
+                          Vigente
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Finalizado</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       {servidor ? (
                         <FuncoesBadges servidor={servidor} />
@@ -306,7 +367,7 @@ export function TeletrabalhoTable({
             {linhasVisiveis.length === 0
               ? `0 de ${numero(ranking.length)}`
               : `Exibindo ${numero(inicio + 1)}–${numero(inicio + linhas.length)} de ${numero(linhasVisiveis.length)}`}
-            {busca.trim() && linhasVisiveis.length !== ranking.length && (
+            {(busca.trim() || buscaLotacao.trim()) && linhasVisiveis.length !== ranking.length && (
               <> (filtrados de {numero(ranking.length)})</>
             )}
           </p>

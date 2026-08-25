@@ -3,11 +3,12 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
+  Activity,
   ArrowLeft,
   ArrowUpRight,
   Briefcase,
   Building2,
-  Crown,
+  Check,
   Laptop,
   Scale,
   ShieldCheck,
@@ -27,7 +28,7 @@ import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
-import { nomeProprio, numero } from '@/lib/utils';
+import { cn, nomeProprio, numero } from '@/lib/utils';
 import type { LinhaRanking, LinhaTeletrabalho, PeriodoTeletrabalho, ServidorFuncoes } from '@/lib/dashboard-data';
 
 /** Mesma normalização de src/tse/rankResponsaveis.js — a fonte de teletrabalho não expõe matrícula/CPF, então o cruzamento com as outras fontes só pode ser por nome. */
@@ -38,6 +39,11 @@ function normalizeNome(nome: string) {
     .trim()
     .replace(/\s+/g, ' ')
     .toUpperCase();
+}
+
+/** Vigente = tem ao menos um período sem data de fim (em aberto) hoje. */
+function estaVigente(linha: LinhaTeletrabalho): boolean {
+  return linha.periodos.some((p) => p.dataFim === null);
 }
 
 /** Período mais recente da pessoa — o período em aberto, se houver, senão o de maior data de início (periodos já vem ordenado desc por dataInicio do agregador). */
@@ -78,9 +84,16 @@ function contarPorUnidadeTopo(ranking: LinhaTeletrabalho[]): FatiaContagem[] {
   return [...principais, { rotulo: 'Outros', quantidade: resto.reduce((s, f) => s + f.quantidade, 0) }];
 }
 
+function calcMediana(valores: number[]) {
+  const s = [...valores].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  if (s.length === 0) return 0;
+  return s.length % 2 === 1 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
 export function TeletrabalhoDashboard() {
   const estado = useDadosDashboard();
-  const { teletrabalho, funcoes, responsaveis, contratos } = estado.dados;
+  const { teletrabalho, funcoes, responsaveis, contratos, resumo } = estado.dados;
 
   const funcoesPorNome = useMemo(() => {
     const map = new Map<string, ServidorFuncoes>();
@@ -90,23 +103,46 @@ export function TeletrabalhoDashboard() {
 
   const funcaoDe = (linha: LinhaTeletrabalho) => funcoesPorNome.get(normalizeNome(linha.nome));
 
-  const topUm = teletrabalho.ranking[0];
+  // "Em teletrabalho agora" é sempre sobre o universo completo — não muda
+  // com o filtro "somente vigentes hoje" abaixo, que só recorta o que a
+  // tabela/os demais KPIs mostram.
+  const emTeletrabalhoAgora = useMemo(() => teletrabalho.ranking.filter(estaVigente).length, [teletrabalho.ranking]);
+
+  const donutAgora = useMemo<FatiaContagem[]>(
+    () => [
+      { rotulo: 'Em teletrabalho agora', quantidade: emTeletrabalhoAgora },
+      { rotulo: 'Demais agentes públicos', quantidade: Math.max(0, resumo.totalAgentesPublicos - emTeletrabalhoAgora) },
+    ],
+    [emTeletrabalhoAgora, resumo.totalAgentesPublicos],
+  );
+
+  const [somenteVigentes, setSomenteVigentes] = useState(false);
+
+  const rankingFiltrado = useMemo(
+    () => (somenteVigentes ? teletrabalho.ranking.filter(estaVigente) : teletrabalho.ranking),
+    [teletrabalho.ranking, somenteVigentes],
+  );
+
+  const medianaFiltrada = useMemo(
+    () => calcMediana(rankingFiltrado.map((r) => r.diasConsolidados)),
+    [rankingFiltrado],
+  );
 
   const donutFiscais = useMemo<FatiaContagem[]>(() => {
-    const fiscais = teletrabalho.ranking.filter((r) => r.responsavelRankingIndex !== null).length;
-    const semContrato = teletrabalho.ranking.length - fiscais;
+    const fiscais = rankingFiltrado.filter((r) => r.responsavelRankingIndex !== null).length;
+    const semContrato = rankingFiltrado.length - fiscais;
     return [
       { rotulo: 'Fiscal/gestor', quantidade: fiscais },
       { rotulo: 'Sem contrato', quantidade: semContrato },
     ];
-  }, [teletrabalho.ranking]);
+  }, [rankingFiltrado]);
 
   const donutFuncoes = useMemo(
-    () => contarPorFuncaoAtual(teletrabalho.ranking.map((r) => ({ funcaoAtual: funcaoDe(r)?.funcaoAtual ?? null }))),
-    [teletrabalho.ranking, funcoesPorNome],
+    () => contarPorFuncaoAtual(rankingFiltrado.map((r) => ({ funcaoAtual: funcaoDe(r)?.funcaoAtual ?? null }))),
+    [rankingFiltrado, funcoesPorNome],
   );
 
-  const donutUnidades = useMemo(() => contarPorUnidadeTopo(teletrabalho.ranking), [teletrabalho.ranking]);
+  const donutUnidades = useMemo(() => contarPorUnidadeTopo(rankingFiltrado), [rankingFiltrado]);
 
   const [detalheAberto, setDetalheAberto] = useState<LinhaTeletrabalho | null>(null);
   const [contratosDe, setContratosDe] = useState<LinhaRanking | null>(null);
@@ -159,22 +195,43 @@ export function TeletrabalhoDashboard() {
       </header>
 
       <div className="space-y-4">
+        <div className="flex flex-wrap items-start gap-3">
+          <button
+            type="button"
+            onClick={() => setSomenteVigentes((v) => !v)}
+            aria-pressed={somenteVigentes}
+            className={cn(
+              'inline-flex shrink-0 items-center gap-1.5 self-start rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors',
+              somenteVigentes
+                ? 'border-primary bg-primary text-primary-foreground shadow-xs'
+                : 'border-border bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+            )}
+          >
+            {somenteVigentes && <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />}
+            Somente vigentes hoje
+          </button>
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
             titulo="Servidores em teletrabalho"
-            valor={numero(teletrabalho.total)}
-            detalhe={`${numero(teletrabalho.ranking.reduce((s, r) => s + r.periodos.length, 0))} períodos registrados`}
+            valor={numero(rankingFiltrado.length)}
+            detalhe={
+              somenteVigentes
+                ? `${numero(rankingFiltrado.length)} vigentes hoje`
+                : `${numero(teletrabalho.total)} no total · ${numero(emTeletrabalhoAgora)} vigentes hoje`
+            }
             icone={<Laptop className="h-4 w-4" aria-hidden />}
           />
-          <StatCard
-            titulo="Maior quantitativo"
-            valor={topUm ? `${numero(topUm.diasConsolidados)} dias` : '—'}
-            detalhe={topUm ? nomeProprio(topUm.nome) : '—'}
-            icone={<Crown className="h-4 w-4" aria-hidden />}
+          <ContagemStatCard
+            titulo="Teletrabalho agora"
+            detalhe={`${numero(emTeletrabalhoAgora)} de ${numero(resumo.totalAgentesPublicos)} agentes públicos do TSE`}
+            icone={<Activity className="h-4 w-4" aria-hidden />}
+            fatias={donutAgora}
           />
           <StatCard
             titulo="Mediana por servidor"
-            valor={`${numero(teletrabalho.medianaDias)} dias`}
+            valor={`${numero(medianaFiltrada)} dias`}
             detalhe="dias consolidados em teletrabalho"
             icone={<Scale className="h-4 w-4" aria-hidden />}
           />
@@ -202,9 +259,10 @@ export function TeletrabalhoDashboard() {
         </div>
 
         <TeletrabalhoTable
-          ranking={teletrabalho.ranking}
+          ranking={rankingFiltrado}
           funcaoDe={funcaoDe}
           lotacaoDe={lotacaoDe}
+          vigenteDe={estaVigente}
           responsaveisRanking={responsaveis.ranking}
           onVerDetalhe={setDetalheAberto}
           onVerContratos={setContratosDe}
@@ -212,10 +270,11 @@ export function TeletrabalhoDashboard() {
       </div>
 
       <footer className="mt-8 text-xs text-muted-foreground">
-        Cada período soma os dias corridos entre início e fim (ou hoje, quando o período segue em aberto); períodos
-        sobrepostos da mesma pessoa não são mesclados, então dias sobrepostos podem ser contados mais de uma vez.
-        Cruzamento com fiscais/gestores e com função comissionada é feito pelo nome do servidor — nenhuma das fontes
-        expõe CPF nem matrícula em comum — então homônimos podem gerar vínculos incorretos.
+        Vigente = tem ao menos um período em aberto (sem data de fim) hoje. Cada período soma os dias corridos entre
+        início e fim (ou hoje, quando segue em aberto); períodos sobrepostos da mesma pessoa não são mesclados, então
+        dias sobrepostos podem ser contados mais de uma vez. Cruzamento com fiscais/gestores e com função
+        comissionada é feito pelo nome do servidor — nenhuma das fontes expõe CPF nem matrícula em comum — então
+        homônimos podem gerar vínculos incorretos.
         <AppVersion />
       </footer>
 

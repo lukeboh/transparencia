@@ -131,6 +131,11 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
       valorVigenteEmpenhado: vigentes.reduce((s, c) => s + (c.valorEmpenhado || 0), 0),
       valorVigentePago: vigentes.reduce((s, c) => s + (c.valorPago || 0), 0),
       totalResponsaveis: responsaveis.size,
+      // Tamanho da relação atual de agentes públicos do TSE (fonte primária,
+      // ver scrapeAgentesPublicos.js) — usado como proxy do quantitativo
+      // total de servidores/agentes públicos "no momento", para comparar com
+      // quem está em teletrabalho agora.
+      totalAgentesPublicos: agentesPublicos.length,
     },
     evolucao,
     categorias,

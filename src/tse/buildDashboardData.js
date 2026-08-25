@@ -84,6 +84,8 @@ export interface ResumoTSE {
   valorVigenteEmpenhado: number;
   valorVigentePago: number;
   totalResponsaveis: number;
+  /** Tamanho da relação atual de agentes públicos do TSE — proxy do quantitativo total de servidores "no momento". */
+  totalAgentesPublicos: number;
 }
 
 export interface PontoEvolucao {

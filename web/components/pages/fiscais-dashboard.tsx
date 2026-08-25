@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Briefcase, Check, Crown, Laptop, Scale, Users } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Briefcase, Check, Laptop, Scale, Users } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
 import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
@@ -14,7 +14,7 @@ import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
-import { brlCompacto, cn, nomeProprio, numero } from '@/lib/utils';
+import { brlCompacto, cn, numero } from '@/lib/utils';
 import type { LinhaRanking, ServidorFuncoes } from '@/lib/dashboard-data';
 
 export function FiscaisDashboard() {
@@ -99,8 +99,6 @@ export function FiscaisDashboard() {
 
     return resultado.sort((a, b) => b.valorConsolidado - a.valorConsolidado);
   }, [responsaveis.ranking, contratos, papeisSelecionados, todosPapeis, somenteVigentes]);
-
-  const topUm = rankingFiltrado[0];
 
   const calcMediana = (arr: number[]) => {
     const s = [...arr].sort((a, b) => a - b);
@@ -232,12 +230,6 @@ export function FiscaisDashboard() {
             }
             icone={<Users className="h-4 w-4" aria-hidden />}
             contagens={donutFuncoesResponsaveis}
-          />
-          <StatCard
-            titulo="Maior valor sob responsabilidade"
-            valor={brlCompacto(topUm?.valorConsolidado ?? 0)}
-            detalhe={topUm ? `${nomeProprio(topUm.nome)} (Emp: ${brlCompacto(topUm.valorEmpenhadoConsolidado || 0)})` : '—'}
-            icone={<Crown className="h-4 w-4" aria-hidden />}
           />
           <StatCard
             titulo="Mediana por responsável"
