@@ -33,6 +33,17 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   e ele nunca retornou dado nenhum, então não é usado aqui.
 - ✅ A antiga página `/responsaveis` foi renomeada para `/fiscais` (rota e
   label) — nome interno de dados (`DashboardData.responsaveis`) não mudou.
+- ✅ Estrutura hierárquica de unidades do TSE (`/unidades`) — fonte: o
+  endpoint JSON por trás do organograma oficial
+  ([agrupamento por unidade](https://transparencia.tse.jus.br/transparenciaDadosServidores/smvc/relatorios/lotacao-geral/sem-assinatura/agrupamento-por-unidade),
+  `src/tse/scrapeUnidades.js`). Cruzada por nome de unidade normalizado com a
+  relação de agentes públicos, teletrabalho vigente e fiscais/gestores
+  (`src/tse/agregarUnidades.js`) — mesma limitação de homônimos/divergência de
+  grafia entre fontes das demais páginas; registros que não batem com nenhuma
+  unidade da árvore (ou batem com mais de uma) ficam contabilizados à parte
+  em vez de descartados. Pirâmide vertical (TSE no topo) com toggle
+  "Consolidado: sim/não" por unidade (soma da subárvore vs. só quem está
+  lotado ali direto), busca por sigla/nome e expandir/recolher tudo.
 - ✅ Responsivo em telas de celular (320px+) — testado com Playwright em
   320/375/768px nas 3 páginas. Cabeçalhos quebram para uma segunda linha em
   vez de estourar a tela (nav com só ícone abaixo de `sm:`); tabelas crescem
@@ -46,7 +57,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   direita em qualquer situação).
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.14**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.15**.
 
 ## Dashboard web
 
@@ -97,8 +108,8 @@ atualizar o snapshot embutido):
 
 ```bash
 npm run tse:scrape -- TSE data/tse_contratos.json   # extrai (raiz do repo)
+npm run tse:scrape-unidades                         # extrai a árvore de unidades
 cd web && npm run data                              # regrava o snapshot embutido
->>>>>>> origin/claude/tse-contract-transparency-sed1nw
 ```
 
 Conteúdo: 3 cards de resumo (valor total contratado, contratos vigentes,

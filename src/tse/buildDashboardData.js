@@ -15,6 +15,7 @@ let entrada = process.argv[2] ?? path.join(raiz, 'data/tse_contratos.json');
 const entradaFuncoes = process.argv[4] ?? path.join(raiz, 'data/tse_funcoes.json');
 const entradaAgentes = process.argv[5] ?? path.join(raiz, 'data/tse_agentes.json');
 const entradaTeletrabalho = process.argv[6] ?? path.join(raiz, 'data/tse_teletrabalho.json');
+const entradaUnidades = process.argv[7] ?? path.join(raiz, 'data/tse_unidades.json');
 const saida = process.argv[3] ?? path.join(raiz, 'web/lib/dashboard-data.ts');
 
 async function main() {
@@ -60,12 +61,29 @@ async function main() {
     );
   }
 
+  let arvoreUnidades = null;
+  if (existsSync(entradaUnidades)) {
+    arvoreUnidades = JSON.parse(await readFile(entradaUnidades, 'utf8'));
+  } else {
+    console.warn(
+      `[Aviso] '${entradaUnidades}' não foi encontrado — seção "unidades" sairá vazia. ` +
+      'Rode "npm run tse:scrape-unidades" para gerá-lo.',
+    );
+  }
+
   const excecoes = carregarExcecoes();
-  const dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos, excecoes, movimentosTeletrabalho);
+  const dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos, excecoes, movimentosTeletrabalho, arvoreUnidades);
   await escreverDashboardData(dados, saida);
   console.log(
     `  ${contratos.length} contratos · ${dados.evolucao.length} anos · ${dados.categorias.length} fatias de categoria`,
   );
+  if (dados.unidades.arvore) {
+    const { naoLocalizados } = dados.unidades;
+    console.log(
+      `  unidades: ${dados.unidades.totalServidoresTSE} servidores na árvore · não localizados: ` +
+      `${naoLocalizados.servidores} servidor(es), ${naoLocalizados.teletrabalho} teletrabalho, ${naoLocalizados.ambiguos} ambíguo(s)`,
+    );
+  }
 }
 
 /** Escreve o snapshot embutido em `saida` a partir de um DashboardData já agregado. */
@@ -243,6 +261,49 @@ export interface TeletrabalhoData {
   ranking: LinhaTeletrabalho[];
 }
 
+export interface FuncaoContagem {
+  tipo: 'FC' | 'CJ';
+  nivel: number;
+  quantidade: number;
+}
+
+export interface FiscalContagem {
+  papel: string;
+  quantidade: number;
+}
+
+export interface UnidadeMetricas {
+  servidores: number;
+  funcoes: FuncaoContagem[];
+  fiscais: FiscalContagem[];
+  teletrabalho: number;
+}
+
+export interface UnidadeNode {
+  id: string;
+  nome: string;
+  sigla: string;
+  parentId: string | null;
+  /** Só quem está lotado exatamente nesse nó (não inclui filhos). */
+  direto: UnidadeMetricas;
+  /** Esse nó + toda a subárvore. */
+  consolidado: UnidadeMetricas;
+  children: UnidadeNode[];
+}
+
+export interface UnidadesData {
+  arvore: UnidadeNode | null;
+  /** Total consolidado de servidores no nó raiz — denominador fixo da % de "Servidores vigentes" em qualquer nó da árvore. */
+  totalServidoresTSE: number;
+  /** Pessoas/registros que não puderam ser posicionados na árvore por não achar (ou achar mais de uma vez) a unidade pelo nome — ver agregarUnidades.js. */
+  naoLocalizados: {
+    servidores: number;
+    teletrabalho: number;
+    ambiguos: number;
+    exemplos: { servidores: string[]; teletrabalho: string[] };
+  };
+}
+
 export interface DashboardData {
   geradoEm: string;
   fonte: string;
@@ -253,6 +314,7 @@ export interface DashboardData {
   responsaveis: ResponsaveisData;
   funcoes: FuncoesData;
   teletrabalho: TeletrabalhoData;
+  unidades: UnidadesData;
 }
 
 /** URL do contrato detalhado na consulta pública do Comprasnet. */
@@ -274,6 +336,11 @@ export function urlTeletrabalho(nome: string) {
     toExcel: 'false',
   });
   return \`https://transparencia.tse.jus.br/transparenciaDadosServidores/infoServidores?\${params.toString()}\`;
+}
+
+/** URL da página de detalhe (lista de agentes públicos) de uma unidade, na consulta pública do TSE — para conferir a origem dos dados de um nó. */
+export function urlUnidadeDetalhe(id: string) {
+  return \`https://transparencia.tse.jus.br/transparenciaDadosServidores/smvc/relatorios/lotacao-geral/sem-assinatura/agrupamento-por-unidade/detalhe/\${id}\`;
 }
 
 export const dashboardData: DashboardData = ${JSON.stringify(dados)};

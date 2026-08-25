@@ -9,7 +9,11 @@ export function DadosStatus({ estado }: { estado: EstadoDados }) {
   if (estado.atualizando) {
     const { progresso } = estado;
     const rotulo =
-      progresso?.fase === 'funcoes' ? 'atualizando funções comissionadas' : 'atualizando da fonte';
+      progresso?.fase === 'funcoes'
+        ? 'atualizando funções comissionadas'
+        : progresso?.fase === 'unidades'
+          ? 'atualizando unidades e lotações'
+          : 'atualizando da fonte';
     return (
       <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
         <LoaderCircle className="h-3.5 w-3.5 animate-spin" aria-hidden />

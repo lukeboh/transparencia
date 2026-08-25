@@ -40,6 +40,11 @@ export function numero(valor: number) {
   return inteiro.format(valor);
 }
 
+/** Divisão segura + arredondamento inteiro — 0 (não NaN) quando o denominador é 0. */
+export function percentual(qtd: number, total: number): number {
+  return total > 0 ? Math.round((qtd / total) * 100) : 0;
+}
+
 /**
  * "2026-07-10T11:39:00.000Z" → "10/07/2026", sem passar por Date/fuso — o
  * mesmo texto no prerender (Node, UTC) e no navegador, evitando mismatch de

@@ -1,0 +1,2233 @@
+{
+  "id": "1",
+  "nome": "TRIBUNAL SUPERIOR ELEITORAL",
+  "found": false,
+  "name": "TSE",
+  "children": [
+    {
+      "id": "3",
+      "nome": "PRESIDÊNCIA",
+      "found": true,
+      "parentidAsString": "1",
+      "name": "PRES",
+      "children": [
+        {
+          "id": "481",
+          "nome": "MINISTROS",
+          "found": true,
+          "parentidAsString": "3",
+          "name": "MIN",
+          "children": [
+            {
+              "id": "483",
+              "nome": "MINISTRO 6 - JURISTA ",
+              "found": true,
+              "parentidAsString": "481",
+              "name": "G6-JUR",
+              "title": "15"
+            },
+            {
+              "id": "484",
+              "nome": "MINISTRO 4 - STJ",
+              "found": true,
+              "parentidAsString": "481",
+              "name": "G4-STJ",
+              "title": "17"
+            },
+            {
+              "id": "485",
+              "nome": "MINISTRO 5 - JURISTA ",
+              "found": true,
+              "parentidAsString": "481",
+              "name": "G5-JUR",
+              "title": "18"
+            },
+            {
+              "id": "486",
+              "nome": "MINISTRO 1 - STF ",
+              "found": true,
+              "parentidAsString": "481",
+              "name": "G1-STF",
+              "title": "19"
+            },
+            {
+              "id": "487",
+              "nome": "MINISTRO 3 - STJ ",
+              "found": true,
+              "parentidAsString": "481",
+              "name": "G3-STJ",
+              "title": "15"
+            },
+            {
+              "id": "1581",
+              "nome": "MINISTRO VICE-PRESIDENTE",
+              "found": true,
+              "parentidAsString": "481",
+              "name": "G2-STF",
+              "title": "18"
+            }
+          ],
+          "title": "DIV"
+        },
+        {
+          "id": "488",
+          "nome": "CORREGEDORIA-GERAL DA JUSTIÇA ELEITORAL",
+          "found": true,
+          "parentidAsString": "3",
+          "name": "CGE",
+          "children": [
+            {
+              "id": "501",
+              "nome": "COORDENADORIA DE ASSUNTOS JUDICIÁRIOS",
+              "found": true,
+              "parentidAsString": "488",
+              "name": "COAJU",
+              "children": [
+                {
+                  "id": "504",
+                  "nome": "SEÇÃO DE PROCEDIMENTOS CARTORÁRIOS",
+                  "found": true,
+                  "parentidAsString": "501",
+                  "name": "SEPC",
+                  "title": "3"
+                },
+                {
+                  "id": "505",
+                  "nome": "SEÇÃO DE ANÁLISE E ACOMPANHAMENTO",
+                  "found": true,
+                  "parentidAsString": "501",
+                  "name": "SEAA",
+                  "title": "2"
+                },
+                {
+                  "id": "893",
+                  "nome": "GABINETE DA COORDENADORIA DE ASSUNTOS JUDICIÁRIOS",
+                  "found": true,
+                  "parentidAsString": "501",
+                  "name": "GAB.COAJU",
+                  "title": "1"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "502",
+              "nome": "COORDENADORIA DE FISCALIZAÇÃO DE CADASTRO",
+              "found": true,
+              "parentidAsString": "488",
+              "name": "CFCAD",
+              "children": [
+                {
+                  "id": "506",
+                  "nome": "SEÇÃO DE DIREITOS POLÍTICOS",
+                  "found": true,
+                  "parentidAsString": "502",
+                  "name": "SEDP",
+                  "title": "3"
+                },
+                {
+                  "id": "507",
+                  "nome": "SEÇÃO DE REGULARIZAÇÃO DE SITUAÇÃO ELEITORAL",
+                  "found": true,
+                  "parentidAsString": "502",
+                  "name": "SERS",
+                  "title": "5"
+                },
+                {
+                  "id": "894",
+                  "nome": "GABINETE DA COORDENADORIA DE FISCALIZAÇÃO DE CADASTRO",
+                  "found": true,
+                  "parentidAsString": "502",
+                  "name": "GAB.CFCAD",
+                  "title": "4"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "503",
+              "nome": "COORDENADORIA DE SUPERVISÃO E ORIENTAÇÃO",
+              "found": true,
+              "parentidAsString": "488",
+              "name": "CSORI",
+              "children": [
+                {
+                  "id": "508",
+                  "nome": "SEÇÃO DE INSPEÇÕES E CORREIÇÕES",
+                  "found": true,
+                  "parentidAsString": "503",
+                  "name": "SEIC",
+                  "title": "1"
+                },
+                {
+                  "id": "509",
+                  "nome": "SEÇÃO DE ORIENTAÇÃO E TREINAMENTO",
+                  "found": true,
+                  "parentidAsString": "503",
+                  "name": "SEOT",
+                  "title": "3"
+                },
+                {
+                  "id": "895",
+                  "nome": "GABINETE DA COORDENADORIA DE SUPERVISÃO E ORIENTAÇÃO ",
+                  "found": true,
+                  "parentidAsString": "503",
+                  "name": "GAB.CSORI",
+                  "title": "1"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "848",
+              "nome": "SECRETARIA DA CORREGEDORIA-GERAL DA JUSTIÇA ELEITORAL",
+              "found": true,
+              "parentidAsString": "488",
+              "name": "SCG",
+              "children": [
+                {
+                  "id": "849",
+                  "nome": "GABINETE DA CGE",
+                  "found": true,
+                  "parentidAsString": "848",
+                  "name": "GAB.CGE",
+                  "title": "5"
+                },
+                {
+                  "id": "850",
+                  "nome": "ASSESSORIA DA CGE",
+                  "found": true,
+                  "parentidAsString": "848",
+                  "name": "ASCGE",
+                  "title": "3"
+                }
+              ],
+              "title": "DIV"
+            }
+          ],
+          "title": "DIV"
+        },
+        {
+          "id": "498",
+          "nome": "ESCOLA JUDICIÁRIA ELEITORAL",
+          "found": true,
+          "parentidAsString": "3",
+          "name": "EJE",
+          "title": "5"
+        },
+        {
+          "id": "512",
+          "nome": "SECRETARIA-GERAL DA PRESIDÊNCIA",
+          "found": true,
+          "parentidAsString": "3",
+          "name": "SPR",
+          "children": [
+            {
+              "id": "513",
+              "nome": "GABINETE DA SECRETARIA-GERAL DA PRESIDÊNCIA",
+              "found": true,
+              "parentidAsString": "512",
+              "name": "GAB.SPR",
+              "title": "6"
+            },
+            {
+              "id": "516",
+              "nome": "ASSESSORIA DE ARTICULAÇÃO PARLAMENTAR",
+              "found": true,
+              "parentidAsString": "512",
+              "name": "ASPAR",
+              "title": "4"
+            },
+            {
+              "id": "935",
+              "nome": "SECRETARIA JUDICIÁRIA",
+              "found": true,
+              "parentidAsString": "512",
+              "name": "SJD",
+              "children": [
+                {
+                  "id": "941",
+                  "nome": "GABINETE DA SJD",
+                  "found": true,
+                  "parentidAsString": "935",
+                  "name": "GAB.SJD",
+                  "title": "2"
+                },
+                {
+                  "id": "943",
+                  "nome": "COORDENADORIA DE REGISTROS PARTIDÁRIOS, AUTUAÇÃO E DISTRIBUIÇÃO",
+                  "found": true,
+                  "parentidAsString": "935",
+                  "name": "CPADI",
+                  "children": [
+                    {
+                      "id": "945",
+                      "nome": "SEÇÃO DE AUTUAÇÃO E DISTRIBUIÇÃO",
+                      "found": true,
+                      "parentidAsString": "943",
+                      "name": "SEADI",
+                      "title": "9"
+                    },
+                    {
+                      "id": "947",
+                      "nome": "GABINETE DA COORDENADORIA DE REGISTROS PARTIDÁRIOS, AUTUAÇÃO E DISTRIBUIÇÃO",
+                      "found": true,
+                      "parentidAsString": "943",
+                      "name": "GAB.CPADI",
+                      "title": "2"
+                    },
+                    {
+                      "id": "1567",
+                      "nome": "NÚCLEO DE GERENCIAMENTO DE SISTEMAS E DADOS PARTIDÁRIOS",
+                      "found": true,
+                      "parentidAsString": "943",
+                      "name": "NGDAP",
+                      "title": "4"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "948",
+                  "nome": "COORDENADORIA DE ACÓRDÃOS E RESOLUÇÕES",
+                  "found": true,
+                  "parentidAsString": "935",
+                  "name": "COARE",
+                  "children": [
+                    {
+                      "id": "951",
+                      "nome": "GABINETE DA COORDENADORIA DE ACÓRDÃOS E RESOLUÇÕES",
+                      "found": true,
+                      "parentidAsString": "948",
+                      "name": "GAB.COARE",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1092",
+                      "nome": "SEÇÃO DE PRODUÇÃO DE NOTAS ORAIS",
+                      "found": true,
+                      "parentidAsString": "948",
+                      "name": "SPNOTAS",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1125",
+                      "nome": "SEÇÃO DE MONTAGEM DE ACÓRDÃOS E RESOLUÇÕES",
+                      "found": true,
+                      "parentidAsString": "948",
+                      "name": "SEMAR",
+                      "title": "8"
+                    },
+                    {
+                      "id": "1153",
+                      "nome": "SEÇÃO DE PROCESSAMENTO E PUBLICAÇÃO DE ACÓRDÃOS E RESOLUÇÕES",
+                      "found": true,
+                      "parentidAsString": "948",
+                      "name": "SEPAR",
+                      "title": "5"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "955",
+                  "nome": "COORDENADORIA DE PROCESSAMENTO",
+                  "found": true,
+                  "parentidAsString": "935",
+                  "name": "CPRO",
+                  "children": [
+                    {
+                      "id": "965",
+                      "nome": "SEÇÃO DE PROCESSAMENTO I",
+                      "found": true,
+                      "parentidAsString": "955",
+                      "name": "SEPROC 1",
+                      "title": "4"
+                    },
+                    {
+                      "id": "966",
+                      "nome": "SEÇÃO DE PROCESSAMENTO II",
+                      "found": true,
+                      "parentidAsString": "955",
+                      "name": "SEPROC 2",
+                      "title": "4"
+                    },
+                    {
+                      "id": "967",
+                      "nome": "SEÇÃO DE PROCESSAMENTO III",
+                      "found": true,
+                      "parentidAsString": "955",
+                      "name": "SEPROC 3",
+                      "title": "4"
+                    },
+                    {
+                      "id": "968",
+                      "nome": "GABINETE DA COORDENADORIA DE PROCESSAMENTO",
+                      "found": true,
+                      "parentidAsString": "955",
+                      "name": "GAB.CPRO",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1565",
+                      "nome": "NÚCLEO DE PROCESSAMENTO ESPECIALIZADO",
+                      "found": true,
+                      "parentidAsString": "955",
+                      "name": "NUPRE",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1566",
+                      "nome": "SEÇÃO DE PROCESSAMENTO DE EXECUÇÕES",
+                      "found": true,
+                      "parentidAsString": "955",
+                      "name": "SEPROE",
+                      "title": "4"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1563",
+                  "nome": "NÚCLEO DE APOIO ADMINISTRATIVO",
+                  "found": true,
+                  "parentidAsString": "935",
+                  "name": "NUCAD",
+                  "title": "1"
+                },
+                {
+                  "id": "1564",
+                  "nome": "NÚCLEO TÉCNICO-CONSULTIVO",
+                  "found": true,
+                  "parentidAsString": "935",
+                  "name": "NUCON",
+                  "title": "1"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "958",
+              "nome": "ASSESSORIA DE PLENÁRIO",
+              "found": true,
+              "parentidAsString": "512",
+              "name": "ASPLEN",
+              "title": "4"
+            },
+            {
+              "id": "1235",
+              "nome": "OUVIDORIA",
+              "found": true,
+              "parentidAsString": "512",
+              "name": "OUV",
+              "title": "5"
+            },
+            {
+              "id": "1294",
+              "nome": "ASSESSORIA DE GESTÃO DE IDENTIFICAÇÃO",
+              "found": true,
+              "parentidAsString": "512",
+              "name": "AGI",
+              "title": "7"
+            },
+            {
+              "id": "1296",
+              "nome": "ASSESSORIA DE APOIO AOS MINISTROS SUBSTITUTOS",
+              "found": true,
+              "parentidAsString": "512",
+              "name": "AAMS",
+              "title": "6"
+            },
+            {
+              "id": "1325",
+              "nome": "ASSESSORIA DO PROCESSO JUDICIAL ELETRÔNICO",
+              "found": true,
+              "parentidAsString": "512",
+              "name": "ASPJE",
+              "title": "9"
+            },
+            {
+              "id": "1403",
+              "nome": "SECRETARIA DE COMUNICAÇÃO E MULTIMÍDIA",
+              "found": true,
+              "parentidAsString": "512",
+              "name": "SECOM",
+              "children": [
+                {
+                  "id": "1404",
+                  "nome": "COORDENADORIA DE IMPRENSA",
+                  "found": true,
+                  "parentidAsString": "1403",
+                  "name": "CIMP",
+                  "children": [
+                    {
+                      "id": "1407",
+                      "nome": "SEÇÃO DE COMUNICAÇÃO INTERNA",
+                      "found": true,
+                      "parentidAsString": "1404",
+                      "name": "SECOI",
+                      "title": "1"
+                    },
+                    {
+                      "id": "1411",
+                      "nome": "GABINETE DA COORDENADORIA DE IMPRENSA",
+                      "found": true,
+                      "parentidAsString": "1404",
+                      "name": "GAB.CIMP",
+                      "title": "1"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1405",
+                  "nome": "COORDENADORIA DE MÍDIAS E WEB",
+                  "found": true,
+                  "parentidAsString": "1403",
+                  "name": "COWEB",
+                  "children": [
+                    {
+                      "id": "1408",
+                      "nome": "SEÇÃO DE CAMPANHA E REDES SOCIAIS",
+                      "found": true,
+                      "parentidAsString": "1405",
+                      "name": "SECRED",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1412",
+                      "nome": "GABINETE DA COORDENADORIA DE MÍDIAS E WEB",
+                      "found": true,
+                      "parentidAsString": "1405",
+                      "name": "GAB.COWEB",
+                      "title": "1"
+                    },
+                    {
+                      "id": "1414",
+                      "nome": "SEÇÃO DE GESTÃO DE CONTEÚDOS WEB",
+                      "found": true,
+                      "parentidAsString": "1405",
+                      "name": "SGWEB",
+                      "title": "2"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1406",
+                  "nome": "COORDENADORIA DE AUDIOVISUAL",
+                  "found": true,
+                  "parentidAsString": "1403",
+                  "name": "COAV",
+                  "children": [
+                    {
+                      "id": "1409",
+                      "nome": "SEÇÃO ADMINISTRATIVA",
+                      "found": true,
+                      "parentidAsString": "1406",
+                      "name": "SEADMI",
+                      "title": "2"
+                    },
+                    {
+                      "id": "1413",
+                      "nome": "GABINETE DA COORDENADORIA DE AUDIOVISUAL",
+                      "found": true,
+                      "parentidAsString": "1406",
+                      "name": "GAB.COAVI",
+                      "title": "3"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1410",
+                  "nome": "GABINETE DA SECRETARIA DE COMUNICAÇÃO E MULTIMÍDIA",
+                  "found": true,
+                  "parentidAsString": "1403",
+                  "name": "GAB.SECOM",
+                  "title": "1"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "1460",
+              "nome": "ASSESSORIA ESPECIAL DE ENFRENTAMENTO À DESINFORMAÇÃO",
+              "found": true,
+              "parentidAsString": "512",
+              "name": "AEED",
+              "title": "6"
+            },
+            {
+              "id": "1461",
+              "nome": "ASSESSORIA DE CERIMONIAL DA PRESIDÊNCIA",
+              "found": true,
+              "parentidAsString": "512",
+              "name": "ACP",
+              "title": "5"
+            },
+            {
+              "id": "1513",
+              "nome": "ASSESSORIA DE INCLUSÃO E DIVERSIDADE",
+              "found": true,
+              "parentidAsString": "512",
+              "name": "AID",
+              "title": "3"
+            }
+          ],
+          "title": "DIV"
+        },
+        {
+          "id": "518",
+          "nome": "SECRETARIA DO TRIBUNAL",
+          "found": true,
+          "parentidAsString": "3",
+          "name": "SEC",
+          "children": [
+            {
+              "id": "519",
+              "nome": "GABINETE DO DIRETOR-GERAL",
+              "found": true,
+              "parentidAsString": "518",
+              "name": "GAB.DG",
+              "children": [
+                {
+                  "id": "1330",
+                  "nome": "COMISSÃO PERMANENTE DE ÉTICA E PROCESSO DISCIPLINAR",
+                  "found": true,
+                  "parentidAsString": "519",
+                  "name": "CPEPD",
+                  "title": "2"
+                },
+                {
+                  "id": "1335",
+                  "nome": "ASSESSORIA DO CENTRO CULTURAL DA JUSTIÇA ELEITORAL",
+                  "found": true,
+                  "parentidAsString": "519",
+                  "name": "ACCJE",
+                  "title": "3"
+                }
+              ],
+              "title": "12"
+            },
+            {
+              "id": "522",
+              "nome": "SECRETARIA DE ADMINISTRACÃO",
+              "found": true,
+              "parentidAsString": "518",
+              "name": "SAD",
+              "children": [
+                {
+                  "id": "535",
+                  "nome": "GABINETE DA SAD",
+                  "found": true,
+                  "parentidAsString": "522",
+                  "name": "GAB.SAD",
+                  "title": "9"
+                },
+                {
+                  "id": "672",
+                  "nome": "COMISSÃO PERMANENTE DE LICITAÇÃO",
+                  "found": true,
+                  "parentidAsString": "522",
+                  "name": "CPL",
+                  "title": "5"
+                },
+                {
+                  "id": "987",
+                  "nome": "COORDENADORIA DE AQUISIÇÕES",
+                  "found": true,
+                  "parentidAsString": "522",
+                  "name": "CODAQ",
+                  "children": [
+                    {
+                      "id": "988",
+                      "nome": "GABINETE DA COORDENADORIA DE AQUISIÇÕES",
+                      "found": true,
+                      "parentidAsString": "987",
+                      "name": "GAB.CODAQ",
+                      "title": "1"
+                    },
+                    {
+                      "id": "992",
+                      "nome": "SEÇÃO DE APOIO AO REQUISITANTE",
+                      "found": true,
+                      "parentidAsString": "987",
+                      "name": "SEARE",
+                      "title": "6"
+                    },
+                    {
+                      "id": "1105",
+                      "nome": "SEÇÃO DE CONTROLE DE CUSTO E GESTÃO DE ATA DE REGISTRO DE PREÇOS",
+                      "found": true,
+                      "parentidAsString": "987",
+                      "name": "SECGA",
+                      "title": "6"
+                    },
+                    {
+                      "id": "1126",
+                      "nome": "SEÇÃO DE CONTRATOS",
+                      "found": true,
+                      "parentidAsString": "987",
+                      "name": "SECONT",
+                      "title": "7"
+                    },
+                    {
+                      "id": "1127",
+                      "nome": "SEÇÃO DE EDITAIS",
+                      "found": true,
+                      "parentidAsString": "987",
+                      "name": "SEEDI",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1128",
+                      "nome": "SEÇÃO DE COMPRAS",
+                      "found": true,
+                      "parentidAsString": "987",
+                      "name": "SECOMP",
+                      "title": "5"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1375",
+                  "nome": "COORDENADORIA DE SERVIÇOS, ENGENHARIA E ARQUITETURA",
+                  "found": true,
+                  "parentidAsString": "522",
+                  "name": "COSEN",
+                  "children": [
+                    {
+                      "id": "1376",
+                      "nome": "SEÇÃO DE ENGENHARIA, ARQUITETURA E PROJETOS",
+                      "found": true,
+                      "parentidAsString": "1375",
+                      "name": "SENAP",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1377",
+                      "nome": "SEÇÃO DE EQUIPAMENTOS E SISTEMAS DE ENGENHARIA",
+                      "found": true,
+                      "parentidAsString": "1375",
+                      "name": "SESEN",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1378",
+                      "nome": "SEÇÃO DE GESTÃO DE SERVIÇOS GERAIS E TÉCNICOS",
+                      "found": true,
+                      "parentidAsString": "1375",
+                      "name": "SEGET",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1397",
+                      "nome": "GABINETE DA COORDENADORIA DE SERVIÇOS, ENGENHARIA E ARQUITETURA",
+                      "found": true,
+                      "parentidAsString": "1375",
+                      "name": "GAB.COSEN",
+                      "title": "1"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1379",
+                  "nome": "COORDENADORIA DE FISCALIZAÇÃO ADMINISTRATIVA",
+                  "found": true,
+                  "parentidAsString": "522",
+                  "name": "COFAD",
+                  "children": [
+                    {
+                      "id": "1380",
+                      "nome": "SEÇÃO DE FISCALIZAÇÃO ADMINISTRATIVA I",
+                      "found": true,
+                      "parentidAsString": "1379",
+                      "name": "SEFIS I",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1381",
+                      "nome": "SEÇÃO DE FISCALIZAÇÃO ADMINISTRATIVA II",
+                      "found": true,
+                      "parentidAsString": "1379",
+                      "name": "SEFIS II",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1382",
+                      "nome": "SEÇÃO DE APURAÇÃO DE INFRAÇÕES CONTRATUAIS",
+                      "found": true,
+                      "parentidAsString": "1379",
+                      "name": "SEAIC",
+                      "title": "2"
+                    },
+                    {
+                      "id": "1398",
+                      "nome": "GABINETE DA COORDENADORIA DE FISCALIZAÇÃO ADMINISTRATIVA",
+                      "found": true,
+                      "parentidAsString": "1379",
+                      "name": "GAB.COFAD",
+                      "title": "2"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1383",
+                  "nome": "COORDENADORIA DE MATERIAL, PATRIMÔNIO E LOGÍSTICA",
+                  "found": true,
+                  "parentidAsString": "522",
+                  "name": "COMPL",
+                  "children": [
+                    {
+                      "id": "1384",
+                      "nome": "SEÇÃO DE LOGÍSTICA DE MATERIAIS",
+                      "found": true,
+                      "parentidAsString": "1383",
+                      "name": "SELMAT",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1387",
+                      "nome": "SEÇÃO DE GESTÃO DE ALMOXARIFADO",
+                      "found": true,
+                      "parentidAsString": "1383",
+                      "name": "SEALM",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1388",
+                      "nome": "SEÇÃO DE GESTÃO DE PATRIMÔNIO",
+                      "found": true,
+                      "parentidAsString": "1383",
+                      "name": "SEPAT",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1399",
+                      "nome": "GABINETE DA COORDENADORIA DE MATERIAL, PATRIMÔNIO E LOGÍSTICA",
+                      "found": true,
+                      "parentidAsString": "1383",
+                      "name": "GAB.COMPL",
+                      "title": "1"
+                    }
+                  ],
+                  "title": "DIV"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "526",
+              "nome": "ASSESSORIA JURÍDICA",
+              "found": true,
+              "parentidAsString": "518",
+              "name": "ASJUR",
+              "title": "11"
+            },
+            {
+              "id": "647",
+              "nome": "SECRETARIA DE PLANEJAMENTO, ORÇAMENTO, FINANÇAS E CONTABILIDADE",
+              "found": true,
+              "parentidAsString": "518",
+              "name": "SOF",
+              "children": [
+                {
+                  "id": "656",
+                  "nome": "GABINETE DA SOF",
+                  "found": true,
+                  "parentidAsString": "647",
+                  "name": "GAB.SOF",
+                  "title": "4"
+                },
+                {
+                  "id": "658",
+                  "nome": "COORDENADORIA DE PLANEJAMENTO E ORÇAMENTO",
+                  "found": true,
+                  "parentidAsString": "647",
+                  "name": "COPOR",
+                  "children": [
+                    {
+                      "id": "659",
+                      "nome": "SEÇÃO DE PROGRAMAÇÃO ORÇAMENTÁRIA",
+                      "found": true,
+                      "parentidAsString": "658",
+                      "name": "SEPOR",
+                      "title": "3"
+                    },
+                    {
+                      "id": "663",
+                      "nome": "SEÇÃO DE PLANEJAMENTO",
+                      "found": true,
+                      "parentidAsString": "658",
+                      "name": "SEPLAN",
+                      "title": "3"
+                    },
+                    {
+                      "id": "906",
+                      "nome": "GABINETE DA COORDENADORIA DE PLANEJAMENTO E ORÇAMENTO",
+                      "found": true,
+                      "parentidAsString": "658",
+                      "name": "GAB.COPOR",
+                      "title": "1"
+                    },
+                    {
+                      "id": "1067",
+                      "nome": "SEÇÃO DE NORMAS ORÇAMENTÁRIAS",
+                      "found": true,
+                      "parentidAsString": "658",
+                      "name": "SENOR",
+                      "title": "2"
+                    },
+                    {
+                      "id": "1232",
+                      "nome": "SEÇÃO DE GERENCIAMENTO ORÇAMENTÁRIO",
+                      "found": true,
+                      "parentidAsString": "658",
+                      "name": "SEGEOR",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1374",
+                      "nome": "SEÇÃO DE GESTÃO ORÇAMENTÁRIA",
+                      "found": true,
+                      "parentidAsString": "658",
+                      "name": "SEGES",
+                      "title": "5"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "664",
+                  "nome": "COORDENADORIA DE FINANÇAS E CONTABILIDADE",
+                  "found": true,
+                  "parentidAsString": "647",
+                  "name": "COFIC",
+                  "children": [
+                    {
+                      "id": "667",
+                      "nome": "SEÇÃO DE ADMINISTRAÇÃO FINANCEIRA",
+                      "found": true,
+                      "parentidAsString": "664",
+                      "name": "SEAFIN",
+                      "title": "3"
+                    },
+                    {
+                      "id": "668",
+                      "nome": "SEÇÃO DE CONTABILIDADE GERENCIAL",
+                      "found": true,
+                      "parentidAsString": "664",
+                      "name": "SECONGE",
+                      "title": "5"
+                    },
+                    {
+                      "id": "669",
+                      "nome": "SEÇÃO DE CONTABILIDADE ANALÍTICA",
+                      "found": true,
+                      "parentidAsString": "664",
+                      "name": "SECONTA",
+                      "title": "4"
+                    },
+                    {
+                      "id": "907",
+                      "nome": "GABINETE DA COORDENADORIA DE FINANÇAS E CONTABILIDADE",
+                      "found": true,
+                      "parentidAsString": "664",
+                      "name": "GAB.COFIC",
+                      "title": "1"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1060",
+                  "nome": "COORDENADORIA DE ORÇAMENTO DE DESPESAS OBRIGATÓRIAS E CUSTOS",
+                  "found": true,
+                  "parentidAsString": "647",
+                  "name": "CODEC",
+                  "children": [
+                    {
+                      "id": "1061",
+                      "nome": "GABINETE DA COORDENADORIA DE ORÇAMENTO DE DESPESAS OBRIGATÓRIAS E CUSTOS",
+                      "found": true,
+                      "parentidAsString": "1060",
+                      "name": "GAB.CODEC",
+                      "title": "1"
+                    },
+                    {
+                      "id": "1062",
+                      "nome": "SEÇÃO DE ANÁLISE DE DADOS FÍSICOS DAS DESPESAS OBRIGATÓRIAS",
+                      "found": true,
+                      "parentidAsString": "1060",
+                      "name": "SEDAF",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1063",
+                      "nome": "SEÇÃO DE ORÇAMENTO DE DESPESAS OBRIGATÓRIAS",
+                      "found": true,
+                      "parentidAsString": "1060",
+                      "name": "SEDOB",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1064",
+                      "nome": "SEÇÃO DE GERENCIAMENTO DE CUSTOS",
+                      "found": true,
+                      "parentidAsString": "1060",
+                      "name": "SEGEC",
+                      "title": "4"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1367",
+                  "nome": "COORDENADORIA DE EXECUÇÃO ORÇAMENTÁRIA E FINANCEIRA",
+                  "found": true,
+                  "parentidAsString": "647",
+                  "name": "CEOFI",
+                  "children": [
+                    {
+                      "id": "1368",
+                      "nome": "SEÇÃO DE EXECUÇÃO ORÇAMENTÁRIA",
+                      "found": true,
+                      "parentidAsString": "1367",
+                      "name": "SEOR",
+                      "title": "6"
+                    },
+                    {
+                      "id": "1369",
+                      "nome": "SEÇÃO DE ACOMPANHAMENTO E PROCESSAMENTO DE RESTOS A PAGAR",
+                      "found": true,
+                      "parentidAsString": "1367",
+                      "name": "SEAPRE",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1370",
+                      "nome": "SEÇÃO DE PRESTAÇÃO DE CONTAS E CONFORMIDADE DOCUMENTAL",
+                      "found": true,
+                      "parentidAsString": "1367",
+                      "name": "SEPCD",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1371",
+                      "nome": "GABINETE DA COORDENADORIA DE EXECUÇÃO ORÇAMENTÁRIA E FINANCEIRA",
+                      "found": true,
+                      "parentidAsString": "1367",
+                      "name": "GAB.CEOFI",
+                      "title": "2"
+                    },
+                    {
+                      "id": "1372",
+                      "nome": "SEÇÃO DE ANÁLISE TÉCNICA",
+                      "found": true,
+                      "parentidAsString": "1367",
+                      "name": "SEAT",
+                      "title": "8"
+                    },
+                    {
+                      "id": "1373",
+                      "nome": "SEÇÃO DE EXECUÇÃO FINANCEIRA",
+                      "found": true,
+                      "parentidAsString": "1367",
+                      "name": "SEFIN",
+                      "title": "6"
+                    },
+                    {
+                      "id": "1568",
+                      "nome": "NÚCLEO DE EXECUÇÃO DO FUNDO PARTIDÁRIO",
+                      "found": true,
+                      "parentidAsString": "1367",
+                      "name": "NEF",
+                      "title": "2"
+                    }
+                  ],
+                  "title": "DIV"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "686",
+              "nome": "SECRETARIA DE GESTÃO DE PESSOAS",
+              "found": true,
+              "parentidAsString": "518",
+              "name": "SGP",
+              "children": [
+                {
+                  "id": "689",
+                  "nome": "COORDENADORIA DE PESSOAL",
+                  "found": true,
+                  "parentidAsString": "686",
+                  "name": "COPES",
+                  "children": [
+                    {
+                      "id": "711",
+                      "nome": "SEÇÃO DE PAGAMENTOS",
+                      "found": true,
+                      "parentidAsString": "689",
+                      "name": "SEPAG",
+                      "title": "6"
+                    },
+                    {
+                      "id": "713",
+                      "nome": "SEÇÃO DE REGISTROS FUNCIONAIS",
+                      "found": true,
+                      "parentidAsString": "689",
+                      "name": "SEREF",
+                      "title": "8"
+                    },
+                    {
+                      "id": "852",
+                      "nome": "GABINETE DA COORDENADORIA DE PESSOAL",
+                      "found": true,
+                      "parentidAsString": "689",
+                      "name": "GAB.COPES",
+                      "title": "1"
+                    },
+                    {
+                      "id": "1091",
+                      "nome": "SEÇÃO DE BENEFÍCIOS",
+                      "found": true,
+                      "parentidAsString": "689",
+                      "name": "SEBEN",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1345",
+                      "nome": "SEÇÃO DE GESTÃO DA FREQUÊNCIA",
+                      "found": true,
+                      "parentidAsString": "689",
+                      "name": "SEGEF",
+                      "title": "5"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "705",
+                  "nome": "COORDENADORIA DE EDUCAÇÃO E DESENVOLVIMENTO",
+                  "found": true,
+                  "parentidAsString": "686",
+                  "name": "COEDE",
+                  "children": [
+                    {
+                      "id": "720",
+                      "nome": "SEÇÃO DE LOTAÇÃO E GESTÃO DE DESEMPENHO",
+                      "found": true,
+                      "parentidAsString": "705",
+                      "name": "SEGED",
+                      "title": "6"
+                    },
+                    {
+                      "id": "721",
+                      "nome": "SEÇÃO DE DESENVOLVIMENTO ORGANIZACIONAL",
+                      "found": true,
+                      "parentidAsString": "705",
+                      "name": "SEDES",
+                      "title": "3"
+                    },
+                    {
+                      "id": "851",
+                      "nome": "GABINETE DA COORDENADORIA DE EDUCAÇÃO E DESENVOLVIMENTO",
+                      "found": true,
+                      "parentidAsString": "705",
+                      "name": "GAB.COEDE",
+                      "title": "2"
+                    },
+                    {
+                      "id": "1059",
+                      "nome": "SEÇÃO DE EDUCAÇÃO CORPORATIVA",
+                      "found": true,
+                      "parentidAsString": "705",
+                      "name": "SEDUC",
+                      "title": "6"
+                    },
+                    {
+                      "id": "1346",
+                      "nome": "SEÇÃO DE TECNOLOGIAS EDUCACIONAIS",
+                      "found": true,
+                      "parentidAsString": "705",
+                      "name": "SETED",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1495",
+                      "nome": "SEÇÃO DE EVENTOS E CIDADANIA CORPORATIVA",
+                      "found": true,
+                      "parentidAsString": "705",
+                      "name": "SEEVE",
+                      "title": "5"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "709",
+                  "nome": "GABINETE DA SGP",
+                  "found": true,
+                  "parentidAsString": "686",
+                  "name": "GAB.SGP",
+                  "children": [
+                    {
+                      "id": "1477",
+                      "nome": "NÚCLEO DE APOIO À GESTÃO DE PESSOAS",
+                      "found": true,
+                      "parentidAsString": "709",
+                      "name": "NAGP",
+                      "title": "2"
+                    }
+                  ],
+                  "title": "3"
+                },
+                {
+                  "id": "916",
+                  "nome": "COORDENADORIA DE ATENÇÃO À SAÚDE",
+                  "found": true,
+                  "parentidAsString": "686",
+                  "name": "CATS",
+                  "children": [
+                    {
+                      "id": "917",
+                      "nome": "GABINETE DA COORDENADORIA DE ATENÇÃO À SAÚDE",
+                      "found": true,
+                      "parentidAsString": "916",
+                      "name": "GAB.CATS",
+                      "title": "1"
+                    },
+                    {
+                      "id": "919",
+                      "nome": "SEÇÃO DE ATENÇÃO SOCIAL E PSICOLÓGICA",
+                      "found": true,
+                      "parentidAsString": "916",
+                      "name": "SEASP",
+                      "title": "3"
+                    },
+                    {
+                      "id": "962",
+                      "nome": "SEÇÃO DE ATENÇÃO ODONTOLOGICA",
+                      "found": true,
+                      "parentidAsString": "916",
+                      "name": "SEATO",
+                      "title": "4"
+                    },
+                    {
+                      "id": "963",
+                      "nome": "SEÇÃO DE ATENÇÃO MÉDICA E DE ENFERMAGEM",
+                      "found": true,
+                      "parentidAsString": "916",
+                      "name": "SEAME",
+                      "title": "12"
+                    },
+                    {
+                      "id": "1276",
+                      "nome": "SEÇÃO DE APOIO ADMINISTRATIVO",
+                      "found": true,
+                      "parentidAsString": "916",
+                      "name": "SEADM",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1584",
+                      "nome": "SEÇÃO DE SAÚDE OCUPACIONAL",
+                      "found": true,
+                      "parentidAsString": "916",
+                      "name": "SESOC",
+                      "title": "3"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1340",
+                  "nome": "COORDENADORIA TÉCNICA",
+                  "found": true,
+                  "parentidAsString": "686",
+                  "name": "COTEC",
+                  "children": [
+                    {
+                      "id": "1342",
+                      "nome": "SEÇÃO DE DIREITOS E DEVERES",
+                      "found": true,
+                      "parentidAsString": "1340",
+                      "name": "SEDID",
+                      "title": "7"
+                    },
+                    {
+                      "id": "1344",
+                      "nome": "SEÇÃO DE ANÁLISE TÉCNICO-PROCESSUAL",
+                      "found": true,
+                      "parentidAsString": "1340",
+                      "name": "SEATEC",
+                      "title": "7"
+                    },
+                    {
+                      "id": "1396",
+                      "nome": "GABINETE DA COORDENADORIA TÉCNICA",
+                      "found": true,
+                      "parentidAsString": "1340",
+                      "name": "GAB.COTEC",
+                      "title": "2"
+                    }
+                  ],
+                  "title": "DIV"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "787",
+              "nome": "SECRETARIA DE TECNOLOGIA DA INFORMAÇÃO",
+              "found": true,
+              "parentidAsString": "518",
+              "name": "STI",
+              "children": [
+                {
+                  "id": "804",
+                  "nome": "GABINETE DA SECRETARIA DE TECNOLOGIA DA INFORMAÇÃO",
+                  "found": true,
+                  "parentidAsString": "787",
+                  "name": "GAB.STI",
+                  "title": "4"
+                },
+                {
+                  "id": "1107",
+                  "nome": "COORDENADORIA DE INFRAESTRUTURA DE TI",
+                  "found": true,
+                  "parentidAsString": "787",
+                  "name": "COINF",
+                  "children": [
+                    {
+                      "id": "1109",
+                      "nome": "SEÇÃO DE MONITORAMENTO DA PRODUÇÃO",
+                      "found": true,
+                      "parentidAsString": "1107",
+                      "name": "SEMOP",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1111",
+                      "nome": "SEÇÃO DE APOIO AO USUÁRIO",
+                      "found": true,
+                      "parentidAsString": "1107",
+                      "name": "SEAU",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1112",
+                      "nome": "GABINETE DA COORDENADORIA DE INFRAESTRUTURA DE TI",
+                      "found": true,
+                      "parentidAsString": "1107",
+                      "name": "GAB.COINF",
+                      "title": "1"
+                    },
+                    {
+                      "id": "1120",
+                      "nome": "SEÇÃO DE SUPORTE A APLICAÇÕES",
+                      "found": true,
+                      "parentidAsString": "1107",
+                      "name": "SESAP",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1478",
+                      "nome": "SEÇÃO DE PESQUISA E SUSTENTAÇÃO DE BANCOS DE DADOS",
+                      "found": true,
+                      "parentidAsString": "1107",
+                      "name": "SEBD",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1585",
+                      "nome": "SEÇÃO DE INOVAÇÃO E APOIO À PRODUÇÃO DE SOFTWARE",
+                      "found": true,
+                      "parentidAsString": "1107",
+                      "name": "SINAPS",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1592",
+                      "nome": "SEÇÃO DE GESTÃO INTEGRADA DE CONTRATAÇÕES",
+                      "found": true,
+                      "parentidAsString": "1107",
+                      "name": "SEGIC",
+                      "title": "2"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1175",
+                  "nome": "COORDENADORIA DE TECNOLOGIA ELEITORAL",
+                  "found": true,
+                  "parentidAsString": "787",
+                  "name": "COTEL",
+                  "children": [
+                    {
+                      "id": "1176",
+                      "nome": "GABINETE DA COORDENADORIA DE TECNOLOGIA ELEITORAL",
+                      "found": true,
+                      "parentidAsString": "1175",
+                      "name": "GAB.COTEL",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1394",
+                      "nome": "SEÇÃO DE GESTÃO INTEGRADA DE TECNOLOGIA ELEITORAL ",
+                      "found": true,
+                      "parentidAsString": "1175",
+                      "name": "SEGITEC",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1476",
+                      "nome": "SEÇÃO DE VOTO INFORMATIZADO",
+                      "found": true,
+                      "parentidAsString": "1175",
+                      "name": "SEVIN",
+                      "title": "6"
+                    },
+                    {
+                      "id": "1480",
+                      "nome": "SEÇÃO DE TECNOLOGIA DE URNAS ELETRÔNICAS",
+                      "found": true,
+                      "parentidAsString": "1175",
+                      "name": "STUE",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1481",
+                      "nome": "SEÇÃO DE GESTÃO DAS URNAS ELETRÔNICAS",
+                      "found": true,
+                      "parentidAsString": "1175",
+                      "name": "SEUE",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1507",
+                      "nome": "SEÇÃO DE GESTÃO DE CERTIFICAÇÃO DIGITAL",
+                      "found": true,
+                      "parentidAsString": "1175",
+                      "name": "SGCD",
+                      "title": "4"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1181",
+                  "nome": "COORDENADORIA DE SISTEMAS ELEITORIAS",
+                  "found": true,
+                  "parentidAsString": "787",
+                  "name": "CSELE",
+                  "children": [
+                    {
+                      "id": "1182",
+                      "nome": "SEÇÃO DE CANDIDATURAS E INFORMAÇÕES PARTIDÁRIAS",
+                      "found": true,
+                      "parentidAsString": "1181",
+                      "name": "SECINP",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1184",
+                      "nome": "SEÇÃO DE TOTALIZAÇÃO E DIVULGAÇÃO DE RESULTADOS",
+                      "found": true,
+                      "parentidAsString": "1181",
+                      "name": "SETOT",
+                      "title": "7"
+                    },
+                    {
+                      "id": "1185",
+                      "nome": "GABINETE DA COORDENADORIA DE SISTEMAS ELEITORAIS",
+                      "found": true,
+                      "parentidAsString": "1181",
+                      "name": "GAB.CSELE",
+                      "title": "2"
+                    },
+                    {
+                      "id": "1186",
+                      "nome": "SEÇÃO DE CADASTRO DE ELEITOR",
+                      "found": true,
+                      "parentidAsString": "1181",
+                      "name": "SECAD",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1479",
+                      "nome": "SEÇÃO DE INTEGRAÇÃO, GARANTIA E CONTROLE DE QUALIDADE DE SOLUÇÕES",
+                      "found": true,
+                      "parentidAsString": "1181",
+                      "name": "SEINT",
+                      "title": "4"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1464",
+                  "nome": "COORDENADORIA DE SOLUÇÕES PROCESSUAIS E PARTIDÁRIAS",
+                  "found": true,
+                  "parentidAsString": "787",
+                  "name": "COPP",
+                  "children": [
+                    {
+                      "id": "1502",
+                      "nome": "SEÇÃO DE AUTOMAÇÃO À JURISPRUDÊNCIA, PROCEDIMENTOS ADMINISTRATIVOS E  COMUNICAÇÕES PROCESSUAIS",
+                      "found": true,
+                      "parentidAsString": "1464",
+                      "name": "SEAJU",
+                      "title": "2"
+                    },
+                    {
+                      "id": "1503",
+                      "nome": "SEÇÃO DE SUPORTE E INOVAÇÃO AO PROCESSO JUDICIAL ELETRÔNICO",
+                      "found": true,
+                      "parentidAsString": "1464",
+                      "name": "SESIP",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1504",
+                      "nome": "SEÇÃO DE AUTOMAÇÃO DE OBRIGAÇÕES PARTIDÁRIAS E ELEITORAIS",
+                      "found": true,
+                      "parentidAsString": "1464",
+                      "name": "SAOPE",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1505",
+                      "nome": "NÚCLEO DE APOIO TÉCNICO ÀS INTEGRAÇÕES COM O PROCESSO JUDICIAL ELETRÔNICO",
+                      "found": true,
+                      "parentidAsString": "1464",
+                      "name": "NATPJE",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1511",
+                      "nome": "GABINETE DA COORDENADORIA DE SOLUÇÕES PROCESSUAIS E PARTIDÁRIAS",
+                      "found": true,
+                      "parentidAsString": "1464",
+                      "name": "GAB.COPP",
+                      "title": "1"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1482",
+                  "nome": "COORDENADORIA DE ARQUITETURA, IDENTIFICAÇÃO E INOVAÇÃO",
+                  "found": true,
+                  "parentidAsString": "787",
+                  "name": "COAI",
+                  "children": [
+                    {
+                      "id": "1487",
+                      "nome": "SEÇÃO DE ARQUITETURA DA INFORMAÇÃO",
+                      "found": true,
+                      "parentidAsString": "1482",
+                      "name": "SEAI",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1488",
+                      "nome": "GABINETE DA COORDENADORIA DE ARQUITETURA, IDENTIFICAÇÃO E INOVAÇÃO",
+                      "found": true,
+                      "parentidAsString": "1482",
+                      "name": "GAB.COAI",
+                      "title": "2"
+                    },
+                    {
+                      "id": "1489",
+                      "nome": "SEÇÃO DE CIÊNCIA DE DADOS",
+                      "found": true,
+                      "parentidAsString": "1482",
+                      "name": "SECID",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1490",
+                      "nome": "SEÇÃO DE IDENTIFICAÇÃO BIOMÉTRICA",
+                      "found": true,
+                      "parentidAsString": "1482",
+                      "name": "SEIBIO",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1491",
+                      "nome": "SEÇÃO DE SOLUÇÕES EM APLICATIVOS MÓVEIS",
+                      "found": true,
+                      "parentidAsString": "1482",
+                      "name": "SESAM",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1492",
+                      "nome": "SEÇÃO DE SERVIÇOS DE TI E SERVICE DESK",
+                      "found": true,
+                      "parentidAsString": "1482",
+                      "name": "SESERV",
+                      "title": "4"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1498",
+                  "nome": "ASSESSORIA DE GESTÃO DO CONHECIMENTO E MODERNIZAÇÃO DE TI",
+                  "found": true,
+                  "parentidAsString": "787",
+                  "name": "AGC",
+                  "title": "1"
+                },
+                {
+                  "id": "1501",
+                  "nome": "NÚCLEO ESTRATÉGICO DE COMUNICAÇÃO DE INFORMÁTICA",
+                  "found": true,
+                  "parentidAsString": "787",
+                  "name": "NECI",
+                  "title": "2"
+                },
+                {
+                  "id": "1506",
+                  "nome": "COORDENADORIA DE SISTEMAS ADMINISTRATIVOS",
+                  "found": true,
+                  "parentidAsString": "787",
+                  "name": "CSADM",
+                  "children": [
+                    {
+                      "id": "1510",
+                      "nome": "GABINETE DA COORDENADORIA DE SISTEMAS ADMINISTRATIVOS",
+                      "found": true,
+                      "parentidAsString": "1506",
+                      "name": "GAB.CSADM",
+                      "title": "20"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1586",
+                  "nome": "COORDENADORIA DE SEGURANÇA CIBERNÉTICA E REDES",
+                  "found": true,
+                  "parentidAsString": "787",
+                  "name": "CCIBER",
+                  "children": [
+                    {
+                      "id": "1587",
+                      "nome": "SEÇÃO DE DEFESA CIBERNÉTICA",
+                      "found": true,
+                      "parentidAsString": "1586",
+                      "name": "SDCIBER",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1588",
+                      "nome": "SEÇÃO DE GERENCIAMENTO DE REDES",
+                      "found": true,
+                      "parentidAsString": "1586",
+                      "name": "SREDE",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1589",
+                      "nome": "SEÇÃO DE OPERAÇÃO CIBERNÉTICA",
+                      "found": true,
+                      "parentidAsString": "1586",
+                      "name": "SEOC",
+                      "title": "2"
+                    },
+                    {
+                      "id": "1590",
+                      "nome": "SEÇÃO DE ACOMPANHAMENTO CIBERNÉTICO",
+                      "found": true,
+                      "parentidAsString": "1586",
+                      "name": "SEACC",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1591",
+                      "nome": "SEÇÃO DE TECNOLOGIA DE NUVEM COMPUTACIONAL",
+                      "found": true,
+                      "parentidAsString": "1586",
+                      "name": "SENUV",
+                      "title": "2"
+                    },
+                    {
+                      "id": "1594",
+                      "nome": "GABINETE DA COORDENADORIA DE SEGURANÇA CIBERNÉTICA E REDES",
+                      "found": true,
+                      "parentidAsString": "1586",
+                      "name": "GAB.CCIBER",
+                      "title": "DIV"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1593",
+                  "nome": "NÚCLEO ESTRATÉGICO DE METODOLOGIAS E PROJETOS",
+                  "found": true,
+                  "parentidAsString": "787",
+                  "name": "NEMP",
+                  "title": "2"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "1292",
+              "nome": "ASSESSORIA DE GESTÃO ELEITORAL",
+              "found": true,
+              "parentidAsString": "518",
+              "name": "AGEL",
+              "title": "6"
+            },
+            {
+              "id": "1514",
+              "nome": "SECRETARIA DE POLÍCIA JUDICIAL",
+              "found": true,
+              "parentidAsString": "518",
+              "name": "SPJ",
+              "children": [
+                {
+                  "id": "1515",
+                  "nome": "GABINETE DA SPJ",
+                  "found": true,
+                  "parentidAsString": "1514",
+                  "name": "GAB.SPJ",
+                  "title": "1"
+                },
+                {
+                  "id": "1516",
+                  "nome": "COORDENADORIA DE POLICIAMENTO ORGÂNICO",
+                  "found": true,
+                  "parentidAsString": "1514",
+                  "name": "COP",
+                  "children": [
+                    {
+                      "id": "1517",
+                      "nome": "GABINETE DA COORDENADORIA DE POLICIAMENTO ORGÂNICO",
+                      "found": true,
+                      "parentidAsString": "1516",
+                      "name": "GAB.COP",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1520",
+                      "nome": "SEÇÃO DE POLICIAMENTO INTERNO",
+                      "found": true,
+                      "parentidAsString": "1516",
+                      "name": "SPI",
+                      "title": "15"
+                    },
+                    {
+                      "id": "1521",
+                      "nome": "SEÇÃO DE POLICIAMENTO ESPECIALIZADO",
+                      "found": true,
+                      "parentidAsString": "1516",
+                      "name": "SPE",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1582",
+                      "nome": "SEÇÃO DE TRANSPORTE",
+                      "found": true,
+                      "parentidAsString": "1516",
+                      "name": "SETRAN",
+                      "title": "1"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1518",
+                  "nome": "COORDENADORIA DE INTELIGÊNCIA",
+                  "found": true,
+                  "parentidAsString": "1514",
+                  "name": "COI",
+                  "children": [
+                    {
+                      "id": "1519",
+                      "nome": "GABINETE DA COORDENADORIA DE INTELIGÊNCIA",
+                      "found": true,
+                      "parentidAsString": "1518",
+                      "name": "GAB.COI",
+                      "title": "DIV"
+                    },
+                    {
+                      "id": "1522",
+                      "nome": "SEÇÃO DE INTELIGÊNCIA E ANÁLISE DE DADOS",
+                      "found": true,
+                      "parentidAsString": "1518",
+                      "name": "SIAD",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1523",
+                      "nome": "SEÇÃO DE PLANEJAMENTO E APOIO OPERACIONAL",
+                      "found": true,
+                      "parentidAsString": "1518",
+                      "name": "SAOP",
+                      "title": "3"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1583",
+                  "nome": "NÚCLEO DE SEGURANÇA DE AUTORIDADES",
+                  "found": true,
+                  "parentidAsString": "1514",
+                  "name": "NSA",
+                  "title": "4"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "1525",
+              "nome": "SECRETARIA DE GESTÃO DA INFORMAÇÃO E DO CONHECIMENTO",
+              "found": true,
+              "parentidAsString": "518",
+              "name": "SGIC",
+              "children": [
+                {
+                  "id": "1526",
+                  "nome": "COORDENADORIA DE GESTÃO DOCUMENTAL",
+                  "found": true,
+                  "parentidAsString": "1525",
+                  "name": "COGED",
+                  "children": [
+                    {
+                      "id": "1531",
+                      "nome": "GABINETE DA COORDENADORIA DE GESTÃO DOCUMENTAL",
+                      "found": true,
+                      "parentidAsString": "1526",
+                      "name": "GAB.COGED",
+                      "title": "1"
+                    },
+                    {
+                      "id": "1532",
+                      "nome": "SEÇÃO DE GESTÃO DE DOCUMENTOS ELETRÔNICOS",
+                      "found": true,
+                      "parentidAsString": "1526",
+                      "name": "SEGEDOC",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1533",
+                      "nome": "SEÇÃO DE PROTOCOLO ADMINISTRATIVO E EXPEDIÇÃO",
+                      "found": true,
+                      "parentidAsString": "1526",
+                      "name": "SEPROT",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1534",
+                      "nome": "SEÇÃO DE ARQUIVO",
+                      "found": true,
+                      "parentidAsString": "1526",
+                      "name": "SEARQ",
+                      "title": "3"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1527",
+                  "nome": "COORDENADORIA DE EDITORAÇÃO E PUBLICAÇÕES",
+                  "found": true,
+                  "parentidAsString": "1525",
+                  "name": "CEDIP",
+                  "children": [
+                    {
+                      "id": "1535",
+                      "nome": "SEÇÃO DE PREPARAÇÃO E REVISÃO DE CONTEÚDOS",
+                      "found": true,
+                      "parentidAsString": "1527",
+                      "name": "SEPREV",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1536",
+                      "nome": "SEÇÃO DE SERVIÇOS GRÁFICOS",
+                      "found": true,
+                      "parentidAsString": "1527",
+                      "name": "SEGRAF",
+                      "title": "3"
+                    },
+                    {
+                      "id": "1537",
+                      "nome": "GABINETE DA COORDENADORIA DE EDITORAÇÃO E PUBLICAÇÕES",
+                      "found": true,
+                      "parentidAsString": "1527",
+                      "name": "GAB.CEDIP",
+                      "title": "2"
+                    },
+                    {
+                      "id": "1538",
+                      "nome": "SEÇÃO DE EDITORAÇÃO E PROGRAMAÇÃO VISUAL",
+                      "found": true,
+                      "parentidAsString": "1527",
+                      "name": "SEPROV",
+                      "title": "3"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1530",
+                  "nome": "COORDENADORIA DE BIBLIOTECA E MUSEU",
+                  "found": true,
+                  "parentidAsString": "1525",
+                  "name": "CBLEM",
+                  "children": [
+                    {
+                      "id": "1558",
+                      "nome": "SEÇÃO DE BIBLIOTECA",
+                      "found": true,
+                      "parentidAsString": "1530",
+                      "name": "SEBBL",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1559",
+                      "nome": "SEÇÃO DE BIBLIOTECA DIGITAL",
+                      "found": true,
+                      "parentidAsString": "1530",
+                      "name": "SEBBD",
+                      "title": "5"
+                    },
+                    {
+                      "id": "1560",
+                      "nome": "SEÇÃO DE MUSEU",
+                      "found": true,
+                      "parentidAsString": "1530",
+                      "name": "SEMUS",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1561",
+                      "nome": "GABINETE DA COORDENADORIA DE BIBLIOTECA E MUSEU",
+                      "found": true,
+                      "parentidAsString": "1530",
+                      "name": "GAB.CBLEM",
+                      "title": "2"
+                    }
+                  ],
+                  "title": "DIV"
+                },
+                {
+                  "id": "1547",
+                  "nome": "GABINETE DA SECRETARIA DE GESTÃO DA INFORMAÇÃO E DO CONHECIMENTO",
+                  "found": true,
+                  "parentidAsString": "1525",
+                  "name": "GAB.SGIC",
+                  "title": "5"
+                },
+                {
+                  "id": "1548",
+                  "nome": "COORDENADORIA DE JURISPRUDÊNCIA E LEGISLAÇÃO",
+                  "found": true,
+                  "parentidAsString": "1525",
+                  "name": "COJULEG",
+                  "children": [
+                    {
+                      "id": "1549",
+                      "nome": "SEÇÃO DE DIVULGAÇÃO DE JURISPRUDÊNCIA",
+                      "found": true,
+                      "parentidAsString": "1548",
+                      "name": "SEDJUR",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1550",
+                      "nome": "SEÇÃO DE CONTEÚDO DE JURISPRUDÊNCIA",
+                      "found": true,
+                      "parentidAsString": "1548",
+                      "name": "SECJUR",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1551",
+                      "nome": "SEÇÃO DE GESTÃO DE DADOS DE JURISPRUDÊNCIA",
+                      "found": true,
+                      "parentidAsString": "1548",
+                      "name": "SEGJUR",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1555",
+                      "nome": "SEÇÃO DE LEGISLAÇÃO",
+                      "found": true,
+                      "parentidAsString": "1548",
+                      "name": "SELEG",
+                      "title": "4"
+                    },
+                    {
+                      "id": "1557",
+                      "nome": "GABINETE DA COORDENADORIA DE JURISPRUDÊNCIA E LEGISLAÇÃO",
+                      "found": true,
+                      "parentidAsString": "1548",
+                      "name": "GAB.COJULEG",
+                      "title": "1"
+                    }
+                  ],
+                  "title": "DIV"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "1562",
+              "nome": "ASSESSORIA DE SEGURANÇA DA INFORMAÇÃO",
+              "found": true,
+              "parentidAsString": "518",
+              "name": "ASINF",
+              "title": "3"
+            }
+          ],
+          "title": "DIV"
+        },
+        {
+          "id": "925",
+          "nome": "GABINETE DA PRESIDÊNCIA",
+          "found": true,
+          "parentidAsString": "3",
+          "name": "GAB.PRES",
+          "title": "16"
+        },
+        {
+          "id": "1443",
+          "nome": "SECRETARIA DE AUDITORIA",
+          "found": true,
+          "parentidAsString": "3",
+          "name": "SAU",
+          "children": [
+            {
+              "id": "1445",
+              "nome": "COORDENADORIA DE AUDITORIA",
+              "found": true,
+              "parentidAsString": "1443",
+              "name": "COAUD",
+              "children": [
+                {
+                  "id": "1448",
+                  "nome": "GABINETE DA COORDENADORIA DE AUDITORIA",
+                  "found": true,
+                  "parentidAsString": "1445",
+                  "name": "GAB.COAUD",
+                  "title": "1"
+                },
+                {
+                  "id": "1449",
+                  "nome": "SEÇÃO DE AUDITORIA DE DESEMPENHO",
+                  "found": true,
+                  "parentidAsString": "1445",
+                  "name": "SEAUD",
+                  "title": "3"
+                },
+                {
+                  "id": "1450",
+                  "nome": "SEÇÃO DE AUDITORIA DE GESTÃO",
+                  "found": true,
+                  "parentidAsString": "1445",
+                  "name": "SEAUG",
+                  "title": "4"
+                },
+                {
+                  "id": "1451",
+                  "nome": "SEÇÃO DE AUDITORIA DE PESSOAL",
+                  "found": true,
+                  "parentidAsString": "1445",
+                  "name": "SEAUP",
+                  "title": "3"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "1446",
+              "nome": "COORDENADORIA DE AUDITORIA DE GOVERNANÇA E GESTÃO DE AQUISIÇÕES",
+              "found": true,
+              "parentidAsString": "1443",
+              "name": "COAUG",
+              "children": [
+                {
+                  "id": "1456",
+                  "nome": "SEÇÃO DE AUDITORIA DE AQUISIÇÕES",
+                  "found": true,
+                  "parentidAsString": "1446",
+                  "name": "SEAAQ",
+                  "title": "4"
+                },
+                {
+                  "id": "1457",
+                  "nome": "SEÇÃO DE AUDITORIA DE TECNOLOGIA DA INFORMAÇÃO",
+                  "found": true,
+                  "parentidAsString": "1446",
+                  "name": "SEAUT",
+                  "title": "4"
+                },
+                {
+                  "id": "1458",
+                  "nome": "GABINETE DA COORDENADORIA DE AUDITORIA DE GOVERNANÇA E GESTÃO DE AQUISIÇÕES",
+                  "found": true,
+                  "parentidAsString": "1446",
+                  "name": "GAB.COAUG",
+                  "title": "1"
+                },
+                {
+                  "id": "1459",
+                  "nome": "SEÇÃO DE AUDITORIA DE CONTRATOS E CONVÊNIOS",
+                  "found": true,
+                  "parentidAsString": "1446",
+                  "name": "SEACO",
+                  "title": "3"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "1447",
+              "nome": "GABINETE DA SECRETARIA DE AUDITORIA",
+              "found": true,
+              "parentidAsString": "1443",
+              "name": "GAB.SAU",
+              "title": "3"
+            }
+          ],
+          "title": "DIV"
+        },
+        {
+          "id": "1569",
+          "nome": "DIRETORIA DE ASSUNTOS INTERNACIONAIS",
+          "found": true,
+          "parentidAsString": "3",
+          "name": "DAIN",
+          "title": "3"
+        },
+        {
+          "id": "1570",
+          "nome": "DIRETORIA DE ASSUNTOS ESTRATÉGICOS",
+          "found": true,
+          "parentidAsString": "3",
+          "name": "DAE",
+          "children": [
+            {
+              "id": "1572",
+              "nome": "COORDENADORIA DE MODERNIZAÇÃO",
+              "found": true,
+              "parentidAsString": "1570",
+              "name": "COMOR",
+              "children": [
+                {
+                  "id": "1577",
+                  "nome": "SEÇÃO DE MODERNIZAÇÃO DE SERVIÇOS AO ELEITOR",
+                  "found": true,
+                  "parentidAsString": "1572",
+                  "name": "SEMSE",
+                  "title": "2"
+                },
+                {
+                  "id": "1578",
+                  "nome": "SEÇÃO DE DADOS ESTRATÉGICOS GERENCIAIS",
+                  "found": true,
+                  "parentidAsString": "1572",
+                  "name": "SEDEG",
+                  "title": "2"
+                },
+                {
+                  "id": "1579",
+                  "nome": "GABINETE DA COORDENADORIA DE MODERNIZAÇÃO",
+                  "found": true,
+                  "parentidAsString": "1572",
+                  "name": "GAB.COMOR",
+                  "title": "1"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "1573",
+              "nome": "COORDENADORIA DE GESTÃO ESTRATÉGICA E SOCIOAMBIENTAL",
+              "found": true,
+              "parentidAsString": "1570",
+              "name": "COGSA",
+              "children": [
+                {
+                  "id": "1574",
+                  "nome": "SEÇÃO DE GESTÃO SOCIOAMBIENTAL",
+                  "found": true,
+                  "parentidAsString": "1573",
+                  "name": "SEGESA",
+                  "title": "4"
+                },
+                {
+                  "id": "1575",
+                  "nome": "SEÇÃO DE GESTÃO ESTRATÉGICA E GOVERNANÇA",
+                  "found": true,
+                  "parentidAsString": "1573",
+                  "name": "SEGGO",
+                  "title": "2"
+                },
+                {
+                  "id": "1576",
+                  "nome": "GABINETE DA COORDENADORIA DE GESTÃO ESTRATÉGICA E SOCIOAMBIENTAL",
+                  "found": true,
+                  "parentidAsString": "1573",
+                  "name": "GAB.COGSA",
+                  "title": "2"
+                }
+              ],
+              "title": "DIV"
+            },
+            {
+              "id": "1580",
+              "nome": "GABINETE DA DIRETORIA DE ASSUNTOS ESTRATÉGICOS",
+              "found": true,
+              "parentidAsString": "1570",
+              "name": "GAB.DAE",
+              "title": "8"
+            }
+          ],
+          "title": "DIV"
+        }
+      ],
+      "title": "DIV"
+    },
+    {
+      "id": "158",
+      "nome": "PROCURADORIA GERAL ELEITORAL",
+      "found": true,
+      "parentidAsString": "1",
+      "name": "PGE",
+      "title": "DIV"
+    },
+    {
+      "id": "1207",
+      "nome": "ASSESSORIA CONSULTIVA",
+      "found": true,
+      "parentidAsString": "1",
+      "name": "ASSEC",
+      "title": "7"
+    },
+    {
+      "id": "1208",
+      "nome": "ASSESSORIA DE EXAME DE CONTAS ELEITORAIS E PARTIDÁRIAS",
+      "found": true,
+      "parentidAsString": "1",
+      "name": "ASEPA",
+      "title": "30"
+    }
+  ],
+  "title": "DIV"
+}

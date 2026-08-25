@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Ban, Briefcase, Laptop, ShieldCheck, Users } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Ban, Briefcase, Laptop, Network, ShieldCheck, Users } from 'lucide-react';
 import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
 import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
 import { PapeisFilter } from '@/components/dashboard/papeis-filter';
@@ -129,6 +129,14 @@ export function FuncoesDashboard() {
           >
             <Laptop className="h-4 w-4" aria-hidden />
             <span className="sr-only sm:not-sr-only">Teletrabalho</span>
+            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
+          </Link>
+          <Link
+            href="/unidades"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <Network className="h-4 w-4" aria-hidden />
+            <span className="sr-only sm:not-sr-only">Unidades</span>
             <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
           </Link>
           <ThemePicker />

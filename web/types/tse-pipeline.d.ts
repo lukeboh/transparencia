@@ -21,6 +21,7 @@ declare module '*src/tse/agregarDashboard.js' {
     agentesPublicos?: unknown[],
     excecoes?: unknown[],
     movimentosTeletrabalho?: unknown[],
+    arvoreUnidades?: unknown,
   ): unknown;
 }
 
@@ -53,4 +54,8 @@ declare module '*src/tse/scrapeAgentesPublicos.js' {
 
 declare module '*src/tse/scrapeTeletrabalho.js' {
   export function scrapeTeletrabalho(): Promise<unknown[]>;
+}
+
+declare module '*src/tse/scrapeUnidades.js' {
+  export function scrapeUnidades(): Promise<unknown>;
 }
