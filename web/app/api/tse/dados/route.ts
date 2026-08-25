@@ -133,6 +133,10 @@ function iniciarAtualizacao(e: EstadoCache) {
       // backfill pesado (milhares de páginas); com `movimentosFuncoesBrutos`
       // já persistido, as próximas só buscam os índices de ano (baratos) e
       // as poucas portarias novas.
+      // BUG CONHECIDO: esse cache incremental nunca reprocessa uma portaria
+      // já vista, mesmo que scrapeFuncoes.js tenha sido corrigido depois —
+      // nomes quebrados de uma raspagem antiga podem ficar presos aqui
+      // indefinidamente. Ver TODO 4 em scrapeFuncoes.js e o README.
       const movimentosFuncoes = await scrapeFuncoes({
         cacheMovimentos: e.movimentosFuncoesBrutos ?? undefined,
         onProgress: (feitos: number, total: number) => {

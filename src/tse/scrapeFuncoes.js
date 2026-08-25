@@ -255,6 +255,16 @@ function extrairMovimentos(html, portariaRef) {
 //    dezenas de minutos, uma queda do processo no meio perde tudo. Salvar
 //    parcialmente a cada lote (ex.: a cada N portarias baixadas) permitiria
 //    retomar de onde parou, ou pelo menos perder pouco progresso.
+// 4) BUG CONHECIDO: `cacheMovimentos` nunca reprocessa uma portaria que já
+//    apareceu nele, mesmo que o parser tenha sido corrigido depois — o
+//    cache em runtime do servidor (web/.cache/tse-dados.json, ver
+//    iniciarAtualizacao em web/app/api/tse/dados/route.ts) só cresce por
+//    cima do que já tinha a cada atualização automática, então nomes
+//    quebrados de uma raspagem anterior a uma correção do parser ficam
+//    presos ali indefinidamente. Já aconteceu em produção (2026-08-25).
+//    `data/tse_funcoes.json` não sofre disso na prática porque é
+//    regenerado do zero manualmente quando necessário, mas o cache do
+//    servidor não tem esse hábito. Ver detalhe no README.
 async function scrapeFuncoes({
   anoInicio = 1999,
   anoFim = new Date().getFullYear(),

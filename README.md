@@ -465,6 +465,31 @@ alertas de contratos perto do vencimento, etc.
   luz, reinício, etc.) perde todo o progresso. Salvar incrementalmente (ex.:
   a cada lote de portarias baixadas) permitiria que uma reinicialização
   retome de onde parou, ou pelo menos com perda mínima de esforço.
+- **Bug conhecido: cache incremental do servidor pode reter nomes quebrados
+  de versões antigas do parser, indefinidamente.** `scrapeFuncoes()` só
+  busca portarias que ainda não estão em `cacheMovimentos` — uma portaria já
+  cacheada nunca é reprocessada, mesmo que o parser tenha sido corrigido
+  depois. Isso é inofensivo para `data/tse_funcoes.json` (regenerado do
+  zero via `npm run tse:scrape-funcoes -- 1999` quando necessário), mas é um
+  problema real para `web/.cache/tse-dados.json`: esse cache do servidor em
+  runtime (usado pela rota `/api/tse/dados`, ver `iniciarAtualizacao` em
+  `web/app/api/tse/dados/route.ts`) só cresce por cima do que já tinha a
+  cada atualização automática (TTL 6h) — se ele foi semeado em algum
+  momento por uma raspagem anterior a uma correção do parser, os nomes
+  quebrados daquela época ficam presos ali para sempre, mesmo com o parser
+  já corrigido, porque as portarias correspondentes nunca voltam a ser
+  buscadas. Foi exatamente o que aconteceu em 2026-08-25: nomes tipo "Art.
+  2º Designá-la para exercer..." ou "A partir de 27 de janeiro de 2020"
+  reapareceram em produção mesmo com o parser já corrigido havia tempos — a
+  correção pontual foi apagar `web/.cache/tse-dados.json` e reiniciar o
+  servidor (ele volta a usar o snapshot embutido, limpo, enquanto refaz o
+  cache do zero em segundo plano). Solução de raiz ainda pendente: a forma
+  mais simples seria o servidor reconstruir esse cache a partir do
+  `data/tse_funcoes.json` versionado (fonte confiável, já reprocessada do
+  zero quando o parser muda) em vez de só empilhar por cima do que já
+  tinha — ou, alternativa mais barata, invalidar o cache quando uma
+  "versão" do parser (ex.: hash do arquivo `scrapeFuncoes.js`) mudar em
+  relação à que gerou o cache salvo.
 
 ### Bugs corrigidos no parser de nomes (`scrapeFuncoes.js`)
 
