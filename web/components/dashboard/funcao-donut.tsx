@@ -46,7 +46,9 @@ function rotuloFatia(fatia: FatiaFuncao) {
  * diferença. `funcaoAtual` vem da relação atual de agentes públicos (fonte
  * primária, mais confiável para "hoje" que o histórico de portarias).
  */
-export function contarPorFuncaoAtual(servidores: ServidorFuncoes[]): FatiaFuncao[] {
+export function contarPorFuncaoAtual(
+  servidores: Pick<ServidorFuncoes, 'funcaoAtual'>[],
+): FatiaFuncao[] {
   const contagem = new Map<string, FatiaFuncao>();
   let semFuncao = 0;
   for (const s of servidores) {

@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Briefcase, Crown, Scale, Users } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Briefcase, Check, Crown, Scale, Users } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/stat-card';
+import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
+import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
 import { RankingChart } from '@/components/dashboard/ranking-chart';
 import { RankingTable } from '@/components/dashboard/ranking-table';
 import { PapeisFilter } from '@/components/dashboard/papeis-filter';
@@ -12,7 +14,7 @@ import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
-import { brlCompacto, nomeProprio, numero } from '@/lib/utils';
+import { brlCompacto, cn, nomeProprio, numero } from '@/lib/utils';
 import type { LinhaRanking, ServidorFuncoes } from '@/lib/dashboard-data';
 
 export function ResponsaveisDashboard() {
@@ -41,6 +43,7 @@ export function ResponsaveisDashboard() {
   }, [responsaveis.ranking]);
 
   const [papeisSelecionados, setPapeisSelecionados] = useState<string[]>([]);
+  const [somenteVigentes, setSomenteVigentes] = useState(false);
 
   useEffect(() => {
     if (todosPapeis.length > 0 && papeisSelecionados.length === 0) {
@@ -50,7 +53,7 @@ export function ResponsaveisDashboard() {
 
   const rankingFiltrado = useMemo(() => {
     if (papeisSelecionados.length === 0) return [];
-    if (papeisSelecionados.length === todosPapeis.length) {
+    if (papeisSelecionados.length === todosPapeis.length && !somenteVigentes) {
       return responsaveis.ranking;
     }
 
@@ -58,9 +61,11 @@ export function ResponsaveisDashboard() {
     const resultado: LinhaRanking[] = [];
 
     for (const servidor of responsaveis.ranking) {
-      const contratosFiltrados = servidor.contratos.filter((c) =>
-        c.papeis.some((p) => setSelecao.has(p))
-      );
+      const contratosFiltrados = servidor.contratos.filter((c) => {
+        if (!c.papeis.some((p) => setSelecao.has(p))) return false;
+        if (somenteVigentes && !contratos[c.i]?.vigente) return false;
+        return true;
+      });
 
       if (contratosFiltrados.length === 0) continue;
 
@@ -93,7 +98,7 @@ export function ResponsaveisDashboard() {
     }
 
     return resultado.sort((a, b) => b.valorConsolidado - a.valorConsolidado);
-  }, [responsaveis.ranking, contratos, papeisSelecionados, todosPapeis]);
+  }, [responsaveis.ranking, contratos, papeisSelecionados, todosPapeis, somenteVigentes]);
 
   const topUm = rankingFiltrado[0];
 
@@ -117,6 +122,18 @@ export function ResponsaveisDashboard() {
   const medianaPago = useMemo(
     () => calcMediana(rankingFiltrado.map((r) => r.valorPagoConsolidado)),
     [rankingFiltrado]
+  );
+
+  // Distribuição por função (FC/CJ) dos responsáveis visíveis no ranking
+  // filtrado — mesmo donut de /funcoes, aqui aplicado só a quem fiscaliza ou
+  // gerencia contrato (o universo de /funcoes é mais amplo: inclui quem
+  // nunca aparece como responsável, os "Zero Fiscal").
+  const donutFuncoesResponsaveis = useMemo(
+    () =>
+      contarPorFuncaoAtual(
+        rankingFiltrado.map((r) => ({ funcaoAtual: funcoesPorNome.get(r.nome)?.funcaoAtual ?? null })),
+      ),
+    [rankingFiltrado, funcoesPorNome],
   );
 
   const emContratosVigentesCount = useMemo(() => {
@@ -174,18 +191,39 @@ export function ResponsaveisDashboard() {
       </header>
 
       <div className="space-y-4">
-        <PapeisFilter
-          todosPapeis={todosPapeis}
-          papeisSelecionados={papeisSelecionados}
-          onChange={setPapeisSelecionados}
-        />
+        <div className="flex flex-wrap items-start gap-3">
+          <PapeisFilter
+            todosPapeis={todosPapeis}
+            papeisSelecionados={papeisSelecionados}
+            onChange={setPapeisSelecionados}
+            className="min-w-[280px] flex-1"
+          />
+          <button
+            type="button"
+            onClick={() => setSomenteVigentes((v) => !v)}
+            aria-pressed={somenteVigentes}
+            className={cn(
+              'inline-flex shrink-0 items-center gap-1.5 self-start rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors',
+              somenteVigentes
+                ? 'border-primary bg-primary text-primary-foreground shadow-xs'
+                : 'border-border bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+            )}
+          >
+            {somenteVigentes && <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />}
+            Somente contratos vigentes
+          </button>
+        </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard
+          <FuncaoStatCard
             titulo="Responsáveis designados"
-            valor={numero(rankingFiltrado.length)}
-            detalhe={`${numero(emContratosVigentesCount)} atuam em contratos vigentes hoje`}
+            detalhe={
+              somenteVigentes
+                ? `${numero(rankingFiltrado.length)} com contrato vigente hoje`
+                : `${numero(rankingFiltrado.length)} no total · ${numero(emContratosVigentesCount)} atuam em contratos vigentes hoje`
+            }
             icone={<Users className="h-4 w-4" aria-hidden />}
+            contagens={donutFuncoesResponsaveis}
           />
           <StatCard
             titulo="Maior valor sob responsabilidade"
@@ -207,7 +245,8 @@ export function ResponsaveisDashboard() {
 
       <footer className="mt-8 text-xs text-muted-foreground">
         O valor consolidado soma o &ldquo;Valor Global&rdquo; de cada contrato em que
-        o servidor aparece como responsável nos papéis selecionados, contando cada contrato
+        o servidor aparece como responsável nos papéis selecionados
+        {somenteVigentes ? ' e vigente hoje' : ''}, contando cada contrato
         uma única vez por pessoa.
         <AppVersion />
       </footer>

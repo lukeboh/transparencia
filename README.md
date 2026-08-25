@@ -23,7 +23,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   abaixo.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.9**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.10**.
 
 ## Dashboard web
 
@@ -86,18 +86,27 @@ Tema claro/escuro com toggle; paleta de gráficos validada para daltonismo
 (CVD) nos dois modos, com "Outros" em cinza de de-ênfase.
 
 A rota `/responsaveis` (linkada no header e no card "Responsáveis designados")
-traz o dashboard da primeira funcionalidade do projeto: cards com total de
-responsáveis / maior valor sob responsabilidade / mediana por responsável,
-gráfico de barras horizontais com o top 10 e tabela paginada com o ranking
-completo — todos os responsáveis, 25 por página (papéis como badges; valor de
-cada contrato contado uma única vez por pessoa). A coluna Função mostra, com o
-mesmo badge usado em `/funcoes`, a função comissionada (FC/CJ) que o servidor
-tem hoje ou já teve — cruzada por nome com `funcoes.servidores`, "—" quando
-nunca teve nenhuma. A tabela tem filtro incremental por servidor (sem
-distinção de acentos/caixa) e ordenação clicável nos cabeçalhos Servidor
-(alfabética), Contratos e Valor consolidado (1º clique ordena, 2º inverte, 3º
-volta à ordem do ranking); a coluna # sempre mostra a posição original no
-ranking por valor.
+traz o dashboard da primeira funcionalidade do projeto: cards com maior valor
+sob responsabilidade e mediana por responsável, e um card "Responsáveis
+designados" que, em vez de só um número, é um donut (mesmo componente de
+`/funcoes`) com a distribuição por função comissionada (FC/CJ, mais "Sem
+função") de quem está no ranking — restrito aos responsáveis de fato (quem
+fiscaliza/gerencia algum contrato), não ao universo mais amplo de
+`/funcoes`. Também tem gráfico de barras horizontais com o top 10 e tabela
+paginada com o ranking completo — todos os responsáveis, 25 por página
+(papéis como badges; valor de cada contrato contado uma única vez por
+pessoa). A coluna Função da tabela mostra, com o mesmo badge usado em
+`/funcoes`, a função comissionada que o servidor tem hoje ou já teve —
+cruzada por nome com `funcoes.servidores`, "—" quando nunca teve nenhuma. A
+tabela tem filtro incremental por servidor (sem distinção de acentos/caixa) e
+ordenação clicável nos cabeçalhos Servidor (alfabética), Contratos e Valor
+consolidado (1º clique ordena, 2º inverte, 3º volta à ordem do ranking); a
+coluna # sempre mostra a posição original no ranking por valor.
+
+Além do filtro por papéis (fiscal/gestor), um toggle "Somente contratos
+vigentes" restringe ranking, gráfico, tabela e o donut de função a apenas
+contratos ainda vigentes hoje — quem só tem contrato encerrado some da lista
+enquanto o toggle está ativo.
 
 ### Temas
 
