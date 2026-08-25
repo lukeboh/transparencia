@@ -7,6 +7,7 @@
 import { parseArgs } from 'node:util';
 import { readFile, writeFile } from 'node:fs/promises';
 import { rankResponsaveis } from './rankResponsaveis.js';
+import { carregarExcecoes, aplicarExcecoes } from './excecoes.js';
 
 const { values } = parseArgs({
   options: {
@@ -30,7 +31,7 @@ function paraCsv(linhas) {
 
 async function main() {
   const raw = await readFile(values.in, 'utf8');
-  const contratos = JSON.parse(raw);
+  const contratos = aplicarExcecoes(JSON.parse(raw), carregarExcecoes());
 
   const papeis = values.papeis ? values.papeis.split(',').map((p) => p.trim()) : undefined;
   const ranking = rankResponsaveis(contratos, { papeis });

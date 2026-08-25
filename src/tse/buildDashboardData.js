@@ -8,6 +8,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { agregarDashboard } from './agregarDashboard.js';
+import { carregarExcecoes } from './excecoes.js';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 let entrada = process.argv[2] ?? path.join(raiz, 'data/tse_contratos.json');
@@ -48,7 +49,8 @@ async function main() {
     );
   }
 
-  const dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos);
+  const excecoes = carregarExcecoes();
+  const dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos, excecoes);
   await escreverDashboardData(dados, saida);
   console.log(
     `  ${contratos.length} contratos · ${dados.evolucao.length} anos · ${dados.categorias.length} fatias de categoria`,
@@ -89,6 +91,15 @@ export interface FatiaCategoria {
   contratos: number;
 }
 
+export interface CorrecaoResumo {
+  /** Campo do contrato que foi sobrescrito (ex.: "valorGlobal"). */
+  campo: string;
+  valorOriginal: unknown;
+  valorCorrigido: unknown;
+  motivo: string;
+  fonte: string;
+}
+
 export interface ContratoResumo {
   id: string;
   numero: string;
@@ -100,6 +111,8 @@ export interface ContratoResumo {
   ano: number | null;
   categoria: string;
   vigente: boolean;
+  /** Campos corrigidos manualmente via data/tse_excecoes.json — vazio quando o contrato não tem correção. */
+  correcoes: CorrecaoResumo[];
 }
 
 export interface FuncaoResumo {

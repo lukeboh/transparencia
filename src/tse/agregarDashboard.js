@@ -5,10 +5,12 @@
 import { rankResponsaveis, normalizeNome } from './rankResponsaveis.js';
 import { agregarFuncoes } from './agregarFuncoes.js';
 import { anoDe, paraDataISO } from './datas.js';
+import { aplicarExcecoes } from './excecoes.js';
 
 const MAX_FATIAS = 5; // demais categorias somadas em "Outros"
 
-function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = []) {
+function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [], excecoes = []) {
+  contratos = aplicarExcecoes(contratos, excecoes);
   const hoje = new Date().toISOString().slice(0, 10);
 
   const totalContratado = contratos.reduce((s, c) => s + (c.valorGlobal || 0), 0);
@@ -74,6 +76,7 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
     ano: anoDe(c.vigenciaInicio) ?? null,
     categoria: c.categoria || 'Não informada',
     vigente: (paraDataISO(c.vigenciaFim) ?? '') >= hoje,
+    correcoes: c._correcoes ?? [],
   }));
   const indicePorId = new Map(contratos.map((c, i) => [c.id, i]));
 

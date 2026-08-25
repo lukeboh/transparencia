@@ -1,0 +1,22 @@
+[
+  {
+    "id": "5882",
+    "numero": "00031/2015",
+    "overrides": {
+      "valorGlobal": 2500000
+    },
+    "motivo": "A fonte (Compras.gov.br) exibe o Valor Global como R$ 2.500.000.000,00 (2,5 bilhões), incompatível com o objeto (serviços de apoio à TI por 12 meses). O valor correto, R$ 2.500.000,00 (2,5 milhões), foi confirmado na consulta de contratos do próprio TSE.",
+    "fonte": "https://siac-consultas.tse.jus.br/main/contratos/detalhar/00312015/CT",
+    "registradoEm": "2026-08-24"
+  },
+  {
+    "id": "310984",
+    "numero": "00090/2022",
+    "overrides": {
+      "valorGlobal": 0
+    },
+    "motivo": "A fonte (Compras.gov.br) exibe o Valor Global como R$ 11.061.452.230,00, mas trata-se de um acordo de cooperação (apoio logístico das Forças Armadas às eleições de 2022) já encerrado, cujo valor foi de R$ 0,00, conforme confirmado na consulta de contratos do próprio TSE.",
+    "fonte": "https://siac-consultas.tse.jus.br/main/contratos/detalhar/00902022/SE",
+    "registradoEm": "2026-08-25"
+  }
+]

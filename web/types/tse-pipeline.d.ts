@@ -19,7 +19,20 @@ declare module '*src/tse/agregarDashboard.js' {
     contratos: unknown[],
     movimentosFuncoes?: unknown[],
     agentesPublicos?: unknown[],
+    excecoes?: unknown[],
   ): unknown;
+}
+
+declare module '*src/tse/excecoes.js' {
+  export interface Excecao {
+    id: string;
+    overrides: Record<string, unknown>;
+    motivo: string;
+    fonte: string;
+    registradoEm?: string;
+  }
+  export function carregarExcecoes(caminho?: string): Excecao[];
+  export function aplicarExcecoes<T extends { id: string }>(contratos: T[], excecoes?: Excecao[]): T[];
 }
 
 declare module '*src/tse/scrapeFuncoes.js' {

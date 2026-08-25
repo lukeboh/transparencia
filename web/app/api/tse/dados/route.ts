@@ -8,6 +8,7 @@ import { scrapeContratos } from '../../../../../src/tse/scrapeContratos.js';
 import { scrapeAgentesPublicos } from '../../../../../src/tse/scrapeAgentesPublicos.js';
 import { scrapeFuncoes } from '../../../../../src/tse/scrapeFuncoes.js';
 import { agregarDashboard } from '../../../../../src/tse/agregarDashboard.js';
+import { carregarExcecoes } from '../../../../../src/tse/excecoes.js';
 import type { DashboardData } from '@/lib/dashboard-data';
 
 export const dynamic = 'force-dynamic';
@@ -140,7 +141,8 @@ function iniciarAtualizacao(e: EstadoCache) {
       });
       e.movimentosFuncoesBrutos = movimentosFuncoes;
 
-      e.dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos) as DashboardData;
+      const excecoes = carregarExcecoes();
+      e.dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos, excecoes) as DashboardData;
       await fs.mkdir(path.dirname(ARQUIVO_CACHE), { recursive: true });
       const persistido: CachePersistido = {
         dados: e.dados,

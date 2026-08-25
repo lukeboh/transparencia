@@ -1,6 +1,6 @@
 'use client';
 
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, PencilLine } from 'lucide-react';
 import { Dialog, DialogHeader } from '@/components/ui/dialog';
 import { brlCompleto, numero } from '@/lib/utils';
 import { urlContrato, type ContratoResumo, type FuncaoResumo } from '@/lib/dashboard-data';
@@ -78,6 +78,15 @@ export function ContratosDialog({
                       title={`${c.funcaoNoContrato.cargoTitulo} — ${c.funcaoNoContrato.tipo}-${c.funcaoNoContrato.nivel} durante a vigência deste contrato`}
                     >
                       {c.funcaoNoContrato.tipo}-{c.funcaoNoContrato.nivel}
+                    </span>
+                  )}
+                  {c.correcoes.length > 0 && (
+                    <span
+                      className="shrink-0 flex items-center gap-0.5 rounded-sm bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400"
+                      title={c.correcoes.map((cor) => `${cor.motivo}\n\nFonte: ${cor.fonte}`).join('\n\n---\n\n')}
+                    >
+                      <PencilLine className="h-3 w-3" aria-hidden />
+                      corrigido
                     </span>
                   )}
                 </span>
