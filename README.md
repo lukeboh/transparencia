@@ -34,7 +34,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   direita em qualquer situação).
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.11**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.12**.
 
 ## Dashboard web
 
@@ -122,14 +122,17 @@ enquanto o toggle está ativo.
 ### Temas
 
 Além do modo claro/escuro, o seletor de paleta (ícone 🎨 no header) oferece
-seis temas: **Neutro** (cinzas clássicos), **Institucional** (azul-marinho
+sete temas: **Neutro** (cinzas clássicos), **Institucional** (azul-marinho
 sóbrio, cantos mais retos), **Esmeralda** (verdes suaves, cantos mais
 arredondados), **Violeta** (gradiente índigo com cartões navy), **Lagoa**
-(gradiente turquesa→verde) e **Ardósia** (flat carvão + teal, cantos retos).
-Os temas mudam apenas o chrome (superfícies, acentos, bordas, raio e, nos
-gradientes, o fundo da página) — os slots de cor dos gráficos (`--chart-*`)
-são os mesmos em todos, porque são a paleta de dados validada para
-daltonismo (revalidada por script contra cada superfície escura nova).
+(gradiente turquesa→verde), **Ardósia** (flat carvão + teal, cantos retos) e
+**TSE** (azul institucional + dourado do brasão, nas cores do site oficial
+[tse.jus.br](https://www.tse.jus.br) — acento dourado em vez do teal/verde
+dos demais temas de acento). Os temas mudam apenas o chrome (superfícies,
+acentos, bordas, raio e, nos gradientes, o fundo da página) — os slots de
+cor dos gráficos (`--chart-*`) são os mesmos em todos, porque são a paleta
+de dados validada para daltonismo — o contraste de cada `--chart-*` contra o
+`--card` escuro de todo tema novo é conferido (razão WCAG) antes de entrar.
 Escolhas persistem em `localStorage` e são aplicadas antes do primeiro paint
 por um script no `<head>`.
 

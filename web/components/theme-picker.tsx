@@ -41,6 +41,12 @@ const TEMAS = [
     descricao: 'Flat carvão e teal',
     amostra: ['#21242e', '#45c4b5', '#2b3040'],
   },
+  {
+    id: 'tse',
+    nome: 'TSE',
+    descricao: 'Azul e dourado oficiais',
+    amostra: ['#10203a', '#6fa8f5', '#103a74'],
+  },
 ] as const;
 
 type TemaId = (typeof TEMAS)[number]['id'];
