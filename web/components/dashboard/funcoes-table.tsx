@@ -261,11 +261,9 @@ export function FuncoesTable({
                   onClick={() => onVerHistorico(servidor)}
                   className="cursor-pointer"
                 >
-                  <TableCell className="max-w-[240px] font-medium">
-                    <span className="flex min-w-0 items-center gap-1.5">
-                      <span className="truncate" title={nomeProprio(servidor.nome)}>
-                        {nomeProprio(servidor.nome)}
-                      </span>
+                  <TableCell className="font-medium">
+                    <span className="flex items-center gap-1.5">
+                      <span>{nomeProprio(servidor.nome)}</span>
                       {servidor.observacoes.length > 0 && (
                         <span title={servidor.observacoes.join(' ')}>
                           <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" aria-hidden />

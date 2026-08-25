@@ -339,11 +339,9 @@ export function TeletrabalhoTable({
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="max-w-[280px]">
+                    <TableCell>
                       {caminho ? (
-                        <span className="block truncate text-xs text-muted-foreground" title={caminho}>
-                          {caminho}
-                        </span>
+                        <span className="text-xs text-muted-foreground">{caminho}</span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
