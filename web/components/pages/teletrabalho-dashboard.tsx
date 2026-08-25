@@ -148,7 +148,7 @@ export function TeletrabalhoDashboard() {
   const [contratosDe, setContratosDe] = useState<LinhaRanking | null>(null);
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <header className="mb-8 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <Link

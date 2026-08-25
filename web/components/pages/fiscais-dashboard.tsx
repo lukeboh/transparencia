@@ -6,7 +6,6 @@ import { ArrowLeft, ArrowUpRight, Briefcase, Check, Laptop, Scale, Users } from 
 import { StatCard } from '@/components/dashboard/stat-card';
 import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
 import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
-import { RankingChart } from '@/components/dashboard/ranking-chart';
 import { RankingTable } from '@/components/dashboard/ranking-table';
 import { PapeisFilter } from '@/components/dashboard/papeis-filter';
 import { DadosStatus } from '@/components/dashboard/dados-status';
@@ -239,7 +238,6 @@ export function FiscaisDashboard() {
           />
         </div>
 
-        <RankingChart ranking={rankingFiltrado} contratos={contratos} />
         <RankingTable ranking={rankingFiltrado} contratos={contratos} funcoesPorNome={funcoesPorNome} />
       </div>
 
