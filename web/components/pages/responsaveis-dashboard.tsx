@@ -152,8 +152,8 @@ export function ResponsaveisDashboard() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-8 flex items-start justify-between gap-4">
-        <div>
+      <header className="mb-8 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <Link
             href="/"
             className="mb-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -176,14 +176,14 @@ export function ResponsaveisDashboard() {
             · <DadosStatus estado={estado} />
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           <Link
             href="/funcoes"
             className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             <Briefcase className="h-4 w-4" aria-hidden />
-            Funções
-            <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+            <span className="sr-only sm:not-sr-only">Funções</span>
+            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
           </Link>
           <ThemePicker />
           <ThemeToggle />

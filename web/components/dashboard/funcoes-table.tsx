@@ -11,6 +11,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   History,
+  MoveHorizontal,
   Search,
   X,
 } from 'lucide-react';
@@ -260,9 +261,11 @@ export function FuncoesTable({
                   onClick={() => onVerHistorico(servidor)}
                   className="cursor-pointer"
                 >
-                  <TableCell className="font-medium">
-                    <span className="inline-flex items-center gap-1.5">
-                      {nomeProprio(servidor.nome)}
+                  <TableCell className="max-w-[240px] font-medium">
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <span className="truncate" title={nomeProprio(servidor.nome)}>
+                        {nomeProprio(servidor.nome)}
+                      </span>
                       {servidor.observacoes.length > 0 && (
                         <span title={servidor.observacoes.join(' ')}>
                           <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-500" aria-hidden />
@@ -299,6 +302,10 @@ export function FuncoesTable({
             )}
           </TableBody>
         </Table>
+        <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground md:hidden">
+          <MoveHorizontal className="h-3 w-3 shrink-0" aria-hidden />
+          Deslize a tabela para o lado para ver mais colunas
+        </p>
 
         <div className="mt-4 flex items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">

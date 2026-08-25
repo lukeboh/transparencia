@@ -99,7 +99,7 @@ export function RankingChart({
   const corAtiva = CORES[metrica];
 
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
           <CardTitle className="text-base font-semibold">

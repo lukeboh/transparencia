@@ -98,7 +98,7 @@ export function EvolucaoChart({
   const corAtiva = CORES[metrica];
 
   return (
-    <Card className="lg:col-span-2">
+    <Card className="min-w-0 lg:col-span-2">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
           <CardTitle className="text-base font-semibold">Evolução dos gastos</CardTitle>

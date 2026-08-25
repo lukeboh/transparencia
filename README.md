@@ -21,9 +21,20 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
 - ✅ Correção manual de dados sabidamente errados via arquivo de exceções
   (`data/tse_excecoes.json`, `src/tse/excecoes.js`) — ver seção "Exceções"
   abaixo.
+- ✅ Responsivo em telas de celular (320px+) — testado com Playwright em
+  320/375/768px nas 3 páginas. Cabeçalhos quebram para uma segunda linha em
+  vez de estourar a tela (nav com só ícone abaixo de `sm:`); tabelas crescem
+  além do card e rolam horizontalmente dentro do próprio container
+  (`overflow-x-auto`) sem derrubar a página inteira em scroll horizontal;
+  gráficos dentro de grid (`Evolução`/`Divisão por categoria`) ganharam
+  `min-w-0` no Card raiz — sem isso, o item de grid não encolhe abaixo do
+  conteúdo interno do gráfico, e a rosca de tema (`ThemePicker`) tinha o
+  dropdown saindo da tela por causa do grupo de botões ficar alinhado à
+  esquerda ao quebrar linha (trocado por `ml-auto`, que mantém alinhado à
+  direita em qualquer situação).
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.10**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.11**.
 
 ## Dashboard web
 

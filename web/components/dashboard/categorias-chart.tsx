@@ -100,7 +100,7 @@ export function CategoriasChart({
         .sort((a, b) => b.valorGlobal - a.valorGlobal);
 
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
           <CardTitle className="text-base font-semibold">Divisão por categoria</CardTitle>

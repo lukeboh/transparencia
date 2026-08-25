@@ -10,6 +10,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  MoveHorizontal,
   Search,
   X,
 } from 'lucide-react';
@@ -348,6 +349,10 @@ export function RankingTable({
             )}
           </TableBody>
         </Table>
+        <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground md:hidden">
+          <MoveHorizontal className="h-3 w-3 shrink-0" aria-hidden />
+          Deslize a tabela para o lado para ver mais colunas
+        </p>
 
         <div className="mt-4 flex items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
