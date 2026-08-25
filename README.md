@@ -363,7 +363,7 @@ já teve uma Função Comissionada (FC-1 a FC-6) ou um Cargo em Comissão (CJ-1 
 CJ-4)**, fiscalizando contrato ou não — matrícula, cargo, lotação, função
 vigente e histórico de nomeação/exoneração com data e link da portaria
 correspondente. Servidores que nunca aparecem como fiscal/gestor de nenhum
-contrato recebem a tag **"Zero Fiscal"**. Filtro por tipo/nível de função e
+contrato recebem a tag **"Não-Fiscal"**. Filtro por tipo/nível de função e
 busca por nome, mesmo padrão da tabela de Fiscais. Também é possível
 ver, para quem fiscaliza algum contrato, a lista desses contratos
 (reaproveitando o mesmo modal auditável da página de Fiscais) — e, na

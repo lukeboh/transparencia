@@ -127,7 +127,7 @@ export function FiscaisDashboard() {
   // Distribuição por função (FC/CJ) dos responsáveis visíveis no ranking
   // filtrado — mesmo donut de /funcoes, aqui aplicado só a quem fiscaliza ou
   // gerencia contrato (o universo de /funcoes é mais amplo: inclui quem
-  // nunca aparece como responsável, os "Zero Fiscal").
+  // nunca aparece como responsável, os "Não-Fiscal").
   const donutFuncoesResponsaveis = useMemo(
     () =>
       contarPorFuncaoAtual(

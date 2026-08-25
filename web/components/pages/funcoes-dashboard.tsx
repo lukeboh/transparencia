@@ -151,7 +151,7 @@ export function FuncoesDashboard() {
             contagens={donutVigentes}
           />
           <FuncaoStatCard
-            titulo="Zero Fiscal"
+            titulo="Não-Fiscal"
             detalhe="nunca aparecem como fiscal/gestor de contrato"
             icone={<Ban className="h-4 w-4" aria-hidden />}
             contagens={donutZeroFiscal}

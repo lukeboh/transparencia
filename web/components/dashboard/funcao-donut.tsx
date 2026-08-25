@@ -40,7 +40,7 @@ function rotuloFatia(fatia: FatiaFuncao) {
 /**
  * Quantidade de servidores por função vigente hoje (tipo-nível), em ordem
  * fixa FC-1..6, CJ-1..4, com uma fatia "Sem função" para quem está no grupo
- * mas não tem função vigente na fonte primária agora (ex.: um "Zero Fiscal"
+ * mas não tem função vigente na fonte primária agora (ex.: um "Não-Fiscal"
  * que só teve função no passado) — assim o donut sempre soma o total do
  * grupo recebido, sem precisar de um número à parte para explicar a
  * diferença. `funcaoAtual` vem da relação atual de agentes públicos (fonte

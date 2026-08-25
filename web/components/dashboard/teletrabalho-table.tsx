@@ -274,7 +274,7 @@ export function TeletrabalhoTable({
                         </span>
                       ) : (
                         <span className="rounded-sm bg-destructive/10 px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-destructive">
-                          Zero Fiscal
+                          Não-Fiscal
                         </span>
                       )}
                     </TableCell>

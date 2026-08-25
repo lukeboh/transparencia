@@ -230,7 +230,7 @@ export function FuncoesTable({
               }}
               className="h-4 w-4 rounded border-border accent-primary"
             />
-            Somente &ldquo;Zero Fiscal&rdquo;
+            Somente &ldquo;Não-Fiscal&rdquo;
           </label>
         </div>
 
@@ -279,7 +279,7 @@ export function FuncoesTable({
                   <TableCell>
                     {servidor.zeroFiscal ? (
                       <span className="rounded-sm bg-destructive/10 px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-destructive">
-                        Zero Fiscal
+                        Não-Fiscal
                       </span>
                     ) : (
                       <button
