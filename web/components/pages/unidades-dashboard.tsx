@@ -124,12 +124,13 @@ export function UnidadesDashboard() {
         com o cadastro de teletrabalho vigente e com o ranking de fiscais/gestores de contrato — nenhuma das fontes
         compartilha um id de unidade ou matrícula/CPF em comum, então homônimos e pequenas divergências de grafia
         entre as fontes podem gerar vínculos incorretos ou registros não localizados (ver &ldquo;Não localizados na
-        estrutura&rdquo; acima). O toggle &ldquo;Consolidado&rdquo; de cada unidade soma toda a subárvore quando
-        ligado, ou só quem está lotado exatamente naquele nó quando desligado; o percentual de &ldquo;Servidores
-        vigentes&rdquo; é sempre sobre o total do TSE, independente do toggle — os demais percentuais (funções,
-        fiscais, teletrabalho) são sempre sobre o total da própria unidade, no estado atual do toggle. Uma pessoa
-        pode ter mais de um papel de fiscal/gestor, então a soma dos chips de fiscal pode passar do total de
-        servidores da unidade.
+        estrutura&rdquo; acima). Cada unidade tem três toggles independentes, com botão geral e por card: &ldquo;
+        Consolidado&rdquo; (soma toda a subárvore quando ligado, ou só quem está lotado exatamente naquele nó quando
+        desligado), &ldquo;Nível de detalhe&rdquo; (detalhado = um chip por função/papel; simples = FC, CJ e
+        fiscais consolidados em um chip cada) e &ldquo;Base do %&rdquo; (geral = percentual sobre o total de
+        servidores do TSE; unidade = sobre os servidores da própria unidade — nesse caso a linha &ldquo;Servidores
+        vigentes&rdquo; mostra sempre 100%, já que é a própria base). Uma pessoa pode ter mais de um papel de
+        fiscal/gestor, então a soma dos chips de fiscal pode passar de 100%.
         <AppVersion />
       </footer>
     </main>

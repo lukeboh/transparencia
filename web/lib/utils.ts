@@ -40,9 +40,18 @@ export function numero(valor: number) {
   return inteiro.format(valor);
 }
 
-/** Divisão segura + arredondamento inteiro — 0 (não NaN) quando o denominador é 0. */
-export function percentual(qtd: number, total: number): number {
-  return total > 0 ? Math.round((qtd / total) * 100) : 0;
+/**
+ * Divisão segura formatada para exibição — abaixo de 10% usa 1 casa decimal
+ * (senão percentuais pequenos e genuinamente diferentes de zero arredondam
+ * todos para "0%" e viram indistinguíveis); a partir de 10%, inteiro
+ * arredondado, como antes. "0" (sem decimal, não NaN) quando o denominador é
+ * 0 ou o resultado é exatamente zero.
+ */
+export function percentual(qtd: number, total: number): string {
+  if (total <= 0) return '0';
+  const valor = (qtd / total) * 100;
+  if (valor > 0 && valor < 10) return valor.toFixed(1);
+  return String(Math.round(valor));
 }
 
 /**
