@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   ArrowDown,
@@ -12,8 +12,10 @@ import {
   ChevronsRight,
   History,
   MoveHorizontal,
+  Network,
   Search,
   X,
+  type LucideIcon,
 } from 'lucide-react';
 import {
   Card,
@@ -32,10 +34,12 @@ import {
 } from '@/components/ui/table';
 import { cn, nomeProprio, numero } from '@/lib/utils';
 import type { ServidorFuncoes } from '@/lib/dashboard-data';
+import type { ResolvedorLotacao } from '@/lib/lotacao-hierarquia';
 
 const LINHAS_POR_PAGINA = 25;
+const LISTA_LOTACOES_ID = 'funcoes-lotacoes';
 
-type CampoOrdenavel = 'nome' | 'funcoes';
+type CampoOrdenavel = 'nome' | 'funcoes' | 'lotacao';
 type DirecaoOrdenacao = 'asc' | 'desc';
 
 interface Ordenacao {
@@ -87,6 +91,55 @@ export function FuncoesBadges({ servidor }: { servidor: ServidorFuncoes }) {
   );
 }
 
+function CampoFiltro({
+  valor,
+  aoMudar,
+  placeholder,
+  rotulo,
+  icone: Icone,
+  listId,
+}: {
+  valor: string;
+  aoMudar: (valor: string) => void;
+  placeholder: string;
+  rotulo: string;
+  icone: LucideIcon;
+  listId?: string;
+}) {
+  return (
+    <div className="relative max-w-sm flex-1 min-w-[220px]">
+      <Icone
+        className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+        aria-hidden
+      />
+      <input
+        type="search"
+        value={valor}
+        list={listId}
+        onChange={(e) => aoMudar(e.target.value)}
+        placeholder={placeholder}
+        aria-label={rotulo}
+        className={cn(
+          'h-9 w-full rounded-md border border-border bg-card pl-8 pr-8 text-sm text-foreground',
+          'placeholder:text-muted-foreground outline-none transition-colors',
+          'focus-visible:ring-2 focus-visible:ring-ring',
+          '[&::-webkit-search-cancel-button]:hidden',
+        )}
+      />
+      {valor && (
+        <button
+          type="button"
+          onClick={() => aoMudar('')}
+          aria-label={`Limpar ${rotulo.toLowerCase()}`}
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <X className="h-3.5 w-3.5" aria-hidden />
+        </button>
+      )}
+    </div>
+  );
+}
+
 function BotaoPagina({ className, ...props }: React.ComponentProps<'button'>) {
   return (
     <button
@@ -133,30 +186,65 @@ function CabecalhoOrdenavel({
 
 export function FuncoesTable({
   servidores,
+  resolverLotacao,
   onVerHistorico,
   onVerContratos,
 }: {
   servidores: ServidorFuncoes[];
+  resolverLotacao: ResolvedorLotacao;
   onVerHistorico: (servidor: ServidorFuncoes) => void;
   onVerContratos: (servidor: ServidorFuncoes) => void;
 }) {
   const [pagina, setPagina] = useState(0);
   const [busca, setBusca] = useState('');
-  const [somenteZeroFiscal, setSomenteZeroFiscal] = useState(false);
+  const [filtroLotacao, setFiltroLotacao] = useState('');
   const [ordenacao, setOrdenacao] = useState<Ordenacao | null>(null);
+
+  // Caminho hierárquico ("menor / … / maior") por nome de lotação, resolvido
+  // uma vez contra a árvore de unidades. Vazio quando o nome não resolve —
+  // nesse caso caímos no nome plano da própria fonte.
+  const lotacaoPorServidor = useMemo(() => {
+    const cache = new Map<string, string>();
+    for (const s of servidores) {
+      const chave = s.lotacao ?? '';
+      if (cache.has(chave)) continue;
+      const siglas = resolverLotacao(s.lotacao);
+      cache.set(chave, siglas.length > 0 ? siglas.join(' / ') : (s.lotacao ?? ''));
+    }
+    return cache;
+  }, [servidores, resolverLotacao]);
+
+  const textoLotacao = useCallback(
+    (servidor: ServidorFuncoes) => lotacaoPorServidor.get(servidor.lotacao ?? '') ?? '',
+    [lotacaoPorServidor],
+  );
+
+  const opcoesLotacao = useMemo(
+    () => Array.from(new Set([...lotacaoPorServidor.values()].filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR')),
+    [lotacaoPorServidor],
+  );
 
   const linhasVisiveis = useMemo(() => {
     const termo = normalizar(busca.trim());
+    const termoLotacao = normalizar(filtroLotacao.trim());
     let filtradas = servidores;
     if (termo) filtradas = filtradas.filter((s) => normalizar(s.nome).includes(termo));
-    if (somenteZeroFiscal) filtradas = filtradas.filter((s) => s.zeroFiscal);
+    if (termoLotacao)
+      filtradas = filtradas.filter((s) => normalizar(textoLotacao(s)).includes(termoLotacao));
     if (!ordenacao) return filtradas;
     const fator = ordenacao.direcao === 'asc' ? 1 : -1;
     return [...filtradas].sort((a, b) => {
       if (ordenacao.campo === 'nome') return fator * a.nome.localeCompare(b.nome, 'pt-BR');
+      if (ordenacao.campo === 'lotacao') {
+        // Sem lotação resolvida sempre ao fim, independente da direção.
+        const la = textoLotacao(a);
+        const lb = textoLotacao(b);
+        if (!la || !lb) return la ? -1 : lb ? 1 : 0;
+        return fator * la.localeCompare(lb, 'pt-BR');
+      }
       return fator * (a.mandatos.length - b.mandatos.length);
     });
-  }, [servidores, busca, somenteZeroFiscal, ordenacao]);
+  }, [servidores, busca, filtroLotacao, ordenacao, textoLotacao]);
 
   const totalPaginas = Math.max(1, Math.ceil(linhasVisiveis.length / LINHAS_POR_PAGINA));
   const paginaAtual = Math.min(pagina, totalPaginas - 1);
@@ -165,9 +253,11 @@ export function FuncoesTable({
 
   function ordenarPor(campo: CampoOrdenavel) {
     setPagina(0);
+    // Campos de texto começam em "asc" (A→Z); "funcoes" (numérico) em "desc".
+    const padrao: DirecaoOrdenacao = campo === 'funcoes' ? 'desc' : 'asc';
     setOrdenacao((atual) => {
-      if (atual?.campo !== campo) return { campo, direcao: campo === 'nome' ? 'asc' : 'desc' };
-      if (atual.direcao === (campo === 'nome' ? 'asc' : 'desc')) {
+      if (atual?.campo !== campo) return { campo, direcao: padrao };
+      if (atual.direcao === padrao) {
         return { campo, direcao: atual.direcao === 'asc' ? 'desc' : 'asc' };
       }
       return null;
@@ -185,53 +275,32 @@ export function FuncoesTable({
       </CardHeader>
       <CardContent>
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <div className="relative max-w-sm flex-1 min-w-[220px]">
-            <Search
-              className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden
-            />
-            <input
-              type="search"
-              value={busca}
-              onChange={(e) => {
-                setBusca(e.target.value);
-                setPagina(0);
-              }}
-              placeholder="Filtrar por servidor…"
-              aria-label="Filtrar por servidor"
-              className={cn(
-                'h-9 w-full rounded-md border border-border bg-card pl-8 pr-8 text-sm text-foreground',
-                'placeholder:text-muted-foreground outline-none transition-colors',
-                'focus-visible:ring-2 focus-visible:ring-ring',
-                '[&::-webkit-search-cancel-button]:hidden',
-              )}
-            />
-            {busca && (
-              <button
-                type="button"
-                onClick={() => {
-                  setBusca('');
-                  setPagina(0);
-                }}
-                aria-label="Limpar filtro"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-              >
-                <X className="h-3.5 w-3.5" aria-hidden />
-              </button>
-            )}
-          </div>
-          <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={somenteZeroFiscal}
-              onChange={(e) => {
-                setSomenteZeroFiscal(e.target.checked);
-                setPagina(0);
-              }}
-              className="h-4 w-4 rounded border-border accent-primary"
-            />
-            Somente &ldquo;Não-Fiscal&rdquo;
-          </label>
+          <CampoFiltro
+            valor={busca}
+            aoMudar={(v) => {
+              setBusca(v);
+              setPagina(0);
+            }}
+            placeholder="Filtrar por servidor…"
+            rotulo="Filtrar por servidor"
+            icone={Search}
+          />
+          <CampoFiltro
+            valor={filtroLotacao}
+            aoMudar={(v) => {
+              setFiltroLotacao(v);
+              setPagina(0);
+            }}
+            placeholder="Filtrar por lotação…"
+            rotulo="Filtrar por lotação"
+            icone={Network}
+            listId={LISTA_LOTACOES_ID}
+          />
+          <datalist id={LISTA_LOTACOES_ID}>
+            {opcoesLotacao.map((opcao) => (
+              <option key={opcao} value={opcao} />
+            ))}
+          </datalist>
         </div>
 
         <Table>
@@ -243,6 +312,9 @@ export function FuncoesTable({
               <TableHead>
                 <CabecalhoOrdenavel rotulo="Função" campo="funcoes" ordenacao={ordenacao} onOrdenar={ordenarPor} />
               </TableHead>
+              <TableHead>
+                <CabecalhoOrdenavel rotulo="Lotação" campo="lotacao" ordenacao={ordenacao} onOrdenar={ordenarPor} />
+              </TableHead>
               <TableHead>Contratos fiscalizados</TableHead>
               <TableHead className="w-10" />
             </TableRow>
@@ -250,7 +322,7 @@ export function FuncoesTable({
           <TableBody>
             {linhas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
                   Nenhum servidor encontrado{busca ? ` para “${busca}”` : ''}
                 </TableCell>
               </TableRow>
@@ -273,6 +345,18 @@ export function FuncoesTable({
                   </TableCell>
                   <TableCell>
                     <FuncoesBadges servidor={servidor} />
+                  </TableCell>
+                  <TableCell>
+                    {textoLotacao(servidor) ? (
+                      <span
+                        className="text-xs text-muted-foreground"
+                        title={servidor.lotacao ?? undefined}
+                      >
+                        {textoLotacao(servidor)}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {servidor.zeroFiscal ? (
@@ -310,7 +394,7 @@ export function FuncoesTable({
             {linhasVisiveis.length === 0
               ? `0 de ${numero(servidores.length)}`
               : `Exibindo ${numero(inicio + 1)}–${numero(inicio + linhas.length)} de ${numero(linhasVisiveis.length)}`}
-            {(busca.trim() || somenteZeroFiscal) && linhasVisiveis.length !== servidores.length && (
+            {(busca.trim() || filtroLotacao.trim()) && linhasVisiveis.length !== servidores.length && (
               <> (filtrados de {numero(servidores.length)})</>
             )}
           </p>

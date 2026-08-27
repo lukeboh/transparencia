@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowUpRight, Ban, Briefcase, Laptop, Network, ShieldCheck, Users } from 'lucide-react';
 import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
 import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
-import { PapeisFilter } from '@/components/dashboard/papeis-filter';
+import { FuncoesFilter, NAO_FISCAL } from '@/components/dashboard/funcoes-filter';
 import { FuncoesTable } from '@/components/dashboard/funcoes-table';
 import { FuncoesHistoricoDialog } from '@/components/dashboard/funcoes-historico-dialog';
 import { ContratosDialog } from '@/components/dashboard/contratos-dialog';
@@ -15,13 +15,20 @@ import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
+import { criarResolvedorLotacao } from '@/lib/lotacao-hierarquia';
 import { nomeProprio, numero } from '@/lib/utils';
 import type { ServidorFuncoes } from '@/lib/dashboard-data';
 
 export function FuncoesDashboard() {
   const estado = useDadosDashboard();
-  const { funcoes, responsaveis, contratos, fonte } = estado.dados;
+  const { funcoes, responsaveis, contratos, fonte, unidades } = estado.dados;
 
+  const resolverLotacao = useMemo(
+    () => criarResolvedorLotacao(unidades.arvore),
+    [unidades.arvore],
+  );
+
+  // Níveis de função (FC-1…CJ-4) que aparecem no histórico completo.
   const todasFuncoes = useMemo(() => {
     const set = new Set<string>();
     for (const s of funcoes.servidores) {
@@ -31,27 +38,86 @@ export function FuncoesDashboard() {
     return Array.from(set).sort();
   }, [funcoes.servidores]);
 
+  // Papel de cada servidor na fiscalização/gestão de contratos: os papéis
+  // reais do ranking de responsáveis, ou NAO_FISCAL para quem nunca aparece
+  // como responsável (zeroFiscal).
+  const papeisPorServidor = useMemo(() => {
+    const map = new Map<ServidorFuncoes, string[]>();
+    for (const s of funcoes.servidores) {
+      if (s.zeroFiscal || s.responsavelRankingIndex == null) {
+        map.set(s, [NAO_FISCAL]);
+        continue;
+      }
+      map.set(s, responsaveis.ranking[s.responsavelRankingIndex]?.papeis ?? [NAO_FISCAL]);
+    }
+    return map;
+  }, [funcoes.servidores, responsaveis.ranking]);
+
+  // Lista de toggles de "Atuação em contratos": NAO_FISCAL primeiro, depois os
+  // papéis reais em ordem alfabética.
+  const todosPapeis = useMemo(() => {
+    const set = new Set<string>();
+    for (const paps of papeisPorServidor.values()) {
+      for (const p of paps) if (p !== NAO_FISCAL) set.add(p);
+    }
+    return [NAO_FISCAL, ...Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR'))];
+  }, [papeisPorServidor]);
+
   const [funcoesSelecionadas, setFuncoesSelecionadas] = useState<string[]>([]);
+  const [papeisSelecionados, setPapeisSelecionados] = useState<string[]>([]);
+  // Toggle "Vigente" do filtro: quando ativo, só entram servidores com função
+  // vigente hoje (funcaoAtual), e o casamento com os níveis selecionados
+  // ignora o histórico de mandatos.
+  const [somenteVigentes, setSomenteVigentes] = useState(false);
 
   const servidoresFiltrados = useMemo(() => {
-    if (funcoesSelecionadas.length === 0 || funcoesSelecionadas.length === todasFuncoes.length) {
-      return funcoes.servidores;
-    }
-    const set = new Set(funcoesSelecionadas);
-    return funcoes.servidores.filter(
-      (s) =>
-        (s.funcaoAtual && set.has(`${s.funcaoAtual.tipo}-${s.funcaoAtual.nivel}`)) ||
-        s.mandatos.some((m) => set.has(`${m.tipo}-${m.nivel}`)),
-    );
-  }, [funcoes.servidores, funcoesSelecionadas, todasFuncoes]);
+    const todosNiveis =
+      funcoesSelecionadas.length === 0 || funcoesSelecionadas.length === todasFuncoes.length;
+    const todosPap =
+      papeisSelecionados.length === 0 || papeisSelecionados.length === todosPapeis.length;
+    const setNiveis = new Set(funcoesSelecionadas);
+    const setPapeis = new Set(papeisSelecionados);
+    return funcoes.servidores.filter((s) => {
+      if (somenteVigentes && !s.funcaoAtual) return false;
 
-  // Seleciona todas as funções assim que a lista carrega (mesmo padrão do
-  // filtro de papéis em /responsaveis).
+      if (!todosNiveis) {
+        const casaNivel = somenteVigentes
+          ? s.funcaoAtual != null && setNiveis.has(`${s.funcaoAtual.tipo}-${s.funcaoAtual.nivel}`)
+          : (s.funcaoAtual != null && setNiveis.has(`${s.funcaoAtual.tipo}-${s.funcaoAtual.nivel}`)) ||
+            s.mandatos.some((m) => setNiveis.has(`${m.tipo}-${m.nivel}`));
+        if (!casaNivel) return false;
+      }
+
+      if (!todosPap) {
+        const paps = papeisPorServidor.get(s) ?? [];
+        if (!paps.some((p) => setPapeis.has(p))) return false;
+      }
+
+      return true;
+    });
+  }, [
+    funcoes.servidores,
+    funcoesSelecionadas,
+    todasFuncoes,
+    papeisSelecionados,
+    todosPapeis,
+    papeisPorServidor,
+    somenteVigentes,
+  ]);
+
+  // Seleciona tudo assim que cada lista carrega (mesmo padrão do filtro de
+  // papéis em /responsaveis).
   useEffect(() => {
     if (todasFuncoes.length > 0 && funcoesSelecionadas.length === 0) {
       setFuncoesSelecionadas(todasFuncoes);
     }
   }, [todasFuncoes]);
+
+  useEffect(() => {
+    if (todosPapeis.length > 1 && papeisSelecionados.length === 0) {
+      setPapeisSelecionados(todosPapeis);
+    }
+  }, [todosPapeis]);
 
   // Os 3 KPIs (e seus donuts) refletem o filtro de função aplicado acima —
   // "com função" aqui significa vigente hoje, não o histórico completo.
@@ -145,10 +211,15 @@ export function FuncoesDashboard() {
       </header>
 
       <div className="space-y-4">
-        <PapeisFilter
-          todosPapeis={todasFuncoes}
-          papeisSelecionados={funcoesSelecionadas}
-          onChange={setFuncoesSelecionadas}
+        <FuncoesFilter
+          niveis={todasFuncoes}
+          niveisSelecionados={funcoesSelecionadas}
+          onNiveisChange={setFuncoesSelecionadas}
+          papeis={todosPapeis}
+          papeisSelecionados={papeisSelecionados}
+          onPapeisChange={setPapeisSelecionados}
+          vigente={somenteVigentes}
+          onVigenteChange={setSomenteVigentes}
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -174,6 +245,7 @@ export function FuncoesDashboard() {
 
         <FuncoesTable
           servidores={servidoresFiltrados}
+          resolverLotacao={resolverLotacao}
           onVerHistorico={setHistoricoAberto}
           onVerContratos={setContratosDe}
         />

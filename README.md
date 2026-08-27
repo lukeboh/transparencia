@@ -63,6 +63,27 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   tabela de ranking ganhou a coluna "Faixas", com os símbolos (badge colorido
   na cor da faixa) de todas as faixas presentes entre os contratos do
   servidor no filtro atual.
+- ✅ Coluna "Lotação" na tabela de servidores com função comissionada em
+  `/funcoes` (`web/lib/lotacao-hierarquia.ts`) — resolve o nome plano de
+  lotação da relação de agentes públicos contra a árvore oficial de unidades
+  (`/unidades`) e mostra o caminho de siglas da unidade mais específica para a
+  mais alta, só os 3 primeiros níveis — ex.: `SEVIN / COTEL / STI` (suficiente
+  para identificar a lotação sem arrastar secretaria/presidência em toda
+  linha; a raiz TSE fica de fora; quando o nome não bate em exatamente um nó,
+  cai no nome plano da fonte). Coluna filtrável por campo de texto com `datalist` das lotações
+  presentes (digitar para filtrar por trecho ou escolher da lista) e
+  ordenável crescente/decrescente.
+- ✅ Painel de filtro genérico em `/funcoes` (`FuncoesFilter`, substitui o
+  `PapeisFilter` só nessa página — `/fiscais` segue com o `PapeisFilter`
+  original). Passou a se chamar só "Filtro" e reúne, em seções de chips: (1)
+  nível de função comissionada (CJ-1…FC-6), (2) "Atuação em contratos" — um
+  toggle para cada papel real do ranking de responsáveis (Fiscal Técnico,
+  Fiscal Administrativo, Gestor, substitutos…) mais um toggle sintético
+  "Não-Fiscal" para quem nunca aparece como responsável (antes era o checkbox
+  "Somente Não-Fiscal" da tabela, agora removido), e (3) o toggle "Vigente",
+  que restringe a quem tem função vigente hoje (`funcaoAtual`) e casa os
+  níveis selecionados só com a função vigente. Função e atuação combinam em E;
+  dentro de cada seção é OU; seção sem nada marcado não restringe.
 - ✅ Responsivo em telas de celular (320px+) — testado com Playwright em
   320/375/768px nas 3 páginas. Cabeçalhos quebram para uma segunda linha em
   vez de estourar a tela (nav com só ícone abaixo de `sm:`); tabelas crescem
@@ -76,7 +97,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   direita em qualquer situação).
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.16**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.18**.
 
 ## Dashboard web
 
