@@ -2,23 +2,31 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Briefcase, Check, Coins, Laptop, Network, Scale, Users } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Briefcase, Coins, Laptop, Network, Scale, Users } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
 import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
 import { ContagemStatCard } from '@/components/dashboard/contagem-stat-card';
 import { CategoriaValorFiscaisCard, contarFiscaisPorFaixaValor } from '@/components/dashboard/categoria-valor-fiscais-card';
-import { CategoriaValorFilter } from '@/components/dashboard/categoria-valor-filter';
+import { FiltroFiscais } from '@/components/dashboard/filtro-fiscais';
 import { RankingTable } from '@/components/dashboard/ranking-table';
-import { PapeisFilter } from '@/components/dashboard/papeis-filter';
 import { DadosStatus } from '@/components/dashboard/dados-status';
 import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
-import { brlCompacto, cn, numero } from '@/lib/utils';
+import { brlCompacto, numero } from '@/lib/utils';
+import { ehSubstituto } from '@/lib/perfis-fiscalizacao';
 import { CATEGORIAS_VALOR, categoriaDoValor, type CategoriaValorId } from '@/lib/categorias-valor';
 import type { ContratoResumo, LinhaRanking, ServidorFuncoes } from '@/lib/dashboard-data';
+
+/** Chave "FC-3" / "CJ-1" da função comissionada, ou null. FC antes de CJ, depois pelo nível. */
+function ordenarFuncao(a: string, b: string): number {
+  const [ta, na] = a.split('-');
+  const [tb, nb] = b.split('-');
+  if (ta !== tb) return ta === 'FC' ? -1 : 1;
+  return Number(na) - Number(nb);
+}
 
 /** Extrai a lógica de filtro+recálculo de rankingFiltrado, reaproveitada nos dois estágios (papéis/vigência e faixa de valor) — ver fiscais-dashboard.tsx. */
 function filtrarRanking(
@@ -28,12 +36,21 @@ function filtrarRanking(
   papeisSelecionados: string[],
   somenteVigentes: boolean,
   categoriasSelecionadas: CategoriaValorId[] | null,
+  funcaoChavePorNome: Map<string, string | null>,
+  funcoesSelecionadas: string[] | null,
+  incluirSemFuncao: boolean,
 ): LinhaRanking[] {
   const setPapeis = new Set(papeisSelecionados);
   const setCategorias = categoriasSelecionadas ? new Set(categoriasSelecionadas) : null;
+  const setFuncoes = funcoesSelecionadas ? new Set(funcoesSelecionadas) : null;
   const resultado: LinhaRanking[] = [];
 
   for (const servidor of ranking) {
+    if (setFuncoes) {
+      const chave = funcaoChavePorNome.get(servidor.nome) ?? null;
+      if (chave === null ? !incluirSemFuncao : !setFuncoes.has(chave)) continue;
+    }
+
     const contratosFiltrados = servidor.contratos.filter((c) => {
       if (!c.papeis.some((p) => setPapeis.has(p))) return false;
       if (somenteVigentes && !contratos[c.i]?.vigente) return false;
@@ -99,17 +116,58 @@ export function FiscaisDashboard() {
     return Array.from(set).sort();
   }, [responsaveis.ranking]);
 
+  // Níveis de função comissionada vigente entre os fiscais/gestores do ranking.
+  const todasFuncoes = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of funcoesPorNome.values()) {
+      if (s.funcaoAtual) set.add(`${s.funcaoAtual.tipo}-${s.funcaoAtual.nivel}`);
+    }
+    return Array.from(set).sort(ordenarFuncao);
+  }, [funcoesPorNome]);
+
+  // Função vigente de cada responsável do ranking, por nome — null quando não há.
+  const funcaoChavePorNome = useMemo(() => {
+    const m = new Map<string, string | null>();
+    for (const [nome, s] of funcoesPorNome) {
+      m.set(nome, s.funcaoAtual ? `${s.funcaoAtual.tipo}-${s.funcaoAtual.nivel}` : null);
+    }
+    return m;
+  }, [funcoesPorNome]);
+
   const [papeisSelecionados, setPapeisSelecionados] = useState<string[]>([]);
+  const [considerarSubstitutos, setConsiderarSubstitutos] = useState(true);
   const [somenteVigentes, setSomenteVigentes] = useState(false);
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState<CategoriaValorId[]>(() =>
     CATEGORIAS_VALOR.map((c) => c.id),
   );
+  const [funcoesSelecionadas, setFuncoesSelecionadas] = useState<string[]>([]);
+  const [incluirSemFuncao, setIncluirSemFuncao] = useState(true);
 
   useEffect(() => {
     if (todosPapeis.length > 0 && papeisSelecionados.length === 0) {
       setPapeisSelecionados(todosPapeis);
     }
   }, [todosPapeis]);
+
+  useEffect(() => {
+    if (todasFuncoes.length > 0 && funcoesSelecionadas.length === 0) {
+      setFuncoesSelecionadas(todasFuncoes);
+    }
+  }, [todasFuncoes]);
+
+  // Papéis que efetivamente filtram o ranking: quando "considerar substitutos"
+  // está desligado, os papéis 🔄 saem da conta (e some quem só entra como
+  // substituto num contrato).
+  const papeisEfetivos = useMemo(
+    () => (considerarSubstitutos ? papeisSelecionados : papeisSelecionados.filter((p) => !ehSubstituto(p))),
+    [considerarSubstitutos, papeisSelecionados],
+  );
+  const todosPapeisEfetivos = useMemo(
+    () => (considerarSubstitutos ? todosPapeis : todosPapeis.filter((p) => !ehSubstituto(p))),
+    [considerarSubstitutos, todosPapeis],
+  );
+  const funcoesIrrestritas =
+    funcoesSelecionadas.length === todasFuncoes.length && incluirSemFuncao;
 
   // Faixa de valor de cada contrato, por índice em `contratos` — calculado
   // uma vez e reaproveitado nos dois estágios de filtro abaixo.
@@ -123,29 +181,66 @@ export function FiscaisDashboard() {
   // mostrando o panorama completo mesmo quando o filtro de faixa (estágio 2)
   // está restringindo o que aparece na tabela.
   const rankingPorPapelVigencia = useMemo(() => {
-    if (papeisSelecionados.length === 0) return [];
-    if (papeisSelecionados.length === todosPapeis.length && !somenteVigentes) {
-      return responsaveis.ranking;
-    }
-    return filtrarRanking(responsaveis.ranking, contratos, categoriaIdPorIndice, papeisSelecionados, somenteVigentes, null);
-  }, [responsaveis.ranking, contratos, categoriaIdPorIndice, papeisSelecionados, todosPapeis, somenteVigentes]);
+    if (papeisEfetivos.length === 0) return [];
+    const semCorte =
+      papeisEfetivos.length === todosPapeisEfetivos.length &&
+      considerarSubstitutos &&
+      funcoesIrrestritas &&
+      !somenteVigentes;
+    if (semCorte) return responsaveis.ranking;
+    return filtrarRanking(
+      responsaveis.ranking,
+      contratos,
+      categoriaIdPorIndice,
+      papeisEfetivos,
+      somenteVigentes,
+      null,
+      funcaoChavePorNome,
+      funcoesIrrestritas ? null : funcoesSelecionadas,
+      incluirSemFuncao,
+    );
+  }, [
+    responsaveis.ranking,
+    contratos,
+    categoriaIdPorIndice,
+    papeisEfetivos,
+    todosPapeisEfetivos,
+    considerarSubstitutos,
+    somenteVigentes,
+    funcaoChavePorNome,
+    funcoesSelecionadas,
+    funcoesIrrestritas,
+    incluirSemFuncao,
+  ]);
 
   // Estágio 2: acrescenta o filtro de faixa de valor sobre o resultado do
   // estágio 1 — é o que efetivamente aparece na tabela e nos demais KPIs da
-  // página. Reaplica papéis/vigência com os mesmos critérios do estágio 1
-  // (idempotente sobre `rankingPorPapelVigencia`, que já veio filtrado).
+  // página. Papéis/vigência já vieram aplicados; função também (por isso `null`
+  // aqui). Reaplica sobre `rankingPorPapelVigencia` de forma idempotente.
   const rankingFiltrado = useMemo(() => {
-    if (papeisSelecionados.length === 0 || categoriasSelecionadas.length === 0) return [];
+    if (papeisEfetivos.length === 0 || categoriasSelecionadas.length === 0) return [];
     if (categoriasSelecionadas.length === CATEGORIAS_VALOR.length) return rankingPorPapelVigencia;
     return filtrarRanking(
       rankingPorPapelVigencia,
       contratos,
       categoriaIdPorIndice,
-      papeisSelecionados,
+      papeisEfetivos,
       somenteVigentes,
       categoriasSelecionadas,
+      funcaoChavePorNome,
+      null,
+      incluirSemFuncao,
     );
-  }, [rankingPorPapelVigencia, contratos, categoriaIdPorIndice, papeisSelecionados, somenteVigentes, categoriasSelecionadas]);
+  }, [
+    rankingPorPapelVigencia,
+    contratos,
+    categoriaIdPorIndice,
+    papeisEfetivos,
+    somenteVigentes,
+    categoriasSelecionadas,
+    funcaoChavePorNome,
+    incluirSemFuncao,
+  ]);
 
   // KPI: contratos por faixa de valor — universo completo de contratos,
   // respeitando "Somente contratos vigentes" (mesmo corte usado no resto da
@@ -281,32 +376,21 @@ export function FiscaisDashboard() {
       </header>
 
       <div className="space-y-4">
-        <div className="flex flex-wrap items-start gap-3">
-          <PapeisFilter
-            todosPapeis={todosPapeis}
-            papeisSelecionados={papeisSelecionados}
-            onChange={setPapeisSelecionados}
-            className="min-w-[280px] flex-1"
-          />
-          <button
-            type="button"
-            onClick={() => setSomenteVigentes((v) => !v)}
-            aria-pressed={somenteVigentes}
-            className={cn(
-              'inline-flex shrink-0 items-center gap-1.5 self-start rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors',
-              somenteVigentes
-                ? 'border-primary bg-primary text-primary-foreground shadow-xs'
-                : 'border-border bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-            )}
-          >
-            {somenteVigentes && <Check className="h-3.5 w-3.5 shrink-0" aria-hidden />}
-            Somente contratos vigentes
-          </button>
-        </div>
-
-        <CategoriaValorFilter
+        <FiltroFiscais
+          todosPapeis={todosPapeis}
+          papeisSelecionados={papeisSelecionados}
+          onPapeisChange={setPapeisSelecionados}
+          considerarSubstitutos={considerarSubstitutos}
+          onConsiderarSubstitutosChange={setConsiderarSubstitutos}
+          somenteVigentes={somenteVigentes}
+          onSomenteVigentesChange={setSomenteVigentes}
           categoriasSelecionadas={categoriasSelecionadas}
-          onChange={setCategoriasSelecionadas}
+          onCategoriasChange={setCategoriasSelecionadas}
+          todasFuncoes={todasFuncoes}
+          funcoesSelecionadas={funcoesSelecionadas}
+          onFuncoesChange={setFuncoesSelecionadas}
+          incluirSemFuncao={incluirSemFuncao}
+          onIncluirSemFuncaoChange={setIncluirSemFuncao}
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -340,7 +424,7 @@ export function FiscaisDashboard() {
           />
           <CategoriaValorFiscaisCard
             titulo="Fiscais por faixa de valor"
-            detalhe={`de ${numero(rankingPorPapelVigencia.length)} fiscais/gestores no filtro de papéis · uma pessoa pode contar em mais de uma faixa`}
+            detalhe={`de ${numero(rankingPorPapelVigencia.length)} fiscais/gestores no filtro (papel, função e vigência) · uma pessoa pode contar em mais de uma faixa`}
             icone={<Coins className="h-4 w-4" aria-hidden />}
             contagens={fiscaisPorFaixaValor}
             totalBase={rankingPorPapelVigencia.length}
@@ -353,9 +437,12 @@ export function FiscaisDashboard() {
       <footer className="mt-8 text-xs text-muted-foreground">
         O valor consolidado soma o &ldquo;Valor Global&rdquo; de cada contrato em que
         o servidor aparece como responsável nos papéis selecionados
+        {considerarSubstitutos ? '' : ' (sem os substitutos)'}
         {somenteVigentes ? ' e vigente hoje' : ''} e dentro das faixas de valor
-        selecionadas, contando cada contrato uma única vez por pessoa. Faixas de
-        valor: {CATEGORIAS_VALOR.map((c) => `${c.simbolo} ${c.nome}`).join(' · ')}.
+        selecionadas, contando cada contrato uma única vez por pessoa. O filtro
+        &ldquo;Por função&rdquo; recorta pelo cargo comissionado vigente do
+        servidor (FC/CJ). Faixas de valor:{' '}
+        {CATEGORIAS_VALOR.map((c) => `${c.simbolo} ${c.nome}`).join(' · ')}.
         <AppVersion />
       </footer>
     </main>

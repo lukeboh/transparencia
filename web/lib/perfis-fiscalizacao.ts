@@ -29,11 +29,21 @@ const PERFIS: Record<string, PerfilVisual> = {
   'Apoio Administrativo': { emoji: '👨‍💻', curto: 'Apoio' },
 };
 
-const SUBSTITUTO = '🔄';
+export const SUBSTITUTO_MARCA = '🔄';
 
 /** True quando o papel é a variante "Substituto" de outro. */
 export function ehSubstituto(papel: string): boolean {
   return /\bsubstituto\b/i.test(papel);
+}
+
+/** Só o emoji do papel (para modo condensado do filtro). "•" se desconhecido. */
+export function iconePerfil(papel: string): string {
+  return PERFIS[papel]?.emoji ?? '•';
+}
+
+/** Só o rótulo curto do papel, sem emoji nem 🔄. Texto original se desconhecido. */
+export function nomeCurtoPerfil(papel: string): string {
+  return PERFIS[papel]?.curto ?? papel;
 }
 
 /**
@@ -44,5 +54,93 @@ export function rotuloPerfil(papel: string): string {
   const perfil = PERFIS[papel];
   if (!perfil) return papel;
   const base = `${perfil.emoji} ${perfil.curto}`;
-  return ehSubstituto(papel) ? `${base} ${SUBSTITUTO}` : base;
+  return ehSubstituto(papel) ? `${base} ${SUBSTITUTO_MARCA}` : base;
+}
+
+// ── Taxonomia hierárquica dos papéis, para o filtro de /fiscais ──────────────
+// Cada grupo reúne papéis "titulares" afins; o substituto de cada titular (quando
+// a fonte tem a variante) fica pareado com ele, não solto na lista.
+
+/** Substituto correspondente a cada papel titular que tem essa variante na fonte. */
+export const SUBSTITUTO_DE: Readonly<Record<string, string>> = {
+  Gestor: 'Gestor Substituto',
+  'Fiscal Titular': 'Fiscal Substituto',
+  'Fiscal Técnico': 'Fiscal Técnico Substituto',
+  'Fiscal Requisitante': 'Fiscal Requisitante Substituto',
+  'Fiscal Setorial': 'Fiscal Setorial Substituto',
+  'Fiscal Administrativo': 'Fiscal Administrativo Substituto',
+};
+
+export interface GrupoPerfis {
+  id: string;
+  titulo: string;
+  emoji: string;
+  /** Papéis titulares do grupo, na ordem de exibição. */
+  titulares: string[];
+}
+
+export const GRUPOS_PERFIS: readonly GrupoPerfis[] = [
+  { id: 'autoridade', titulo: 'Autoridade', emoji: '🤴', titulares: ['Autoridade Competente'] },
+  { id: 'gestao', titulo: 'Gestão', emoji: '🧑‍💼', titulares: ['Gestor'] },
+  {
+    id: 'fiscalizacao',
+    titulo: 'Fiscalização',
+    emoji: '👮‍♂️',
+    titulares: [
+      'Fiscal Titular',
+      'Fiscal Técnico',
+      'Fiscal Requisitante',
+      'Fiscal Setorial',
+      'Fiscal Administrativo',
+    ],
+  },
+  {
+    id: 'responsaveis',
+    titulo: 'Responsáveis',
+    emoji: '💂‍♂️',
+    titulares: [
+      'Responsável Unidade Requisitante',
+      'Responsável no Setor de Contratos',
+      'Responsável pela Gestão da Conta Vinculada',
+    ],
+  },
+  { id: 'apoio', titulo: 'Apoio', emoji: '👨‍💻', titulares: ['Apoio Administrativo'] },
+];
+
+/**
+ * Organiza uma lista plana de papéis (como vem do ranking) nos grupos da
+ * taxonomia. Cada item traz o titular e o substituto **quando ambos existem na
+ * lista recebida**. Papéis fora da taxonomia caem num grupo "Outros" para nunca
+ * sumirem silenciosamente.
+ */
+export function agruparPapeis(papeis: string[]): {
+  grupo: GrupoPerfis;
+  pares: { titular: string; substituto: string | null }[];
+}[] {
+  const disponiveis = new Set(papeis);
+  const usados = new Set<string>();
+  const resultado: { grupo: GrupoPerfis; pares: { titular: string; substituto: string | null }[] }[] = [];
+
+  for (const grupo of GRUPOS_PERFIS) {
+    const pares: { titular: string; substituto: string | null }[] = [];
+    for (const titular of grupo.titulares) {
+      if (!disponiveis.has(titular)) continue;
+      usados.add(titular);
+      const sub = SUBSTITUTO_DE[titular] ?? null;
+      const substituto = sub && disponiveis.has(sub) ? sub : null;
+      if (substituto) usados.add(substituto);
+      pares.push({ titular, substituto });
+    }
+    if (pares.length > 0) resultado.push({ grupo, pares });
+  }
+
+  const outros = papeis.filter((p) => !usados.has(p));
+  if (outros.length > 0) {
+    resultado.push({
+      grupo: { id: 'outros', titulo: 'Outros', emoji: '•', titulares: outros },
+      pares: outros.map((titular) => ({ titular, substituto: null })),
+    });
+  }
+
+  return resultado;
 }

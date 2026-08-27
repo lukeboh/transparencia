@@ -55,11 +55,11 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   pessoa pode fiscalizar contratos de mais de uma faixa, então a contagem não
   é uma partição exclusiva; base = ranking já filtrado por papéis/vigência,
   antes do filtro de faixa, para servir de panorama estável enquanto esse
-  filtro é ajustado). Um filtro de chips (`CategoriaValorFilter`, mesmo
-  padrão visual de `PapeisFilter`) seleciona quais faixas entram no ranking
-  exibido — filtro em dois estágios: papéis/vigência primeiro, faixa de valor
-  depois, ambos recalculando valor consolidado e papéis de cada linha a
-  partir só dos contratos que sobrevivem aos dois filtros. Cada linha da
+  filtro é ajustado). As faixas viraram chips coloridos no card de filtro
+  unificado (`FiltroFiscais`, ver abaixo) — filtro em dois estágios:
+  papéis/função/vigência primeiro, faixa de valor depois, ambos recalculando
+  valor consolidado e papéis de cada linha a partir só dos contratos que
+  sobrevivem aos dois filtros. Cada linha da
   tabela de ranking ganhou a coluna "Faixas", com os símbolos (badge colorido
   na cor da faixa) de todas as faixas presentes entre os contratos do
   servidor no filtro atual.
@@ -73,9 +73,9 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   cai no nome plano da fonte). Coluna filtrável por campo de texto com `datalist` das lotações
   presentes (digitar para filtrar por trecho ou escolher da lista) e
   ordenável crescente/decrescente.
-- ✅ Painel de filtro genérico em `/funcoes` (`FuncoesFilter`, substitui o
-  `PapeisFilter` só nessa página — `/fiscais` segue com o `PapeisFilter`
-  original). Passou a se chamar só "Filtro" e reúne, em seções de chips: (1)
+- ✅ Painel de filtro genérico em `/funcoes` (`FuncoesFilter`) — `/fiscais` tem
+  o seu próprio (`FiltroFiscais`, ver abaixo). Passou a se chamar só "Filtro" e
+  reúne, em seções de chips: (1)
   nível de função comissionada (CJ-1…FC-6), (2) "Atuação em contratos" — um
   toggle para cada papel real do ranking de responsáveis (Fiscal Técnico,
   Fiscal Administrativo, Gestor, substitutos…) mais um toggle sintético
@@ -101,14 +101,29 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   👨‍🎓 Requisitante, 👷 Setorial, 🕵️‍♂️ Administrativo, 💂‍♂️ Responsável
   Unidade, 📜 Contratos, 🤵‍♂️ Conta Vinculada, 👨‍💻 Apoio); variantes
   "Substituto" reaproveitam emoji/rótulo do titular e ganham um 🔄 ao final.
-  Aplicado em todo lugar que mostra papel (coluna "Papéis" do ranking,
-  `PapeisFilter`, seção "Atuação em contratos" do `FuncoesFilter`, chips de
+  Aplicado em todo lugar que mostra papel (coluna "Papéis" do ranking, filtro
+  de `/fiscais`, seção "Atuação em contratos" do `FuncoesFilter`, chips de
   `/unidades`, modal de contratos), sempre com o nome completo original no
   `title`. As faixas de valor de contrato trocaram os símbolos `$`/`$$$` por
   medalhas/troféus em ordem crescente: 🥉 🥈 🥇 🏆 👑 💎.
+- ✅ Filtro unificado em `/fiscais` (`FiltroFiscais`, substitui `PapeisFilter`
+  + `CategoriaValorFilter` + o botão "Somente vigentes"). Um card só, com a
+  hierarquia: **Por contratos** (checkboxes "Somente contratos vigentes" e
+  "Considerar substitutos") → sub-cards **Por papel** (chips agrupados pela
+  taxonomia de `perfis-fiscalizacao.ts`: Autoridade / Gestão / Fiscalização /
+  Responsáveis / Apoio, com cada substituto 🔄 pareado ao titular; clicar no
+  cabeçalho do grupo alterna o grupo inteiro) e **Por valor** (as 6 faixas);
+  e **Por função** — filtro NOVO que recorta o ranking pelo cargo comissionado
+  vigente do servidor (FC-1…CJ-4) mais o toggle "Incluir quem não tem função
+  vigente". Quando "Considerar substitutos" está desligado, os papéis 🔄 saem
+  da conta e some quem só entra como substituto num contrato. Sem "gaivota" de
+  seleção — o estado é só cor (sólido/tingido = dentro, riscado = fora,
+  apagado = desabilitado). No celular o card colapsa num botão "Filtro (N
+  ativos)" que abre o mesmo conteúdo num sheet (`Dialog`); "Limpar" volta tudo
+  ao estado permissivo.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.19**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.20**.
 
 ## Dashboard web
 
