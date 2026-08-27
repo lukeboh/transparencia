@@ -45,9 +45,9 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   "Consolidado: sim/não" por unidade (soma da subárvore vs. só quem está
   lotado ali direto), busca por sigla/nome e expandir/recolher tudo.
 - ✅ Faixas de valor de contrato em `/fiscais` (`web/lib/categorias-valor.ts`) —
-  6 categorias fixas por teto de "Valor Global" (irrisório $ até R$100, baixo
-  custo $$ até R$10 mil, médio custo $$$ até R$100 mil, alto custo $$$$ até
-  R$1 milhão, altíssimo custo $👑 até R$10 milhões, custo extra alto $👑🥷
+  6 categorias fixas por teto de "Valor Global" (irrisório 🥉 até R$100, baixo
+  custo 🥈 até R$10 mil, médio custo 🥇 até R$100 mil, alto custo 🏆 até
+  R$1 milhão, altíssimo custo 👑 até R$10 milhões, custo extra alto 💎
   acima disso), cada uma com um dos 6 slots de cor categórica validados do
   projeto (`--chart-1..6`). Dois KPIs novos: "Contratos por faixa de valor"
   (donut sobre todo o universo de contratos, respeitando "Somente contratos
@@ -95,9 +95,20 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   dropdown saindo da tela por causa do grupo de botões ficar alinhado à
   esquerda ao quebrar linha (trocado por `ml-auto`, que mantém alinhado à
   direita em qualquer situação).
+- ✅ Representação visual dos perfis de fiscalização/gestão
+  (`web/lib/perfis-fiscalizacao.ts`) — cada "papel" da fonte vira emoji +
+  rótulo curto (🤴 Autoridade, 🧑‍💼 Gestor, 👮‍♂️ Fiscal, 🧑‍🔬 Técnico,
+  👨‍🎓 Requisitante, 👷 Setorial, 🕵️‍♂️ Administrativo, 💂‍♂️ Responsável
+  Unidade, 📜 Contratos, 🤵‍♂️ Conta Vinculada, 👨‍💻 Apoio); variantes
+  "Substituto" reaproveitam emoji/rótulo do titular e ganham um 🔄 ao final.
+  Aplicado em todo lugar que mostra papel (coluna "Papéis" do ranking,
+  `PapeisFilter`, seção "Atuação em contratos" do `FuncoesFilter`, chips de
+  `/unidades`, modal de contratos), sempre com o nome completo original no
+  `title`. As faixas de valor de contrato trocaram os símbolos `$`/`$$$` por
+  medalhas/troféus em ordem crescente: 🥉 🥈 🥇 🏆 👑 💎.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.18**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.19**.
 
 ## Dashboard web
 

@@ -36,6 +36,7 @@ import {
 import { FuncoesBadges } from '@/components/dashboard/funcoes-table';
 import { brlCompleto, cn, nomeProprio, numero } from '@/lib/utils';
 import { categoriasDeContratos, descricaoFaixa } from '@/lib/categorias-valor';
+import { rotuloPerfil } from '@/lib/perfis-fiscalizacao';
 import type { ContratoResumo, LinhaRanking, ServidorFuncoes } from '@/lib/dashboard-data';
 
 const LINHAS_POR_PAGINA = 25;
@@ -73,9 +74,10 @@ export function Papeis({ papeis }: { papeis: string[] }) {
       {visiveis.map((papel) => (
         <span
           key={papel}
+          title={papel}
           className="rounded-sm bg-secondary px-1.5 py-0.5 text-xs text-secondary-foreground"
         >
-          {papel}
+          {rotuloPerfil(papel)}
         </span>
       ))}
       {ocultos > 0 && (

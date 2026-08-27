@@ -3,6 +3,7 @@
 import { ExternalLink, PencilLine } from 'lucide-react';
 import { Dialog, DialogHeader } from '@/components/ui/dialog';
 import { brlCompleto, numero } from '@/lib/utils';
+import { rotuloPerfil } from '@/lib/perfis-fiscalizacao';
 import { urlContrato, type ContratoResumo, type FuncaoResumo } from '@/lib/dashboard-data';
 
 export interface ContratoAuditavel extends ContratoResumo {
@@ -68,8 +69,11 @@ export function ContratosDialog({
                     </span>
                   )}
                   {c.papeisNoContrato && (
-                    <span className="truncate text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                      {c.papeisNoContrato.join(', ')}
+                    <span
+                      title={c.papeisNoContrato.join(', ')}
+                      className="truncate text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded"
+                    >
+                      {c.papeisNoContrato.map(rotuloPerfil).join(', ')}
                     </span>
                   )}
                   {c.funcaoNoContrato && (

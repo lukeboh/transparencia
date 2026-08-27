@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Check, ChevronDown, ChevronUp, Filter, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { rotuloPerfil } from '@/lib/perfis-fiscalizacao';
 
 /** Papel sintético para servidores que nunca aparecem como fiscal/gestor de
  * contrato (ServidorFuncoes.zeroFiscal). Entra na lista de papéis como se
@@ -164,7 +165,7 @@ export function FuncoesFilter({
             {papeis.map((p) => (
               <Chip
                 key={p}
-                rotulo={p}
+                rotulo={rotuloPerfil(p)}
                 selecionado={papeisSelecionados.includes(p)}
                 onClick={() => toggle(papeisSelecionados, onPapeisChange, p)}
               />

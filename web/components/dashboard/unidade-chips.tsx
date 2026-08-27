@@ -1,4 +1,5 @@
 import { percentual } from '@/lib/utils';
+import { rotuloPerfil } from '@/lib/perfis-fiscalizacao';
 import type { FiscalContagem, FuncaoContagem } from '@/lib/dashboard-data';
 
 export type NivelDetalhe = 'detalhado' | 'simples';
@@ -81,7 +82,7 @@ export function FiscalChips({
     return (
       <span className="flex flex-wrap items-center gap-1">
         <Chip>
-          Fiscal · {total} · {percentual(total, denominador)}%
+          👮‍♂️ Fiscal · {total} · {percentual(total, denominador)}%
         </Chip>
       </span>
     );
@@ -91,7 +92,8 @@ export function FiscalChips({
     <span className="flex flex-wrap items-center gap-1">
       {contagens.map((f) => (
         <Chip key={f.papel}>
-          {f.papel} · {f.quantidade} · {percentual(f.quantidade, denominador)}%
+          <span title={f.papel}>{rotuloPerfil(f.papel)}</span> · {f.quantidade} ·{' '}
+          {percentual(f.quantidade, denominador)}%
         </Chip>
       ))}
     </span>

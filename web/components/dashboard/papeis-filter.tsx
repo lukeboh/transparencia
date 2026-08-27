@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Filter, Check, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { rotuloPerfil } from '@/lib/perfis-fiscalizacao';
 
 interface PapeisFilterProps {
   todosPapeis: string[];
@@ -90,6 +91,7 @@ export function PapeisFilter({
             <button
               key={papel}
               type="button"
+              title={papel}
               onClick={() => togglePapel(papel)}
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-all focus-visible:outline-2 focus-visible:outline-ring',
@@ -99,7 +101,7 @@ export function PapeisFilter({
               )}
             >
               {selecionado && <Check className="h-3 w-3 shrink-0" />}
-              {papel}
+              {rotuloPerfil(papel)}
             </button>
           );
         })}

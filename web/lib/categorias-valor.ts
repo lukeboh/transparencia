@@ -2,9 +2,10 @@
 // à divisão por categoria de compra (ver categorias-chart.tsx), pensada para
 // destacar contratos com valor irrisório/simbólico em contraste com os de
 // valor altíssimo (ver nota sobre tetos nacionais no README). Cada faixa tem
-// um símbolo (estilo "faixa de preço") e uma cor fixa dos 6 slots
-// categóricos validados do projeto (--chart-1..6, ver globals.css) — como são
-// exatamente 6 faixas para 6 slots, não há necessidade de ciclar/reusar cor.
+// um símbolo (medalhas/troféus em ordem crescente, de 🥉 a 💎) e uma cor fixa
+// dos 6 slots categóricos validados do projeto (--chart-1..6, ver globals.css)
+// — como são exatamente 6 faixas para 6 slots, não há necessidade de
+// ciclar/reusar cor.
 import { brlCompleto } from '@/lib/utils';
 import type { ContratoDoResponsavel, ContratoResumo } from '@/lib/dashboard-data';
 
@@ -20,12 +21,12 @@ export interface CategoriaValor {
 }
 
 export const CATEGORIAS_VALOR: CategoriaValor[] = [
-  { id: 'irrisorio', nome: 'Irrisório', simbolo: '$', teto: 100, cor: 'var(--chart-1)' },
-  { id: 'baixo', nome: 'Baixo custo', simbolo: '$$', teto: 10_000, cor: 'var(--chart-2)' },
-  { id: 'medio', nome: 'Médio custo', simbolo: '$$$', teto: 100_000, cor: 'var(--chart-3)' },
-  { id: 'alto', nome: 'Alto custo', simbolo: '$$$$', teto: 1_000_000, cor: 'var(--chart-4)' },
-  { id: 'altissimo', nome: 'Altíssimo custo', simbolo: '$👑', teto: 10_000_000, cor: 'var(--chart-5)' },
-  { id: 'extraAlto', nome: 'Custo extra alto', simbolo: '$👑🥷', teto: null, cor: 'var(--chart-6)' },
+  { id: 'irrisorio', nome: 'Irrisório', simbolo: '🥉', teto: 100, cor: 'var(--chart-1)' },
+  { id: 'baixo', nome: 'Baixo custo', simbolo: '🥈', teto: 10_000, cor: 'var(--chart-2)' },
+  { id: 'medio', nome: 'Médio custo', simbolo: '🥇', teto: 100_000, cor: 'var(--chart-3)' },
+  { id: 'alto', nome: 'Alto custo', simbolo: '🏆', teto: 1_000_000, cor: 'var(--chart-4)' },
+  { id: 'altissimo', nome: 'Altíssimo custo', simbolo: '👑', teto: 10_000_000, cor: 'var(--chart-5)' },
+  { id: 'extraAlto', nome: 'Custo extra alto', simbolo: '💎', teto: null, cor: 'var(--chart-6)' },
 ];
 
 /** Faixa de um valor, pelo primeiro teto (inclusive) que o valor não ultrapassa. */
