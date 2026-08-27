@@ -44,6 +44,25 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   em vez de descartados. Pirâmide vertical (TSE no topo) com toggle
   "Consolidado: sim/não" por unidade (soma da subárvore vs. só quem está
   lotado ali direto), busca por sigla/nome e expandir/recolher tudo.
+- ✅ Faixas de valor de contrato em `/fiscais` (`web/lib/categorias-valor.ts`) —
+  6 categorias fixas por teto de "Valor Global" (irrisório $ até R$100, baixo
+  custo $$ até R$10 mil, médio custo $$$ até R$100 mil, alto custo $$$$ até
+  R$1 milhão, altíssimo custo $👑 até R$10 milhões, custo extra alto $👑🥷
+  acima disso), cada uma com um dos 6 slots de cor categórica validados do
+  projeto (`--chart-1..6`). Dois KPIs novos: "Contratos por faixa de valor"
+  (donut sobre todo o universo de contratos, respeitando "Somente contratos
+  vigentes") e "Fiscais por faixa de valor" (barras, não donut — a mesma
+  pessoa pode fiscalizar contratos de mais de uma faixa, então a contagem não
+  é uma partição exclusiva; base = ranking já filtrado por papéis/vigência,
+  antes do filtro de faixa, para servir de panorama estável enquanto esse
+  filtro é ajustado). Um filtro de chips (`CategoriaValorFilter`, mesmo
+  padrão visual de `PapeisFilter`) seleciona quais faixas entram no ranking
+  exibido — filtro em dois estágios: papéis/vigência primeiro, faixa de valor
+  depois, ambos recalculando valor consolidado e papéis de cada linha a
+  partir só dos contratos que sobrevivem aos dois filtros. Cada linha da
+  tabela de ranking ganhou a coluna "Faixas", com os símbolos (badge colorido
+  na cor da faixa) de todas as faixas presentes entre os contratos do
+  servidor no filtro atual.
 - ✅ Responsivo em telas de celular (320px+) — testado com Playwright em
   320/375/768px nas 3 páginas. Cabeçalhos quebram para uma segunda linha em
   vez de estourar a tela (nav com só ícone abaixo de `sm:`); tabelas crescem
@@ -57,7 +76,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   direita em qualquer situação).
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.15**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.16**.
 
 ## Dashboard web
 

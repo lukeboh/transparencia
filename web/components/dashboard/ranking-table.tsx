@@ -35,6 +35,7 @@ import {
 } from '@/components/dashboard/contratos-dialog';
 import { FuncoesBadges } from '@/components/dashboard/funcoes-table';
 import { brlCompleto, cn, nomeProprio, numero } from '@/lib/utils';
+import { categoriasDeContratos, descricaoFaixa } from '@/lib/categorias-valor';
 import type { ContratoResumo, LinhaRanking, ServidorFuncoes } from '@/lib/dashboard-data';
 
 const LINHAS_POR_PAGINA = 25;
@@ -80,6 +81,29 @@ export function Papeis({ papeis }: { papeis: string[] }) {
       {ocultos > 0 && (
         <span className="text-xs text-muted-foreground">+{ocultos}</span>
       )}
+    </span>
+  );
+}
+
+/** Símbolos das faixas de valor dos contratos que o responsável fiscaliza/gerencia — ver lib/categorias-valor.ts. */
+function FaixasValor({ linha, contratos }: { linha: LinhaRanking; contratos: ContratoResumo[] }) {
+  const categorias = categoriasDeContratos(linha.contratos, contratos);
+  if (categorias.length === 0) return <span className="text-muted-foreground">—</span>;
+  return (
+    <span className="flex flex-wrap items-center gap-1">
+      {categorias.map((categoria) => (
+        <span
+          key={categoria.id}
+          title={`${categoria.nome} — ${descricaoFaixa(categoria)}`}
+          className="inline-flex h-5 items-center rounded-sm px-1.5 text-xs font-semibold"
+          style={{
+            backgroundColor: `color-mix(in oklch, ${categoria.cor} 20%, var(--card))`,
+            color: categoria.cor,
+          }}
+        >
+          {categoria.simbolo}
+        </span>
+      ))}
     </span>
   );
 }
@@ -213,7 +237,8 @@ export function RankingTable({
           <Link href="/funcoes" className="underline decoration-border underline-offset-4 hover:text-foreground">
             /funcoes
           </Link>
-          ). Clique em um servidor para auditar seus contratos.
+          ). A coluna Faixas mostra os símbolos das faixas de valor (ver filtro acima) presentes entre os
+          contratos do servidor. Clique em um servidor para auditar seus contratos.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -267,6 +292,7 @@ export function RankingTable({
               </TableHead>
               <TableHead>Papéis</TableHead>
               <TableHead>Função</TableHead>
+              <TableHead>Faixas</TableHead>
               <TableHead className="text-right">
                 <CabecalhoOrdenavel
                   rotulo="Contratos"
@@ -304,7 +330,7 @@ export function RankingTable({
           <TableBody>
             {linhas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
                   Nenhum servidor encontrado para &ldquo;{busca}&rdquo;
                 </TableCell>
               </TableRow>
@@ -331,6 +357,9 @@ export function RankingTable({
                         <span className="text-muted-foreground">—</span>
                       );
                     })()}
+                  </TableCell>
+                  <TableCell>
+                    <FaixasValor linha={linha} contratos={contratos} />
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {numero(linha.quantidadeContratos)}

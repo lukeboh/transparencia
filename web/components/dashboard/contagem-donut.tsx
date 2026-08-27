@@ -8,6 +8,8 @@ import { numero } from '@/lib/utils';
 export interface FatiaContagem {
   rotulo: string;
   quantidade: number;
+  /** Cor explícita da fatia — sobrepõe o ciclo de cores por índice (usado quando cada rótulo já tem uma cor fixa de domínio, ex.: faixas de valor). */
+  cor?: string;
 }
 
 // Mesma paleta categórica de 5 slots + cinza de de-ênfase usada em
@@ -23,17 +25,23 @@ const CORES_SLOTS = [
 const COR_OUTROS = '#898781';
 
 function corFatia(fatia: FatiaContagem, index: number) {
+  if (fatia.cor) return fatia.cor;
   return fatia.rotulo === 'Outros' ? COR_OUTROS : CORES_SLOTS[index % CORES_SLOTS.length];
 }
 
-function ContagemTooltip({ active, payload }: TooltipProps<number, string>) {
+function ContagemTooltip({
+  active,
+  payload,
+  unidadeSingular,
+  unidadePlural,
+}: TooltipProps<number, string> & { unidadeSingular: string; unidadePlural: string }) {
   if (!active || !payload?.length) return null;
   const fatia = payload[0].payload as FatiaContagem;
   return (
     <div className="rounded-md border border-border bg-popover px-2.5 py-1.5 text-popover-foreground shadow-md text-xs">
       <span className="font-semibold">{fatia.rotulo}</span>{' '}
       <span className="text-muted-foreground">
-        · {numero(fatia.quantidade)} servidor{fatia.quantidade === 1 ? '' : 'es'}
+        · {numero(fatia.quantidade)} {fatia.quantidade === 1 ? unidadeSingular : unidadePlural}
       </span>
     </div>
   );
@@ -45,12 +53,23 @@ function FatiaAtiva(props: PieSectorDataItem) {
 }
 
 /** Donut genérico de contagem por categoria — mesmo recibo visual de FuncaoDonut, cores categóricas em vez da rampa FC/CJ. */
-export function ContagemDonut({ fatias, tamanho = 168 }: { fatias: FatiaContagem[]; tamanho?: number }) {
+export function ContagemDonut({
+  fatias,
+  tamanho = 168,
+  unidadeSingular = 'servidor',
+  unidadePlural = 'servidores',
+}: {
+  fatias: FatiaContagem[];
+  tamanho?: number;
+  /** Nome da unidade contada, para o rótulo central e o tooltip (ex.: "contrato"/"contratos"). */
+  unidadeSingular?: string;
+  unidadePlural?: string;
+}) {
   const [ativa, setAtiva] = useState<number | undefined>(undefined);
   const total = fatias.reduce((s, f) => s + f.quantidade, 0);
 
   if (total === 0) {
-    return <p className="py-4 text-center text-xs text-muted-foreground">Nenhum servidor no filtro atual.</p>;
+    return <p className="py-4 text-center text-xs text-muted-foreground">Nenhum {unidadeSingular} no filtro atual.</p>;
   }
 
   return (
@@ -58,7 +77,11 @@ export function ContagemDonut({ fatias, tamanho = 168 }: { fatias: FatiaContagem
       <div className="relative shrink-0" style={{ height: tamanho, width: tamanho }}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Tooltip content={<ContagemTooltip />} allowEscapeViewBox={{ x: true, y: true }} wrapperStyle={{ zIndex: 20 }} />
+            <Tooltip
+              content={<ContagemTooltip unidadeSingular={unidadeSingular} unidadePlural={unidadePlural} />}
+              allowEscapeViewBox={{ x: true, y: true }}
+              wrapperStyle={{ zIndex: 20 }}
+            />
             <Pie
               data={fatias}
               dataKey="quantidade"
@@ -83,7 +106,7 @@ export function ContagemDonut({ fatias, tamanho = 168 }: { fatias: FatiaContagem
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-2xl font-semibold tabular-nums">{numero(total)}</span>
-          <span className="text-[10px] text-muted-foreground">servidores</span>
+          <span className="text-[10px] text-muted-foreground">{unidadePlural}</span>
         </div>
       </div>
       <ul className="flex flex-wrap justify-center gap-x-2 gap-y-0.5" aria-label="Legenda">
