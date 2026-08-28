@@ -123,7 +123,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   ao estado permissivo.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.20**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.21**.
 
 ## Dashboard web
 
@@ -286,6 +286,41 @@ npm install
 npm run tse:scrape -- TSE data/tse_contratos.json   # extrai os contratos reais
 npm run tse:rank -- --in data/tse_contratos.json --top 30
 ```
+
+### Dados raspados versionados no repositório
+
+Os cinco JSON de saída dos scrapers ficam **versionados** em `data/`:
+`tse_contratos.json`, `tse_funcoes.json`, `tse_agentes.json`,
+`tse_teletrabalho.json` e `tse_unidades.json`. Isso garante que um clone novo
+já traga o estado real (o `buildDashboardData.js` gera
+`web/lib/dashboard-data.ts` a partir deles) sem precisar rodar nenhum scrape,
+e — para os dois que fazem raspagem **incremental** — que o trabalho já
+acumulado não se perca.
+
+`scrapeContratos.js` e `scrapeFuncoes.js` releem o próprio arquivo de saída
+como cache (`cacheExistente`) e só buscam o que ainda não têm. O arquivo é,
+portanto, um **superconjunto** da fonte viva: um contrato/portaria que a fonte
+venha a remover continua no arquivo versionado (é o comportamento desejado —
+preservar o que já foi raspado), e a fonte de contratos
+(`contratos.comprasnet.gov.br`) é a mais frágil de re-raspar por exigir
+sessão + cookie httponly + CSRF. `tse_agentes.json`, `tse_teletrabalho.json` e
+`tse_unidades.json` não são incrementais (cada um é uma única requisição que
+devolve a base inteira) — são versionados só pela conveniência do clone
+pronto.
+
+Consequências operacionais (as mesmas que `tse_funcoes.json` já tinha):
+
+- depois de cada `npm run tse:scrape` o arquivo aparece como `modified` no
+  `git status`; commite um snapshot novo quando quiser;
+- cada commit que inclua um scrape novo adiciona ~2 MB ao histórico do
+  `.git` (o arquivo é pretty-print com 2 espaços);
+- o `.git` **não** versiona o cache de runtime do servidor
+  (`web/.cache/tse-dados.json`, no `.gitignore`) nem o CSV derivado
+  (`data/ranking_responsaveis.csv`) — esses continuam ignorados de propósito.
+
+A coerência do que o app mostra não depende de os cinco arquivos estarem
+sincronizados entre si: ela vem de `web/lib/dashboard-data.ts` ser sempre
+regenerado a partir dos cinco juntos e commitado.
 
 ### Nota sobre os valores
 
