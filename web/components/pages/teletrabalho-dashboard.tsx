@@ -29,6 +29,7 @@ import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
+import { criarResolvedorLotacao } from '@/lib/lotacao-hierarquia';
 import { cn, nomeProprio, numero } from '@/lib/utils';
 import type { LinhaRanking, LinhaTeletrabalho, PeriodoTeletrabalho, ServidorFuncoes } from '@/lib/dashboard-data';
 
@@ -94,7 +95,12 @@ function calcMediana(valores: number[]) {
 
 export function TeletrabalhoDashboard() {
   const estado = useDadosDashboard();
-  const { teletrabalho, funcoes, responsaveis, contratos, resumo } = estado.dados;
+  const { teletrabalho, funcoes, responsaveis, contratos, resumo, unidades } = estado.dados;
+
+  const resolverLotacao = useMemo(
+    () => criarResolvedorLotacao(unidades.arvore),
+    [unidades.arvore],
+  );
 
   const funcoesPorNome = useMemo(() => {
     const map = new Map<string, ServidorFuncoes>();
@@ -271,6 +277,7 @@ export function TeletrabalhoDashboard() {
           ranking={rankingFiltrado}
           funcaoDe={funcaoDe}
           lotacaoDe={lotacaoDe}
+          resolverLotacao={resolverLotacao}
           vigenteDe={estaVigente}
           responsaveisRanking={responsaveis.ranking}
           onVerDetalhe={setDetalheAberto}

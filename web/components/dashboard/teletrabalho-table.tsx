@@ -32,6 +32,7 @@ import { Papeis } from '@/components/dashboard/ranking-table';
 import { FuncoesBadges } from '@/components/dashboard/funcoes-table';
 import { cn, nomeProprio, numero } from '@/lib/utils';
 import type { LinhaRanking, LinhaTeletrabalho, ServidorFuncoes } from '@/lib/dashboard-data';
+import type { ResolvedorLotacao } from '@/lib/lotacao-hierarquia';
 
 const LINHAS_POR_PAGINA = 25;
 
@@ -50,10 +51,20 @@ const DIRECAO_INICIAL: Record<CampoOrdenavel, DirecaoOrdenacao> = {
   situacao: 'desc',
 };
 
-/** Caminho da lotação do maior nível para o menor (secretaria → coordenadoria → seção) — inverso de `unidadeNiveis` (que vem da fonte do menor para o maior) — para ordenar/agrupar por secretaria primeiro. */
-function caminhoLotacao(niveis: string[] | null): string {
-  if (!niveis || niveis.length === 0) return '';
-  return [...niveis].reverse().join(' › ');
+/** Nome plano da lotação (unidade mais específica) — a "folha" de `unidadeNiveis`
+ *  (que vem da fonte do menor para o maior). É a chave para resolver as siglas
+ *  contra a árvore de unidades e também o texto do tooltip. */
+function nomeLotacao(niveis: string[] | null): string | null {
+  return niveis && niveis.length > 0 ? niveis[0] : null;
+}
+
+/** Mesma apresentação da coluna Lotação de /funcoes: caminho de até 3 siglas da
+ *  unidade mais específica para a mais alta ("SEVIN / COTEL / STI"); cai no nome
+ *  plano da fonte quando a árvore não resolve. */
+function siglasLotacao(niveis: string[] | null, resolver: ResolvedorLotacao): string {
+  const folha = nomeLotacao(niveis);
+  const siglas = resolver(folha);
+  return siglas.length > 0 ? siglas.join(' / ') : (folha ?? '');
 }
 
 function normalizar(texto: string) {
@@ -111,6 +122,7 @@ export function TeletrabalhoTable({
   ranking,
   funcaoDe,
   lotacaoDe,
+  resolverLotacao,
   vigenteDe,
   responsaveisRanking,
   onVerDetalhe,
@@ -120,6 +132,8 @@ export function TeletrabalhoTable({
   funcaoDe: (linha: LinhaTeletrabalho) => ServidorFuncoes | undefined;
   /** Níveis da lotação do período mais recente, do menor (seção) para o maior (secretaria/gabinete/assessoria). */
   lotacaoDe: (linha: LinhaTeletrabalho) => string[] | null;
+  /** Resolve o nome plano da lotação para o caminho de siglas da árvore de unidades (mesma coluna de /funcoes). */
+  resolverLotacao: ResolvedorLotacao;
   /** true = tem período em aberto hoje (vigente). */
   vigenteDe: (linha: LinhaTeletrabalho) => boolean;
   responsaveisRanking: LinhaRanking[];
@@ -140,7 +154,8 @@ export function TeletrabalhoTable({
     const termoLotacao = normalizar(buscaLotacao.trim());
     const filtradas = comPosicao.filter(({ linha }) => {
       if (termoNome && !normalizar(linha.nome).includes(termoNome)) return false;
-      if (termoLotacao && !normalizar(caminhoLotacao(lotacaoDe(linha))).includes(termoLotacao)) return false;
+      if (termoLotacao && !normalizar(siglasLotacao(lotacaoDe(linha), resolverLotacao)).includes(termoLotacao))
+        return false;
       return true;
     });
     if (!ordenacao) return filtradas;
@@ -151,16 +166,18 @@ export function TeletrabalhoTable({
           return fator * a.linha.nome.localeCompare(b.linha.nome, 'pt-BR');
         case 'dias':
           return fator * (a.linha.diasConsolidados - b.linha.diasConsolidados);
-        case 'lotacao':
-          return (
-            fator *
-            caminhoLotacao(lotacaoDe(a.linha)).localeCompare(caminhoLotacao(lotacaoDe(b.linha)), 'pt-BR')
-          );
+        case 'lotacao': {
+          // Sem lotação resolvida sempre ao fim, independente da direção (igual /funcoes).
+          const la = siglasLotacao(lotacaoDe(a.linha), resolverLotacao);
+          const lb = siglasLotacao(lotacaoDe(b.linha), resolverLotacao);
+          if (!la || !lb) return la ? -1 : lb ? 1 : 0;
+          return fator * la.localeCompare(lb, 'pt-BR');
+        }
         case 'situacao':
           return fator * (Number(vigenteDe(a.linha)) - Number(vigenteDe(b.linha)));
       }
     });
-  }, [ranking, busca, buscaLotacao, ordenacao, lotacaoDe, vigenteDe]);
+  }, [ranking, busca, buscaLotacao, ordenacao, lotacaoDe, resolverLotacao, vigenteDe]);
 
   const totalPaginas = Math.max(1, Math.ceil(linhasVisiveis.length / LINHAS_POR_PAGINA));
   const paginaAtual = Math.min(pagina, totalPaginas - 1);
@@ -296,7 +313,8 @@ export function TeletrabalhoTable({
                     ? responsaveisRanking[linha.responsavelRankingIndex]
                     : null;
                 const servidor = funcaoDe(linha);
-                const caminho = caminhoLotacao(lotacaoDe(linha));
+                const niveis = lotacaoDe(linha);
+                const siglas = siglasLotacao(niveis, resolverLotacao);
                 const vigente = vigenteDe(linha);
                 return (
                   <TableRow key={linha.nome} onClick={() => onVerDetalhe(linha)} className="cursor-pointer">
@@ -339,10 +357,13 @@ export function TeletrabalhoTable({
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="max-w-[320px]">
-                      {caminho ? (
-                        <span className="block truncate text-xs text-muted-foreground" title={caminho}>
-                          {caminho}
+                    <TableCell>
+                      {siglas ? (
+                        <span
+                          className="text-xs text-muted-foreground"
+                          title={nomeLotacao(niveis) ?? undefined}
+                        >
+                          {siglas}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
