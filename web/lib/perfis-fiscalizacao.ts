@@ -80,8 +80,6 @@ export interface GrupoPerfis {
 }
 
 export const GRUPOS_PERFIS: readonly GrupoPerfis[] = [
-  { id: 'autoridade', titulo: 'Autoridade', emoji: '🤴', titulares: ['Autoridade Competente'] },
-  { id: 'gestao', titulo: 'Gestão', emoji: '🧑‍💼', titulares: ['Gestor'] },
   {
     id: 'fiscalizacao',
     titulo: 'Fiscalização',
@@ -95,22 +93,24 @@ export const GRUPOS_PERFIS: readonly GrupoPerfis[] = [
     ],
   },
   {
-    id: 'responsaveis',
-    titulo: 'Responsáveis',
-    emoji: '💂‍♂️',
+    id: 'outros',
+    titulo: 'Outros',
+    emoji: '🗂️',
     titulares: [
+      'Autoridade Competente',
+      'Gestor',
       'Responsável Unidade Requisitante',
       'Responsável no Setor de Contratos',
       'Responsável pela Gestão da Conta Vinculada',
+      'Apoio Administrativo',
     ],
   },
-  { id: 'apoio', titulo: 'Apoio', emoji: '👨‍💻', titulares: ['Apoio Administrativo'] },
 ];
 
 /**
  * Organiza uma lista plana de papéis (como vem do ranking) nos grupos da
  * taxonomia. Cada item traz o titular e o substituto **quando ambos existem na
- * lista recebida**. Papéis fora da taxonomia caem num grupo "Outros" para nunca
+ * lista recebida**. Papéis fora da taxonomia entram no grupo "Outros" para nunca
  * sumirem silenciosamente.
  */
 export function agruparPapeis(papeis: string[]): {
@@ -134,12 +134,18 @@ export function agruparPapeis(papeis: string[]): {
     if (pares.length > 0) resultado.push({ grupo, pares });
   }
 
-  const outros = papeis.filter((p) => !usados.has(p));
-  if (outros.length > 0) {
-    resultado.push({
-      grupo: { id: 'outros', titulo: 'Outros', emoji: '•', titulares: outros },
-      pares: outros.map((titular) => ({ titular, substituto: null })),
-    });
+  const semGrupo = papeis.filter((p) => !usados.has(p));
+  if (semGrupo.length > 0) {
+    const paresExtra = semGrupo.map((titular) => ({ titular, substituto: null }));
+    const grupoOutros = resultado.find((r) => r.grupo.id === 'outros');
+    if (grupoOutros) {
+      grupoOutros.pares.push(...paresExtra);
+    } else {
+      resultado.push({
+        grupo: { id: 'outros', titulo: 'Outros', emoji: '🗂️', titulares: semGrupo },
+        pares: paresExtra,
+      });
+    }
   }
 
   return resultado;
