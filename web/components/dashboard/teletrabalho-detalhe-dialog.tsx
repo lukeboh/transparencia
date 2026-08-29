@@ -1,7 +1,7 @@
 'use client';
 
-import { ExternalLink } from 'lucide-react';
 import { Dialog, DialogHeader } from '@/components/ui/dialog';
+import { BotaoFonteExterna } from '@/components/dashboard/botao-fonte-externa';
 import { dataUTC, nomeProprio, numero } from '@/lib/utils';
 import { urlTeletrabalho, type LinhaTeletrabalho } from '@/lib/dashboard-data';
 
@@ -50,17 +50,14 @@ export function TeletrabalhoDetalheDialog({
         ))}
       </ul>
 
-      <p className="flex flex-col gap-1.5 border-t border-border p-3 text-xs text-muted-foreground">
+      <p className="flex flex-col gap-2 border-t border-border p-3 text-xs text-muted-foreground">
         Unidade listada do menor nível (seção) para o maior (secretaria/gabinete/assessoria).
-        <a
+        <BotaoFonteExterna
           href={urlTeletrabalho(linha.nome)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 self-start text-primary hover:underline font-medium"
+          titulo="Abre a consulta de teletrabalho do TSE já filtrada por este servidor, em nova aba"
         >
-          Ver na fonte (TSE), filtrado por este servidor
-          <ExternalLink className="h-3 w-3" aria-hidden />
-        </a>
+          Fonte externa — teletrabalho no portal do TSE
+        </BotaoFonteExterna>
       </p>
     </Dialog>
   );

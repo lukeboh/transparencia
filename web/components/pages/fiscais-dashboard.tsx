@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Briefcase, Coins, Laptop, Network, Scale, Users } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Briefcase, Coins, Laptop, Network, Percent, Scale, Users } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
 import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
@@ -11,6 +11,7 @@ import { CategoriaValorFiscaisCard, contarFiscaisPorFaixaValor } from '@/compone
 import { FiltroFiscais } from '@/components/dashboard/filtro-fiscais';
 import { RankingTable } from '@/components/dashboard/ranking-table';
 import { DadosStatus } from '@/components/dashboard/dados-status';
+import { DicaTermo } from '@/components/ui/dica-termo';
 import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
@@ -332,7 +333,9 @@ export function FiscaisDashboard() {
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight">Fiscais</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Servidores fiscais e gestores pelos maiores valores consolidados de
+            Servidores fiscais e gestores{' '}
+            <DicaTermo id="fiscalGestor" alinhamento="esquerda" /> pelos maiores valores
+            consolidados <DicaTermo id="valorConsolidado" alinhamento="esquerda" /> de
             contratos ·{' '}
             <a
               href={fonte}
@@ -368,6 +371,14 @@ export function FiscaisDashboard() {
           >
             <Network className="h-4 w-4" aria-hidden />
             <span className="sr-only sm:not-sr-only">Unidades</span>
+            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
+          </Link>
+          <Link
+            href="/indicadores"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <Percent className="h-4 w-4" aria-hidden />
+            <span className="sr-only sm:not-sr-only">Indicadores</span>
             <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
           </Link>
           <ThemePicker />
@@ -441,7 +452,7 @@ export function FiscaisDashboard() {
         {somenteVigentes ? ' e vigente hoje' : ''} e dentro das faixas de valor
         selecionadas, contando cada contrato uma única vez por pessoa. O filtro
         &ldquo;Por função&rdquo; recorta pelo cargo comissionado vigente do
-        servidor (FC/CJ). Faixas de valor:{' '}
+        servidor (FC/CJ <DicaTermo id="fcCj" alinhamento="esquerda" />). Faixas de valor:{' '}
         {CATEGORIAS_VALOR.map((c) => `${c.simbolo} ${c.nome}`).join(' · ')}.
         <AppVersion />
       </footer>

@@ -2,10 +2,11 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Briefcase, Building2, GitBranch, Laptop, Users } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Briefcase, Building2, GitBranch, Laptop, Percent, Users } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { UnidadeArvore } from '@/components/dashboard/unidade-arvore';
 import { DadosStatus } from '@/components/dashboard/dados-status';
+import { DicaTermo } from '@/components/ui/dica-termo';
 import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
@@ -82,6 +83,14 @@ export function UnidadesDashboard() {
             <span className="sr-only sm:not-sr-only">Teletrabalho</span>
             <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
           </Link>
+          <Link
+            href="/indicadores"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <Percent className="h-4 w-4" aria-hidden />
+            <span className="sr-only sm:not-sr-only">Indicadores</span>
+            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
+          </Link>
           <ThemePicker />
           <ThemeToggle />
         </div>
@@ -102,13 +111,21 @@ export function UnidadesDashboard() {
               icone={<Users className="h-4 w-4" aria-hidden />}
             />
             <StatCard
-              titulo="Unidades"
+              titulo={
+                <span className="inline-flex items-center gap-1">
+                  Unidades <DicaTermo id="unidadeFolha" />
+                </span>
+              }
               valor={numero(totalUnidades)}
               detalhe={`${numero(totalFolhas)} unidades-folha`}
               icone={<Building2 className="h-4 w-4" aria-hidden />}
             />
             <StatCard
-              titulo="Não localizados na estrutura"
+              titulo={
+                <span className="inline-flex items-center gap-1">
+                  Não localizados na estrutura <DicaTermo id="naoLocalizados" />
+                </span>
+              }
               valor={numero(totalNaoLocalizados)}
               detalhe={`${numero(naoLocalizados.servidores)} servidor(es) · ${numero(naoLocalizados.teletrabalho)} teletrabalho · ${numero(naoLocalizados.ambiguos)} ambíguo(s)`}
               icone={<GitBranch className="h-4 w-4" aria-hidden />}

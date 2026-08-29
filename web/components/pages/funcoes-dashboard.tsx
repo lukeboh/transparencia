@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Ban, Briefcase, Laptop, Network, ShieldCheck, Users } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Ban, Briefcase, Laptop, Network, Percent, ShieldCheck, Users } from 'lucide-react';
 import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
 import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
 import { FuncoesFilter, NAO_FISCAL } from '@/components/dashboard/funcoes-filter';
@@ -11,6 +11,7 @@ import { FuncoesHistoricoDialog } from '@/components/dashboard/funcoes-historico
 import { ContratosDialog } from '@/components/dashboard/contratos-dialog';
 import { contratosDoResponsavel } from '@/components/dashboard/ranking-table';
 import { DadosStatus } from '@/components/dashboard/dados-status';
+import { DicaTermo } from '@/components/ui/dica-termo';
 import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
@@ -159,7 +160,8 @@ export function FuncoesDashboard() {
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight">Funções comissionadas</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            FC-1 a FC-6 e CJ-1 a CJ-4 de cada servidor ·{' '}
+            FC-1 a FC-6 e CJ-1 a CJ-4 <DicaTermo id="fcCj" alinhamento="esquerda" /> de cada
+            servidor ·{' '}
             <a
               href="https://transparencia.tse.jus.br/transparenciaDadosServidores/smvc/relatorios/servidor/relacao-agentes-publicos"
               target="_blank"
@@ -167,8 +169,8 @@ export function FuncoesDashboard() {
               className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
             >
               fonte: relação de agentes públicos
-            </a>{' '}
-            + histórico de{' '}
+            </a>
+            <DicaTermo id="agentesPublicos" alinhamento="esquerda" /> + histórico de{' '}
             <a
               href="https://www.tse.jus.br/legislacao/compilada/prt"
               target="_blank"
@@ -176,8 +178,9 @@ export function FuncoesDashboard() {
               className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
             >
               portarias do TSE
-            </a>{' '}
-            · <DadosStatus estado={estado} />
+            </a>
+            <DicaTermo id="portaria" alinhamento="esquerda" /> ·{' '}
+            <DadosStatus estado={estado} />
           </p>
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -203,6 +206,14 @@ export function FuncoesDashboard() {
           >
             <Network className="h-4 w-4" aria-hidden />
             <span className="sr-only sm:not-sr-only">Unidades</span>
+            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
+          </Link>
+          <Link
+            href="/indicadores"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <Percent className="h-4 w-4" aria-hidden />
+            <span className="sr-only sm:not-sr-only">Indicadores</span>
             <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
           </Link>
           <ThemePicker />

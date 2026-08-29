@@ -1,39 +1,47 @@
 'use client';
 
+import { useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, Briefcase, Laptop, Network, Percent, Users } from 'lucide-react';
-import { StatCards } from '@/components/dashboard/stat-cards';
-import { EvolucaoChart } from '@/components/dashboard/evolucao-chart';
-import { CategoriasChart } from '@/components/dashboard/categorias-chart';
+import { ArrowLeft, ArrowUpRight, Briefcase, Laptop, Network, Users } from 'lucide-react';
+import { IndicadoresTable } from '@/components/dashboard/indicadores-table';
 import { DadosStatus } from '@/components/dashboard/dados-status';
 import { DicaTermo } from '@/components/ui/dica-termo';
 import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
+import { achatarUnidades } from '@/lib/unidades-flat';
 
-export function HomeDashboard() {
+export function IndicadoresDashboard() {
   const estado = useDadosDashboard();
-  const { resumo, evolucao, categorias, contratos, fonte } = estado.dados;
+  const { unidades } = estado.dados;
+
+  const linhas = useMemo(
+    () => (unidades.arvore ? achatarUnidades(unidades.arvore) : []),
+    [unidades.arvore],
+  );
 
   return (
     <main className="max-w-none px-4 py-8 sm:px-6 lg:px-8">
       <header className="mb-8 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <Link
+            href="/"
+            className="mb-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
             Contratos do TSE
-          </h1>
+          </Link>
+          <h1 className="text-2xl font-semibold tracking-tight">Indicadores por unidade</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Gastos com contratos do Tribunal Superior Eleitoral{' '}
-            <DicaTermo id="valoresContrato" alinhamento="esquerda" /> ·{' '}
-            <a
-              href={fonte}
-              target="_blank"
-              rel="noopener noreferrer"
+            Relações percentuais comparáveis entre unidades — escolha as colunas e ordene por qualquer uma{' '}
+            <DicaTermo id="consolidado" alinhamento="esquerda" /> ·{' '}
+            <Link
+              href="/unidades"
               className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
             >
-              fonte: Compras.gov.br
-            </a>{' '}
+              base: estrutura de unidades
+            </Link>{' '}
             · <DadosStatus estado={estado} />
           </p>
         </div>
@@ -70,32 +78,31 @@ export function HomeDashboard() {
             <span className="sr-only sm:not-sr-only">Unidades</span>
             <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
           </Link>
-          <Link
-            href="/indicadores"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Percent className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Indicadores</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
           <ThemePicker />
           <ThemeToggle />
         </div>
       </header>
 
-      <div className="space-y-4">
-        <StatCards resumo={resumo} contratos={contratos} />
-        <div className="grid gap-4 lg:grid-cols-3">
-          <EvolucaoChart dados={evolucao} contratos={contratos} />
-          <CategoriasChart dados={categorias} contratos={contratos} />
+      {!unidades.arvore ? (
+        <p className="text-sm text-muted-foreground">
+          Estrutura de unidades ainda não disponível — aguarde a atualização automática dos dados ou rode{' '}
+          <code className="rounded-sm bg-accent px-1 py-0.5">npm run tse:scrape-unidades</code>.
+        </p>
+      ) : (
+        <div className="space-y-4">
+          <IndicadoresTable linhas={linhas} tseServidores={unidades.totalServidoresTSE} />
         </div>
-      </div>
+      )}
 
       <footer className="mt-8 text-xs text-muted-foreground">
-        Valores conforme campo &ldquo;Valor Global&rdquo; da fonte oficial. Alguns
-        contratos refletem tetos nacionais de compras centralizadas pelo TSE para
-        toda a Justiça Eleitoral (ex.: urnas eletrônicas), não apenas gasto próprio
-        do órgão.
+        Cada coluna é uma relação percentual: uma métrica (servidores, com FC, com CJ, fiscais, teletrabalho)
+        sobre um denominador. Variantes: <strong>unidade</strong> (só quem está lotado exatamente no nó),{' '}
+        <strong>consolidada</strong> (o nó e toda a subárvore), <strong>órgão · direto</strong> (valor do nó
+        sobre o total de servidores do TSE) e <strong>órgão · subárvore</strong> (valor consolidado sobre o
+        total do TSE). &ldquo;—&rdquo; aparece quando o denominador é zero (unidade sem servidor lotado
+        direto). &ldquo;Fiscais&rdquo; soma papéis: quem tem mais de um papel conta em cada um, então o
+        percentual pode passar de 100% e a barra trava em 100%. Tudo reflete só o momento atual (relação de
+        agentes públicos vigente, contratos vigentes, teletrabalho em aberto).
         <AppVersion />
       </footer>
     </main>

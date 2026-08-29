@@ -1,13 +1,18 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Check, ChevronDown, ChevronRight, ExternalLink, Search, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronRight, Info, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FiscalChips, FuncaoChips, type BasePercentual, type NivelDetalhe } from '@/components/dashboard/unidade-chips';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
+import { UnidadeDetalheDialog } from '@/components/dashboard/unidade-detalhe-dialog';
+import { DicaTermo } from '@/components/ui/dica-termo';
+import { InfoDica } from '@/components/ui/info-dica';
 import { cn, numero, percentual } from '@/lib/utils';
 import type { ColunaExport } from '@/lib/exportar-dados';
-import { urlUnidadeDetalhe, type UnidadeMetricas, type UnidadeNode } from '@/lib/dashboard-data';
+import { achatarUnidades, somaFiscais, somaFuncoes, type LinhaUnidade } from '@/lib/unidades-flat';
+import type { UnidadeNode } from '@/lib/dashboard-data';
+import { CATEGORIAS_UNIDADE, classificarUnidades, rotuloCategoria, type CategoriaUnidade } from '@/lib/unidades-categoria';
 
 const PROFUNDIDADE_PADRAO_EXPANDIDA = 2;
 
@@ -48,66 +53,19 @@ function indexarPorId(no: UnidadeNode, acc = new Map<string, UnidadeNode>()) {
   return acc;
 }
 
-// ── Exportação: achata a árvore numa linha por unidade ──────────────────────
-interface LinhaExportUnidade {
-  caminho: string;
-  sigla: string;
-  nome: string;
-  nivel: number;
-  servidoresDireto: number;
-  servidoresConsolidado: number;
-  fcConsolidado: number;
-  cjConsolidado: number;
-  fiscaisConsolidado: number;
-  teletrabalhoDireto: number;
-  teletrabalhoConsolidado: number;
-}
-
-const somaFuncoes = (m: UnidadeMetricas, tipo: 'FC' | 'CJ') =>
-  m.funcoes.filter((f) => f.tipo === tipo).reduce((s, f) => s + f.quantidade, 0);
-const somaFiscais = (m: UnidadeMetricas) => m.fiscais.reduce((s, f) => s + f.quantidade, 0);
-
-/** Percorre a árvore em profundidade; inclui só os nós de `visiveis` (todos
- *  quando null), mas o caminho de siglas sempre carrega os ancestrais. */
-function achatarUnidades(
-  no: UnidadeNode,
-  visiveis: Set<string> | null,
-  prefixo: string[] = [],
-  nivel = 0,
-  acc: LinhaExportUnidade[] = [],
-): LinhaExportUnidade[] {
-  const caminho = [...prefixo, no.sigla];
-  if (!visiveis || visiveis.has(no.id)) {
-    acc.push({
-      caminho: caminho.join(' / '),
-      sigla: no.sigla,
-      nome: no.nome,
-      nivel,
-      servidoresDireto: no.direto.servidores,
-      servidoresConsolidado: no.consolidado.servidores,
-      fcConsolidado: somaFuncoes(no.consolidado, 'FC'),
-      cjConsolidado: somaFuncoes(no.consolidado, 'CJ'),
-      fiscaisConsolidado: somaFiscais(no.consolidado),
-      teletrabalhoDireto: no.direto.teletrabalho,
-      teletrabalhoConsolidado: no.consolidado.teletrabalho,
-    });
-  }
-  for (const filho of no.children) achatarUnidades(filho, visiveis, caminho, nivel + 1, acc);
-  return acc;
-}
-
-const COLUNAS_EXPORT_UNIDADES: ColunaExport<LinhaExportUnidade>[] = [
+// Exportação: uma linha por unidade, achatada de `achatarUnidades`.
+const COLUNAS_EXPORT_UNIDADES: ColunaExport<LinhaUnidade>[] = [
   { cabecalho: 'Caminho', valor: (u) => u.caminho },
   { cabecalho: 'Sigla', valor: (u) => u.sigla },
   { cabecalho: 'Unidade', valor: (u) => u.nome },
   { cabecalho: 'Nível', valor: (u) => u.nivel },
-  { cabecalho: 'Servidores (direto)', valor: (u) => u.servidoresDireto },
-  { cabecalho: 'Servidores (consolidado)', valor: (u) => u.servidoresConsolidado },
-  { cabecalho: 'FC (consolidado)', valor: (u) => u.fcConsolidado },
-  { cabecalho: 'CJ (consolidado)', valor: (u) => u.cjConsolidado },
-  { cabecalho: 'Fiscais (consolidado)', valor: (u) => u.fiscaisConsolidado },
-  { cabecalho: 'Teletrabalho (direto)', valor: (u) => u.teletrabalhoDireto },
-  { cabecalho: 'Teletrabalho (consolidado)', valor: (u) => u.teletrabalhoConsolidado },
+  { cabecalho: 'Servidores (direto)', valor: (u) => u.node.direto.servidores },
+  { cabecalho: 'Servidores (consolidado)', valor: (u) => u.node.consolidado.servidores },
+  { cabecalho: 'FC (consolidado)', valor: (u) => somaFuncoes(u.node.consolidado, 'FC') },
+  { cabecalho: 'CJ (consolidado)', valor: (u) => somaFuncoes(u.node.consolidado, 'CJ') },
+  { cabecalho: 'Fiscais (consolidado)', valor: (u) => somaFiscais(u.node.consolidado) },
+  { cabecalho: 'Teletrabalho (direto)', valor: (u) => u.node.direto.teletrabalho },
+  { cabecalho: 'Teletrabalho (consolidado)', valor: (u) => u.node.consolidado.teletrabalho },
 ];
 
 function PillToggle({ pressionado, onClick, children }: { pressionado: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -137,11 +95,13 @@ interface UnidadeCardProps {
   consolidadoIds: Set<string>;
   detalhadoIds: Set<string>;
   baseGeralIds: Set<string>;
-  visibleIds: Set<string> | null;
+  /** id do nó → filhos que devem ser renderizados (já com netos promovidos quando um nível intermediário está oculto pelo filtro de tipo). */
+  filhosVisiveisPorId: Map<string, UnidadeNode[]>;
   onToggleExpand: (id: string) => void;
   onToggleConsolidado: (id: string) => void;
   onToggleDetalhe: (id: string) => void;
   onToggleBase: (id: string) => void;
+  onAbrirDetalhe: (id: string) => void;
 }
 
 function UnidadeCard({
@@ -152,17 +112,22 @@ function UnidadeCard({
   consolidadoIds,
   detalhadoIds,
   baseGeralIds,
-  visibleIds,
+  filhosVisiveisPorId,
   onToggleExpand,
   onToggleConsolidado,
   onToggleDetalhe,
   onToggleBase,
+  onAbrirDetalhe,
 }: UnidadeCardProps) {
-  const temFilhos = node.children.length > 0;
+  const filhosRender = filhosVisiveisPorId.get(node.id) ?? node.children;
+  const temFilhos = filhosRender.length > 0;
   const isRaiz = node.parentId === null;
   // Raiz não tem população própria (só filhos) e folha não tem subárvore — em
   // ambos os casos o toggle de consolidação seria decorativo, então nem aparece.
-  const mostrarToggleConsolidado = !isRaiz && temFilhos;
+  // Usa a subárvore real (`node.children`), não a filtrada: as métricas
+  // consolidadas continuam somando todos os descendentes, mesmo os que o filtro
+  // de tipo estiver escondendo da árvore.
+  const mostrarToggleConsolidado = !isRaiz && node.children.length > 0;
   const consolidar = isRaiz || consolidadoIds.has(node.id);
   const metricas = consolidar ? node.consolidado : node.direto;
   const expandido = expandedIds.has(node.id);
@@ -193,24 +158,27 @@ function UnidadeCard({
             <div className="min-w-0">
               <CardTitle className="flex flex-wrap items-center gap-1.5">
                 <span>{node.sigla}</span>
-                <a
-                  href={urlUnidadeDetalhe(node.id)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`Ver ${node.sigla} na fonte`}
+                <button
+                  type="button"
+                  onClick={() => onAbrirDetalhe(node.id)}
+                  aria-label={`Ver detalhes de ${node.sigla}`}
+                  title={`Ver detalhes de ${node.sigla}`}
                   className="text-muted-foreground transition-colors hover:text-foreground"
                 >
-                  <ExternalLink className="h-3 w-3" aria-hidden />
-                </a>
+                  <Info className="h-3.5 w-3.5" aria-hidden />
+                </button>
               </CardTitle>
               <CardDescription>{node.nome}</CardDescription>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {mostrarToggleConsolidado && (
-              <PillToggle pressionado={consolidar} onClick={() => onToggleConsolidado(node.id)}>
-                Consolidado: {consolidar ? 'sim' : 'não'}
-              </PillToggle>
+              <span className="inline-flex items-center gap-1">
+                <PillToggle pressionado={consolidar} onClick={() => onToggleConsolidado(node.id)}>
+                  Consolidado: {consolidar ? 'sim' : 'não'}
+                </PillToggle>
+                <DicaTermo id="consolidado" />
+              </span>
             )}
             <PillToggle pressionado={modoDetalhe === 'detalhado'} onClick={() => onToggleDetalhe(node.id)}>
               Detalhe: {modoDetalhe}
@@ -246,25 +214,24 @@ function UnidadeCard({
 
       {temFilhos && expandido && (
         <div>
-          {node.children
-            .filter((filho) => !visibleIds || visibleIds.has(filho.id))
-            .map((filho) => (
-              <UnidadeCard
-                key={filho.id}
-                node={filho}
-                profundidade={profundidade + 1}
-                totalServidoresTSE={totalServidoresTSE}
-                expandedIds={expandedIds}
-                consolidadoIds={consolidadoIds}
-                detalhadoIds={detalhadoIds}
-                baseGeralIds={baseGeralIds}
-                visibleIds={visibleIds}
-                onToggleExpand={onToggleExpand}
-                onToggleConsolidado={onToggleConsolidado}
-                onToggleDetalhe={onToggleDetalhe}
-                onToggleBase={onToggleBase}
-              />
-            ))}
+          {filhosRender.map((filho) => (
+            <UnidadeCard
+              key={filho.id}
+              node={filho}
+              profundidade={profundidade + 1}
+              totalServidoresTSE={totalServidoresTSE}
+              expandedIds={expandedIds}
+              consolidadoIds={consolidadoIds}
+              detalhadoIds={detalhadoIds}
+              baseGeralIds={baseGeralIds}
+              filhosVisiveisPorId={filhosVisiveisPorId}
+              onToggleExpand={onToggleExpand}
+              onToggleConsolidado={onToggleConsolidado}
+              onToggleDetalhe={onToggleDetalhe}
+              onToggleBase={onToggleBase}
+              onAbrirDetalhe={onAbrirDetalhe}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -273,6 +240,14 @@ function UnidadeCard({
 
 export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeNode; totalServidoresTSE: number }) {
   const porId = useMemo(() => indexarPorId(arvore), [arvore]);
+  const categoriaPorId = useMemo(() => classificarUnidades(arvore), [arvore]);
+
+  // Filtro de tipo: cada categoria liga/desliga a exibição dos nós dela na
+  // árvore. Um nó oculto não some com a subárvore — os filhos visíveis sobem
+  // para o ancestral visível mais próximo. Todas ligadas por padrão.
+  const [categoriasAtivas, setCategoriasAtivas] = useState<Set<CategoriaUnidade>>(
+    () => new Set(CATEGORIAS_UNIDADE.map((c) => c.id)),
+  );
 
   const [expandedIds, setExpandedIds] = useState(() => idsExpandidosPadrao(arvore, PROFUNDIDADE_PADRAO_EXPANDIDA));
   // "Consolidado: sim" por padrão em todo nó com filhos — senão um nó
@@ -291,6 +266,8 @@ export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeN
   const [baseGeralIds, setBaseGeralIds] = useState<Set<string>>(() => new Set(idsTodos(arvore)));
   const [baseGlobal, setBaseGlobal] = useState<BasePercentual>('geral');
   const [busca, setBusca] = useState('');
+  // Primeiro nível de detalhamento de uma unidade — modal interno.
+  const [detalheId, setDetalheId] = useState<string | null>(null);
 
   function toggleExpand(id: string) {
     setExpandedIds((atual) => {
@@ -342,6 +319,21 @@ export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeN
     setBaseGeralIds(proximo === 'geral' ? idsTodos(arvore) : new Set());
   }
 
+  function toggleCategoria(id: CategoriaUnidade) {
+    setCategoriasAtivas((atual) => {
+      const proximo = new Set(atual);
+      if (proximo.has(id)) proximo.delete(id);
+      else proximo.add(id);
+      return proximo;
+    });
+  }
+
+  const todasCategoriasAtivas = categoriasAtivas.size === CATEGORIAS_UNIDADE.length;
+
+  function mostrarTodasCategorias() {
+    setCategoriasAtivas(new Set(CATEGORIAS_UNIDADE.map((c) => c.id)));
+  }
+
   const buscaNormalizada = normalizarBusca(busca);
 
   const resultadoBusca = useMemo(() => {
@@ -383,11 +375,56 @@ export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeN
     return new Set([...expandedIds, ...resultadoBusca.expandirIds, ...resultadoBusca.matchIds]);
   }, [expandedIds, resultadoBusca]);
 
-  // Exporta uma linha por unidade — só as visíveis quando há busca ativa.
-  const linhasExport = useMemo(
-    () => achatarUnidades(arvore, resultadoBusca?.visibleIds ?? null),
-    [arvore, resultadoBusca],
-  );
+  // Para cada nó, a lista de filhos que devem ser renderizados: os filhos cuja
+  // categoria está ligada, e — no lugar de cada filho oculto — os netos
+  // visíveis dele (promovidos). A busca tem prioridade: um nó que casa com a
+  // busca (e seus ancestrais, para chegar até ele) aparece mesmo com a
+  // categoria desligada; dentro da subárvore do resultado o filtro de tipo
+  // ainda vale.
+  const filhosVisiveisPorId = useMemo(() => {
+    const busca = resultadoBusca;
+
+    function noVisivel(no: UnidadeNode): boolean {
+      const cat = categoriaPorId.get(no.id) ?? 'ramo';
+      if (cat === 'tribunal') return true;
+      if (busca) {
+        if (busca.matchIds.has(no.id) || busca.expandirIds.has(no.id)) return true;
+        if (!busca.visibleIds.has(no.id)) return false;
+      }
+      return categoriasAtivas.has(cat);
+    }
+
+    function filhosRenderizados(no: UnidadeNode): UnidadeNode[] {
+      const out: UnidadeNode[] = [];
+      for (const filho of no.children) {
+        if (noVisivel(filho)) out.push(filho);
+        else out.push(...filhosRenderizados(filho));
+      }
+      return out;
+    }
+
+    const mapa = new Map<string, UnidadeNode[]>();
+    function visita(no: UnidadeNode) {
+      mapa.set(no.id, filhosRenderizados(no));
+      for (const filho of no.children) visita(filho);
+    }
+    visita(arvore);
+    return mapa;
+  }, [arvore, categoriaPorId, categoriasAtivas, resultadoBusca]);
+
+  // Todo id que aparece renderizado em algum lugar da árvore (raiz + todos os
+  // filhos visíveis de todos os nós) — base do que a exportação enxerga.
+  const idsVisiveis = useMemo(() => {
+    const ids = new Set<string>([arvore.id]);
+    for (const filhos of filhosVisiveisPorId.values()) {
+      for (const filho of filhos) ids.add(filho.id);
+    }
+    return ids;
+  }, [arvore, filhosVisiveisPorId]);
+
+  // Exporta uma linha por unidade — só as que estão visíveis na árvore agora
+  // (filtro de tipo + busca).
+  const linhasExport = useMemo(() => achatarUnidades(arvore, idsVisiveis), [arvore, idsVisiveis]);
 
   function expandirTudo() {
     setExpandedIds(idsComFilhos(arvore));
@@ -396,6 +433,20 @@ export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeN
   function recolherTudo() {
     setExpandedIds(new Set());
   }
+
+  const detalheNode = detalheId ? porId.get(detalheId) ?? null : null;
+  const detalheCaminho = useMemo(() => {
+    if (!detalheNode) return [];
+    const siglas: string[] = [];
+    let paiId = detalheNode.parentId;
+    while (paiId) {
+      const pai = porId.get(paiId);
+      if (!pai) break;
+      siglas.unshift(pai.sigla);
+      paiId = pai.parentId;
+    }
+    return siglas;
+  }, [detalheNode, porId]);
 
   return (
     <div>
@@ -447,9 +498,12 @@ export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeN
           <PillToggle pressionado={nivelGlobal === 'detalhado'} onClick={alternarNivelGlobal}>
             Nível de detalhe: {nivelGlobal}
           </PillToggle>
-          <PillToggle pressionado={baseGlobal === 'geral'} onClick={alternarBaseGlobal}>
-            Base do %: {baseGlobal}
-          </PillToggle>
+          <span className="inline-flex items-center gap-1">
+            <PillToggle pressionado={baseGlobal === 'geral'} onClick={alternarBaseGlobal}>
+              Base do %: {baseGlobal}
+            </PillToggle>
+            <DicaTermo id="basePercentual" alinhamento="direita" />
+          </span>
           <BotaoExportar
             linhas={linhasExport}
             colunas={COLUNAS_EXPORT_UNIDADES}
@@ -457,6 +511,37 @@ export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeN
             nomeAba="Unidades"
           />
         </div>
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+          <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
+          Mostrar
+          <InfoDica titulo="Como funcionam os filtros de tipo" alinhamento="esquerda">
+            Ligam e desligam a exibição de cada tipo de unidade na árvore. Ao ocultar um nível
+            intermediário (uma coordenadoria, por exemplo), as subunidades dela sobem para o
+            ramo visível acima — nada some da contagem, só da navegação. A busca sempre mostra
+            o que casa, mesmo com o tipo desligado.
+          </InfoDica>
+        </span>
+        {CATEGORIAS_UNIDADE.map((categoria) => (
+          <PillToggle
+            key={categoria.id}
+            pressionado={categoriasAtivas.has(categoria.id)}
+            onClick={() => toggleCategoria(categoria.id)}
+          >
+            <span title={categoria.descricao}>{categoria.rotulo}</span>
+          </PillToggle>
+        ))}
+        {!todasCategoriasAtivas && (
+          <button
+            type="button"
+            onClick={mostrarTodasCategorias}
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+          >
+            <RotateCcw className="h-3 w-3" aria-hidden /> Mostrar tudo
+          </button>
+        )}
       </div>
 
       {resultadoBusca && resultadoBusca.matchIds.size === 0 ? (
@@ -470,13 +555,23 @@ export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeN
           consolidadoIds={consolidadoIds}
           detalhadoIds={detalhadoIds}
           baseGeralIds={baseGeralIds}
-          visibleIds={resultadoBusca?.visibleIds ?? null}
+          filhosVisiveisPorId={filhosVisiveisPorId}
           onToggleExpand={toggleExpand}
           onToggleConsolidado={toggleConsolidado}
           onToggleDetalhe={toggleDetalhe}
           onToggleBase={toggleBase}
+          onAbrirDetalhe={setDetalheId}
         />
       )}
+
+      <UnidadeDetalheDialog
+        node={detalheNode}
+        caminho={detalheCaminho}
+        categoriaRotulo={detalheNode ? rotuloCategoria(categoriaPorId.get(detalheNode.id) ?? 'ramo') : ''}
+        totalServidoresTSE={totalServidoresTSE}
+        open={detalheNode !== null}
+        onClose={() => setDetalheId(null)}
+      />
     </div>
   );
 }

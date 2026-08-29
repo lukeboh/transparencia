@@ -11,6 +11,7 @@ import {
   Check,
   Laptop,
   Network,
+  Percent,
   Scale,
   ShieldCheck,
   Users,
@@ -25,6 +26,7 @@ import { TeletrabalhoDetalheDialog } from '@/components/dashboard/teletrabalho-d
 import { ContratosDialog } from '@/components/dashboard/contratos-dialog';
 import { contratosDoResponsavel } from '@/components/dashboard/ranking-table';
 import { DadosStatus } from '@/components/dashboard/dados-status';
+import { DicaTermo } from '@/components/ui/dica-termo';
 import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
@@ -167,7 +169,8 @@ export function TeletrabalhoDashboard() {
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight">Teletrabalho</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Dias em regime de teletrabalho por servidor ·{' '}
+            Dias em regime de teletrabalho por servidor{' '}
+            <DicaTermo id="teletrabalhoVigente" alinhamento="esquerda" /> ·{' '}
             <a
               href="https://www.tse.jus.br/transparencia-e-prestacao-de-contas/pessoal/cargos-e-funcoes/servidores-em-regime-de-teletrabalho"
               target="_blank"
@@ -202,6 +205,14 @@ export function TeletrabalhoDashboard() {
           >
             <Network className="h-4 w-4" aria-hidden />
             <span className="sr-only sm:not-sr-only">Unidades</span>
+            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
+          </Link>
+          <Link
+            href="/indicadores"
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <Percent className="h-4 w-4" aria-hidden />
+            <span className="sr-only sm:not-sr-only">Indicadores</span>
             <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
           </Link>
           <ThemePicker />

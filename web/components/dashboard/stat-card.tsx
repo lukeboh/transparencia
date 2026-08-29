@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface StatCardProps {
-  titulo: string;
+  titulo: React.ReactNode;
   valor: string;
-  detalhe: string;
+  detalhe: React.ReactNode;
   icone: React.ReactNode;
 }
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ExternalLink, FileCheck2, Landmark, Users } from 'lucide-react';
+import { FileCheck2, Landmark, Users } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { ContratosDialog } from '@/components/dashboard/contratos-dialog';
 import { brlCompacto, numero } from '@/lib/utils';
@@ -11,39 +11,34 @@ import type { ContratoResumo, ResumoTSE } from '@/lib/dashboard-data';
 export function StatCards({
   resumo,
   contratos,
-  fonte,
 }: {
   resumo: ResumoTSE;
   contratos: ContratoResumo[];
-  fonte: string;
 }) {
   const [vigentesAberto, setVigentesAberto] = useState(false);
+  const [todosAberto, setTodosAberto] = useState(false);
   const vigentes = contratos
     .filter((c) => c.vigente)
     .sort((a, b) => b.valorGlobal - a.valorGlobal);
+  const todos = [...contratos].sort((a, b) => b.valorGlobal - a.valorGlobal);
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {/* Existe consulta equivalente na fonte (unidade=TSE): link direto, nova aba. */}
-      <a
-        href={fonte}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Abrir a consulta equivalente no Compras.gov.br"
-        className="rounded-lg outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring"
+      {/* Primeiro nível: modal interno com todos os contratos contabilizados;
+          cada linha abre o contrato na fonte. */}
+      <button
+        type="button"
+        onClick={() => setTodosAberto(true)}
+        aria-label="Listar todos os contratos contabilizados"
+        className="rounded-lg text-left outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring"
       >
         <StatCard
           titulo="Valor total contratado"
           valor={brlCompacto(resumo.totalContratado)}
           detalhe={`Emp: ${brlCompacto(resumo.totalEmpenhado || 0)} · Pg: ${brlCompacto(resumo.totalPago || 0)}`}
-          icone={
-            <span className="flex items-center gap-1">
-              <Landmark className="h-4 w-4" aria-hidden />
-              <ExternalLink className="h-3 w-3" aria-hidden />
-            </span>
-          }
+          icone={<Landmark className="h-4 w-4" aria-hidden />}
         />
-      </a>
+      </button>
 
       {/* Sem filtro de vigência via URL na fonte: modal auditável. */}
       <button
@@ -79,6 +74,14 @@ export function StatCards({
           contratos={vigentes}
           open
           onClose={() => setVigentesAberto(false)}
+        />
+      )}
+      {todosAberto && (
+        <ContratosDialog
+          titulo="Todos os contratos contabilizados"
+          contratos={todos}
+          open
+          onClose={() => setTodosAberto(false)}
         />
       )}
     </div>
