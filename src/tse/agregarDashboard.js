@@ -83,10 +83,14 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
   const indicePorId = new Map(contratos.map((c, i) => [c.id, i]));
 
   const rankingCompleto = rankResponsaveis(contratos);
+  // /unidades é uma foto do momento atual: "Fiscais vigentes" por unidade deve
+  // contar só quem responde por contrato vigente hoje, não o histórico de
+  // contratos já encerrados.
+  const rankingVigentes = rankResponsaveis(vigentes);
   const { servidores: servidoresFuncoes, rankingComFuncao } = agregarFuncoes(agentesPublicos, movimentosFuncoes, contratos);
   const teletrabalho = agregarTeletrabalho(movimentosTeletrabalho, rankingCompleto, hoje);
   const unidades = arvoreUnidades
-    ? agregarUnidades(arvoreUnidades, agentesPublicos, teletrabalho, rankingCompleto)
+    ? agregarUnidades(arvoreUnidades, agentesPublicos, teletrabalho, rankingVigentes)
     : { arvore: null, totalServidoresTSE: 0, naoLocalizados: { servidores: 0, teletrabalho: 0, ambiguos: 0, exemplos: { servidores: [], teletrabalho: [] } } };
   const calcMediana = (arr) => {
     const s = [...arr].sort((a, b) => a - b);
