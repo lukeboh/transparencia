@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Check, ChevronDown, ChevronRight, Info, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Info, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PillToggle } from '@/components/ui/pill-toggle';
 import { FiscalChips, FuncaoChips, type BasePercentual, type NivelDetalhe } from '@/components/dashboard/unidade-chips';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
 import { UnidadeDetalheDialog } from '@/components/dashboard/unidade-detalhe-dialog';
@@ -67,25 +68,6 @@ const COLUNAS_EXPORT_UNIDADES: ColunaExport<LinhaUnidade>[] = [
   { cabecalho: 'Teletrabalho (direto)', valor: (u) => u.node.direto.teletrabalho },
   { cabecalho: 'Teletrabalho (consolidado)', valor: (u) => u.node.consolidado.teletrabalho },
 ];
-
-function PillToggle({ pressionado, onClick, children }: { pressionado: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={pressionado}
-      className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors',
-        pressionado
-          ? 'border-primary bg-primary text-primary-foreground shadow-xs'
-          : 'border-border bg-card text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-      )}
-    >
-      {pressionado && <Check className="h-3 w-3 shrink-0" aria-hidden />}
-      {children}
-    </button>
-  );
-}
 
 interface UnidadeCardProps {
   node: UnidadeNode;

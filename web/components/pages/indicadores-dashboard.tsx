@@ -11,6 +11,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
 import { achatarUnidades } from '@/lib/unidades-flat';
+import { classificarUnidades, type CategoriaUnidade } from '@/lib/unidades-categoria';
 
 export function IndicadoresDashboard() {
   const estado = useDadosDashboard();
@@ -18,6 +19,11 @@ export function IndicadoresDashboard() {
 
   const linhas = useMemo(
     () => (unidades.arvore ? achatarUnidades(unidades.arvore) : []),
+    [unidades.arvore],
+  );
+
+  const categoriaPorId = useMemo<Map<string, CategoriaUnidade>>(
+    () => (unidades.arvore ? classificarUnidades(unidades.arvore) : new Map()),
     [unidades.arvore],
   );
 
@@ -90,7 +96,11 @@ export function IndicadoresDashboard() {
         </p>
       ) : (
         <div className="space-y-4">
-          <IndicadoresTable linhas={linhas} tseServidores={unidades.totalServidoresTSE} />
+          <IndicadoresTable
+            linhas={linhas}
+            tseServidores={unidades.totalServidoresTSE}
+            categoriaPorId={categoriaPorId}
+          />
         </div>
       )}
 

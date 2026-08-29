@@ -12,7 +12,9 @@ import {
   Columns3,
   Info,
   MoveHorizontal,
+  RotateCcw,
   Search,
+  SlidersHorizontal,
   X,
 } from 'lucide-react';
 import {
@@ -32,9 +34,12 @@ import {
 } from '@/components/ui/table';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
 import { UnidadeDetalheDialog } from '@/components/dashboard/unidade-detalhe-dialog';
+import { PillToggle } from '@/components/ui/pill-toggle';
+import { InfoDica } from '@/components/ui/info-dica';
 import { cn, numero } from '@/lib/utils';
 import type { ColunaExport } from '@/lib/exportar-dados';
 import type { LinhaUnidade } from '@/lib/unidades-flat';
+import { CATEGORIAS_UNIDADE, type CategoriaUnidade } from '@/lib/unidades-categoria';
 import {
   GRUPOS_RELACOES,
   RELACOES,
@@ -171,9 +176,12 @@ function MenuColunas({
 export function IndicadoresTable({
   linhas,
   tseServidores,
+  categoriaPorId,
 }: {
   linhas: LinhaUnidade[];
   tseServidores: number;
+  /** id da unidade → categoria (mesma heurística de /unidades, ver lib/unidades-categoria.ts). */
+  categoriaPorId: Map<string, CategoriaUnidade>;
 }) {
   const [busca, setBusca] = useState('');
   const [pagina, setPagina] = useState(0);
@@ -182,6 +190,28 @@ export function IndicadoresTable({
   const [carregou, setCarregou] = useState(false);
   // Primeiro nível de detalhamento da unidade — modal interno (id da linha).
   const [detalheId, setDetalheId] = useState<string | null>(null);
+  // Filtro de tipo de unidade — mesmas categorias de /unidades, todas ligadas
+  // por padrão. Aqui a tabela é plana, então é só esconder/mostrar linhas.
+  const [categoriasAtivas, setCategoriasAtivas] = useState<Set<CategoriaUnidade>>(
+    () => new Set(CATEGORIAS_UNIDADE.map((c) => c.id)),
+  );
+
+  function toggleCategoria(id: CategoriaUnidade) {
+    setPagina(0);
+    setCategoriasAtivas((atual) => {
+      const prox = new Set(atual);
+      if (prox.has(id)) prox.delete(id);
+      else prox.add(id);
+      return prox;
+    });
+  }
+
+  const todasCategoriasAtivas = categoriasAtivas.size === CATEGORIAS_UNIDADE.length;
+
+  function mostrarTodasCategorias() {
+    setPagina(0);
+    setCategoriasAtivas(new Set(CATEGORIAS_UNIDADE.map((c) => c.id)));
+  }
 
   // Seleção de colunas persistida por navegador (mesmo padrão do theme-picker).
   useEffect(() => {
@@ -243,6 +273,12 @@ export function IndicadoresTable({
           normalizar(linha.caminho).includes(termo),
       );
     }
+    if (!todasCategoriasAtivas) {
+      arr = arr.filter(({ linha }) => {
+        const cat = categoriaPorId.get(linha.id) ?? 'ramo';
+        return cat === 'tribunal' || categoriasAtivas.has(cat);
+      });
+    }
     if (!ordEfetiva) return arr;
     const fator = ordEfetiva.dir === 'asc' ? 1 : -1;
     const valor = (x: LinhaValores): string | number | null => {
@@ -260,7 +296,7 @@ export function IndicadoresTable({
       if (va === null || vb === null) return va === null ? 1 : vb === null ? -1 : 0;
       return fator * (va - vb);
     });
-  }, [linhasComValores, busca, ordEfetiva]);
+  }, [linhasComValores, busca, ordEfetiva, categoriaPorId, categoriasAtivas, todasCategoriasAtivas]);
 
   const totalPaginas = Math.max(1, Math.ceil(visiveis.length / LINHAS_POR_PAGINA));
   const paginaAtual = Math.min(pagina, totalPaginas - 1);
@@ -357,6 +393,36 @@ export function IndicadoresTable({
             nomeAba="Indicadores"
             className="sm:ml-auto"
           />
+        </div>
+
+        <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+          <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+            <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
+            Mostrar
+            <InfoDica titulo="Como funcionam os filtros de tipo" alinhamento="esquerda">
+              Ligam e desligam as linhas de cada tipo de unidade — a mesma classificação da
+              tela /unidades. Aqui a tabela é plana, então cada tipo apenas some ou volta da
+              lista; a contagem das colunas de cada unidade que continua visível não muda.
+            </InfoDica>
+          </span>
+          {CATEGORIAS_UNIDADE.map((categoria) => (
+            <PillToggle
+              key={categoria.id}
+              pressionado={categoriasAtivas.has(categoria.id)}
+              onClick={() => toggleCategoria(categoria.id)}
+            >
+              <span title={categoria.descricao}>{categoria.rotulo}</span>
+            </PillToggle>
+          ))}
+          {!todasCategoriasAtivas && (
+            <button
+              type="button"
+              onClick={mostrarTodasCategorias}
+              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+            >
+              <RotateCcw className="h-3 w-3" aria-hidden /> Mostrar tudo
+            </button>
+          )}
         </div>
 
         <Table>
