@@ -172,7 +172,9 @@ function UnidadeCard({
 
   return (
     <div className={cn(profundidade > 0 && 'ml-4 border-l border-border pl-4 sm:ml-6 sm:pl-6')}>
-      <Card className="mb-3">
+      {/* No desktop o card encolhe até a largura do próprio conteúdo (nome
+          longo ainda quebra dentro do teto); no mobile ocupa a linha toda. */}
+      <Card className="mb-3 w-full sm:w-fit sm:max-w-2xl">
         <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3 space-y-0 pb-3">
           <div className="flex min-w-0 items-start gap-2">
             {temFilhos ? (
