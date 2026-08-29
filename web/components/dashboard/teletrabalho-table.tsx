@@ -29,8 +29,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Papeis } from '@/components/dashboard/ranking-table';
-import { FuncoesBadges } from '@/components/dashboard/funcoes-table';
+import { FuncoesBadges, funcaoDestaque } from '@/components/dashboard/funcoes-table';
+import { BotaoExportar } from '@/components/dashboard/botao-exportar';
 import { cn, nomeProprio, numero } from '@/lib/utils';
+import type { ColunaExport } from '@/lib/exportar-dados';
 import type { LinhaRanking, LinhaTeletrabalho, ServidorFuncoes } from '@/lib/dashboard-data';
 import type { ResolvedorLotacao } from '@/lib/lotacao-hierarquia';
 
@@ -184,6 +186,40 @@ export function TeletrabalhoTable({
   const inicio = paginaAtual * LINHAS_POR_PAGINA;
   const linhas = linhasVisiveis.slice(inicio, inicio + LINHAS_POR_PAGINA);
 
+  // Exporta o ranking inteiro no filtro/ordenação atuais (não só a página).
+  const colunasExport = useMemo<ColunaExport<{ linha: LinhaTeletrabalho; posicao: number }>[]>(
+    () => [
+      { cabecalho: '#', valor: ({ posicao }) => posicao },
+      { cabecalho: 'Servidor', valor: ({ linha }) => nomeProprio(linha.nome) },
+      { cabecalho: 'Vigente', valor: ({ linha }) => vigenteDe(linha) },
+      {
+        cabecalho: 'Função',
+        valor: ({ linha }) => {
+          const d = funcaoDe(linha);
+          const f = d ? funcaoDestaque(d) : null;
+          return f ? `${f.tipo}-${f.nivel}` : '';
+        },
+      },
+      {
+        cabecalho: 'Fiscal',
+        valor: ({ linha }) => {
+          if (linha.responsavelRankingIndex === null) return 'Não-Fiscal';
+          return responsaveisRanking[linha.responsavelRankingIndex]?.papeis.join(', ') ?? '';
+        },
+      },
+      {
+        cabecalho: 'Lotação',
+        valor: ({ linha }) => siglasLotacao(lotacaoDe(linha), resolverLotacao),
+      },
+      {
+        cabecalho: 'Lotação (nome completo)',
+        valor: ({ linha }) => nomeLotacao(lotacaoDe(linha)) ?? '',
+      },
+      { cabecalho: 'Dias em teletrabalho', valor: ({ linha }) => linha.diasConsolidados },
+    ],
+    [funcaoDe, vigenteDe, lotacaoDe, resolverLotacao, responsaveisRanking],
+  );
+
   function ordenarPor(campo: CampoOrdenavel) {
     setPagina(0);
     setOrdenacao((atual) => {
@@ -205,7 +241,7 @@ export function TeletrabalhoTable({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mb-4 flex flex-wrap gap-3">
+        <div className="mb-4 flex flex-wrap items-center gap-3">
           <div className="relative max-w-sm flex-1 min-w-[220px]">
             <Search
               className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
@@ -276,6 +312,13 @@ export function TeletrabalhoTable({
               </button>
             )}
           </div>
+          <BotaoExportar
+            linhas={linhasVisiveis}
+            colunas={colunasExport}
+            nomeArquivo="teletrabalho"
+            nomeAba="Teletrabalho"
+            className="sm:ml-auto"
+          />
         </div>
 
         <Table>

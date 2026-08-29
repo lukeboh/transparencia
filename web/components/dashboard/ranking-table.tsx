@@ -33,10 +33,12 @@ import {
   ContratosDialog,
   type ContratoAuditavel,
 } from '@/components/dashboard/contratos-dialog';
-import { FuncoesBadges } from '@/components/dashboard/funcoes-table';
+import { FuncoesBadges, funcaoDestaque } from '@/components/dashboard/funcoes-table';
+import { BotaoExportar } from '@/components/dashboard/botao-exportar';
 import { brlCompleto, cn, nomeProprio, numero } from '@/lib/utils';
 import { categoriasDeContratos, descricaoFaixa } from '@/lib/categorias-valor';
 import { rotuloPerfil } from '@/lib/perfis-fiscalizacao';
+import type { ColunaExport } from '@/lib/exportar-dados';
 import type { ContratoResumo, LinhaRanking, ServidorFuncoes } from '@/lib/dashboard-data';
 
 const LINHAS_POR_PAGINA = 25;
@@ -216,6 +218,35 @@ export function RankingTable({
   const inicio = paginaAtual * LINHAS_POR_PAGINA;
   const linhas = linhasVisiveis.slice(inicio, inicio + LINHAS_POR_PAGINA);
 
+  // Exporta o ranking inteiro no filtro/ordenação atuais (não só a página).
+  const colunasExport = useMemo<ColunaExport<{ linha: LinhaRanking; posicao: number }>[]>(
+    () => [
+      { cabecalho: '#', valor: ({ posicao }) => posicao },
+      { cabecalho: 'Servidor', valor: ({ linha }) => nomeProprio(linha.nome) },
+      { cabecalho: 'Papéis', valor: ({ linha }) => linha.papeis.join(', ') },
+      {
+        cabecalho: 'Função',
+        valor: ({ linha }) => {
+          const s = funcoesPorNome.get(linha.nome);
+          const d = s ? funcaoDestaque(s) : null;
+          return d ? `${d.tipo}-${d.nivel}${d.vigente ? ' (vigente)' : ''}` : '';
+        },
+      },
+      {
+        cabecalho: 'Faixas de valor',
+        valor: ({ linha }) =>
+          categoriasDeContratos(linha.contratos, contratos)
+            .map((c) => c.nome)
+            .join(', '),
+      },
+      { cabecalho: 'Contratos', valor: ({ linha }) => linha.quantidadeContratos },
+      { cabecalho: 'Valor Global (R$)', valor: ({ linha }) => linha.valorConsolidado },
+      { cabecalho: 'Empenhado (R$)', valor: ({ linha }) => linha.valorEmpenhadoConsolidado || 0 },
+      { cabecalho: 'Pago (R$)', valor: ({ linha }) => linha.valorPagoConsolidado || 0 },
+    ],
+    [contratos, funcoesPorNome],
+  );
+
   function ordenarPor(campo: CampoOrdenavel) {
     setPagina(0);
     setOrdenacao((atual) => {
@@ -244,40 +275,48 @@ export function RankingTable({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="relative mb-4 max-w-sm">
-          <Search
-            className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden
-          />
-          <input
-            type="search"
-            value={busca}
-            onChange={(e) => {
-              setBusca(e.target.value);
-              setPagina(0);
-            }}
-            placeholder="Filtrar por servidor…"
-            aria-label="Filtrar por servidor"
-            className={cn(
-              'h-9 w-full rounded-md border border-border bg-card pl-8 pr-8 text-sm text-foreground',
-              'placeholder:text-muted-foreground outline-none transition-colors',
-              'focus-visible:ring-2 focus-visible:ring-ring',
-              '[&::-webkit-search-cancel-button]:hidden',
-            )}
-          />
-          {busca && (
-            <button
-              type="button"
-              onClick={() => {
-                setBusca('');
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="relative max-w-sm flex-1 min-w-[220px]">
+            <Search
+              className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+            <input
+              type="search"
+              value={busca}
+              onChange={(e) => {
+                setBusca(e.target.value);
                 setPagina(0);
               }}
-              aria-label="Limpar filtro"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-            >
-              <X className="h-3.5 w-3.5" aria-hidden />
-            </button>
-          )}
+              placeholder="Filtrar por servidor…"
+              aria-label="Filtrar por servidor"
+              className={cn(
+                'h-9 w-full rounded-md border border-border bg-card pl-8 pr-8 text-sm text-foreground',
+                'placeholder:text-muted-foreground outline-none transition-colors',
+                'focus-visible:ring-2 focus-visible:ring-ring',
+                '[&::-webkit-search-cancel-button]:hidden',
+              )}
+            />
+            {busca && (
+              <button
+                type="button"
+                onClick={() => {
+                  setBusca('');
+                  setPagina(0);
+                }}
+                aria-label="Limpar filtro"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              >
+                <X className="h-3.5 w-3.5" aria-hidden />
+              </button>
+            )}
+          </div>
+          <BotaoExportar
+            linhas={linhasVisiveis}
+            colunas={colunasExport}
+            nomeArquivo="fiscais"
+            nomeAba="Fiscais"
+          />
         </div>
 
         <Table>

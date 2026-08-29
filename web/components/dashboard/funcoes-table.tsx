@@ -32,7 +32,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { BotaoExportar } from '@/components/dashboard/botao-exportar';
 import { cn, nomeProprio, numero } from '@/lib/utils';
+import type { ColunaExport } from '@/lib/exportar-dados';
 import type { ServidorFuncoes } from '@/lib/dashboard-data';
 import type { ResolvedorLotacao } from '@/lib/lotacao-hierarquia';
 
@@ -251,6 +253,38 @@ export function FuncoesTable({
   const inicio = paginaAtual * LINHAS_POR_PAGINA;
   const linhas = linhasVisiveis.slice(inicio, inicio + LINHAS_POR_PAGINA);
 
+  // Exporta todos os servidores do filtro/ordenação atuais (não só a página).
+  const colunasExport = useMemo<ColunaExport<ServidorFuncoes>[]>(
+    () => [
+      { cabecalho: 'Servidor', valor: (s) => nomeProprio(s.nome) },
+      { cabecalho: 'Matrícula', valor: (s) => s.matricula ?? '' },
+      { cabecalho: 'Cargo', valor: (s) => s.cargo ?? '' },
+      {
+        cabecalho: 'Função',
+        valor: (s) => {
+          const d = funcaoDestaque(s);
+          return d ? `${d.tipo}-${d.nivel}` : '';
+        },
+      },
+      {
+        cabecalho: 'Função vigente',
+        valor: (s) => {
+          const d = funcaoDestaque(s);
+          return d ? d.vigente : '';
+        },
+      },
+      { cabecalho: 'Mandatos no histórico', valor: (s) => s.mandatos.length },
+      { cabecalho: 'Lotação', valor: (s) => textoLotacao(s) },
+      { cabecalho: 'Lotação (nome completo)', valor: (s) => s.lotacao ?? '' },
+      {
+        cabecalho: 'Atuação em contratos',
+        valor: (s) => (s.zeroFiscal ? 'Não-Fiscal' : 'Fiscal/gestor'),
+      },
+      { cabecalho: 'Observações', valor: (s) => s.observacoes.join('; ') },
+    ],
+    [textoLotacao],
+  );
+
   function ordenarPor(campo: CampoOrdenavel) {
     setPagina(0);
     // Campos de texto começam em "asc" (A→Z); "funcoes" (numérico) em "desc".
@@ -301,6 +335,13 @@ export function FuncoesTable({
               <option key={opcao} value={opcao} />
             ))}
           </datalist>
+          <BotaoExportar
+            linhas={linhasVisiveis}
+            colunas={colunasExport}
+            nomeArquivo="funcoes"
+            nomeAba="Funções"
+            className="sm:ml-auto"
+          />
         </div>
 
         <Table>

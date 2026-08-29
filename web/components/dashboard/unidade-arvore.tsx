@@ -4,8 +4,10 @@ import { useMemo, useState } from 'react';
 import { Check, ChevronDown, ChevronRight, ExternalLink, Search, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FiscalChips, FuncaoChips, type BasePercentual, type NivelDetalhe } from '@/components/dashboard/unidade-chips';
+import { BotaoExportar } from '@/components/dashboard/botao-exportar';
 import { cn, numero, percentual } from '@/lib/utils';
-import { urlUnidadeDetalhe, type UnidadeNode } from '@/lib/dashboard-data';
+import type { ColunaExport } from '@/lib/exportar-dados';
+import { urlUnidadeDetalhe, type UnidadeMetricas, type UnidadeNode } from '@/lib/dashboard-data';
 
 const PROFUNDIDADE_PADRAO_EXPANDIDA = 2;
 
@@ -45,6 +47,68 @@ function indexarPorId(no: UnidadeNode, acc = new Map<string, UnidadeNode>()) {
   for (const filho of no.children) indexarPorId(filho, acc);
   return acc;
 }
+
+// ── Exportação: achata a árvore numa linha por unidade ──────────────────────
+interface LinhaExportUnidade {
+  caminho: string;
+  sigla: string;
+  nome: string;
+  nivel: number;
+  servidoresDireto: number;
+  servidoresConsolidado: number;
+  fcConsolidado: number;
+  cjConsolidado: number;
+  fiscaisConsolidado: number;
+  teletrabalhoDireto: number;
+  teletrabalhoConsolidado: number;
+}
+
+const somaFuncoes = (m: UnidadeMetricas, tipo: 'FC' | 'CJ') =>
+  m.funcoes.filter((f) => f.tipo === tipo).reduce((s, f) => s + f.quantidade, 0);
+const somaFiscais = (m: UnidadeMetricas) => m.fiscais.reduce((s, f) => s + f.quantidade, 0);
+
+/** Percorre a árvore em profundidade; inclui só os nós de `visiveis` (todos
+ *  quando null), mas o caminho de siglas sempre carrega os ancestrais. */
+function achatarUnidades(
+  no: UnidadeNode,
+  visiveis: Set<string> | null,
+  prefixo: string[] = [],
+  nivel = 0,
+  acc: LinhaExportUnidade[] = [],
+): LinhaExportUnidade[] {
+  const caminho = [...prefixo, no.sigla];
+  if (!visiveis || visiveis.has(no.id)) {
+    acc.push({
+      caminho: caminho.join(' / '),
+      sigla: no.sigla,
+      nome: no.nome,
+      nivel,
+      servidoresDireto: no.direto.servidores,
+      servidoresConsolidado: no.consolidado.servidores,
+      fcConsolidado: somaFuncoes(no.consolidado, 'FC'),
+      cjConsolidado: somaFuncoes(no.consolidado, 'CJ'),
+      fiscaisConsolidado: somaFiscais(no.consolidado),
+      teletrabalhoDireto: no.direto.teletrabalho,
+      teletrabalhoConsolidado: no.consolidado.teletrabalho,
+    });
+  }
+  for (const filho of no.children) achatarUnidades(filho, visiveis, caminho, nivel + 1, acc);
+  return acc;
+}
+
+const COLUNAS_EXPORT_UNIDADES: ColunaExport<LinhaExportUnidade>[] = [
+  { cabecalho: 'Caminho', valor: (u) => u.caminho },
+  { cabecalho: 'Sigla', valor: (u) => u.sigla },
+  { cabecalho: 'Unidade', valor: (u) => u.nome },
+  { cabecalho: 'Nível', valor: (u) => u.nivel },
+  { cabecalho: 'Servidores (direto)', valor: (u) => u.servidoresDireto },
+  { cabecalho: 'Servidores (consolidado)', valor: (u) => u.servidoresConsolidado },
+  { cabecalho: 'FC (consolidado)', valor: (u) => u.fcConsolidado },
+  { cabecalho: 'CJ (consolidado)', valor: (u) => u.cjConsolidado },
+  { cabecalho: 'Fiscais (consolidado)', valor: (u) => u.fiscaisConsolidado },
+  { cabecalho: 'Teletrabalho (direto)', valor: (u) => u.teletrabalhoDireto },
+  { cabecalho: 'Teletrabalho (consolidado)', valor: (u) => u.teletrabalhoConsolidado },
+];
 
 function PillToggle({ pressionado, onClick, children }: { pressionado: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
@@ -317,6 +381,12 @@ export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeN
     return new Set([...expandedIds, ...resultadoBusca.expandirIds, ...resultadoBusca.matchIds]);
   }, [expandedIds, resultadoBusca]);
 
+  // Exporta uma linha por unidade — só as visíveis quando há busca ativa.
+  const linhasExport = useMemo(
+    () => achatarUnidades(arvore, resultadoBusca?.visibleIds ?? null),
+    [arvore, resultadoBusca],
+  );
+
   function expandirTudo() {
     setExpandedIds(idsComFilhos(arvore));
   }
@@ -378,6 +448,12 @@ export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeN
           <PillToggle pressionado={baseGlobal === 'geral'} onClick={alternarBaseGlobal}>
             Base do %: {baseGlobal}
           </PillToggle>
+          <BotaoExportar
+            linhas={linhasExport}
+            colunas={COLUNAS_EXPORT_UNIDADES}
+            nomeArquivo="unidades"
+            nomeAba="Unidades"
+          />
         </div>
       </div>
 
