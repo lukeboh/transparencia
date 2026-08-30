@@ -16,6 +16,8 @@ import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
+import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
+import { bool, incluidos } from '@/lib/url-filtros';
 import { criarResolvedorLotacao } from '@/lib/lotacao-hierarquia';
 import { nomeProprio, numero } from '@/lib/utils';
 import type { ServidorFuncoes } from '@/lib/dashboard-data';
@@ -119,6 +121,26 @@ export function FuncoesDashboard() {
       setPapeisSelecionados(todosPapeis);
     }
   }, [todosPapeis]);
+
+  // Filtros do card de filtro, compartilháveis pela URL (a busca/lotação/
+  // ordenação da tabela ficam por conta do próprio FuncoesTable).
+  useSincronizarUrl(
+    {
+      func: incluidos.escrever(todasFuncoes, funcoesSelecionadas),
+      papeis: incluidos.escrever(todosPapeis, papeisSelecionados),
+      vig: bool.escrever(somenteVigentes, false),
+      // esquema antigo ("guardava os desmarcados"): limpa se aparecer num link
+      func_off: null,
+      papeis_off: null,
+    },
+    (sp) => {
+      const f = sp.get('func');
+      if (f !== null) setFuncoesSelecionadas(incluidos.ler(todasFuncoes, f));
+      const p = sp.get('papeis');
+      if (p !== null) setPapeisSelecionados(incluidos.ler(todosPapeis, p));
+      setSomenteVigentes(bool.ler(sp.get('vig'), false));
+    },
+  );
 
   // Os 3 KPIs (e seus donuts) refletem o filtro de função aplicado acima —
   // "com função" aqui significa vigente hoje, não o histórico completo.

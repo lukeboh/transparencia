@@ -39,7 +39,9 @@ import { InfoDica } from '@/components/ui/info-dica';
 import { cn, numero } from '@/lib/utils';
 import type { ColunaExport } from '@/lib/exportar-dados';
 import type { LinhaUnidade } from '@/lib/unidades-flat';
-import { CATEGORIAS_UNIDADE, type CategoriaUnidade } from '@/lib/unidades-categoria';
+import { CATEGORIAS_UNIDADE, IDS_CATEGORIA, type CategoriaUnidade } from '@/lib/unidades-categoria';
+import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
+import { csv, excluidos, inteiro, ordem } from '@/lib/url-filtros';
 import {
   GRUPOS_RELACOES,
   RELACOES,
@@ -242,6 +244,44 @@ export function IndicadoresTable({
       else prox.add(id);
       return prox;
     });
+
+  const colunasNoPadrao =
+    colunasVisiveis.size === RELACOES_PADRAO.length &&
+    RELACOES_PADRAO.every((id) => colunasVisiveis.has(id));
+
+  // Filtros compartilháveis pela URL (busca, tipos, colunas, ordenação, página).
+  useSincronizarUrl(
+    {
+      q: busca || undefined,
+      tipos_off: excluidos.escrever(IDS_CATEGORIA, [...categoriasAtivas]),
+      cols: colunasNoPadrao ? undefined : csv.escrever([...colunasVisiveis]),
+      ord: ordem.escrever(ordenacao?.chave, ordenacao?.dir),
+      pg: inteiro.escrever(pagina, 0),
+    },
+    (sp) => {
+      const q = sp.get('q');
+      if (q) setBusca(q);
+
+      const off = sp.get('tipos_off');
+      if (off !== null) {
+        setCategoriasAtivas(new Set(excluidos.ler(IDS_CATEGORIA, off) as CategoriaUnidade[]));
+      }
+
+      const cols = csv.ler(sp.get('cols'));
+      if (cols) {
+        const validas = cols.filter((id) => RELACOES_POR_ID.has(id));
+        if (validas.length > 0) setColunasVisiveis(new Set(validas));
+      }
+
+      const o = ordem.ler(sp.get('ord'));
+      if (o && (o.campo === 'unidade' || o.campo === 'nivel' || RELACOES_POR_ID.has(o.campo))) {
+        setOrdenacao({ chave: o.campo, dir: o.direcao });
+      }
+
+      const pg = inteiro.ler(sp.get('pg'), 0, 0);
+      if (pg > 0) setPagina(pg);
+    },
+  );
 
   // Colunas na ordem do catálogo, não na ordem em que o usuário marcou.
   const colunas = useMemo<Relacao[]>(

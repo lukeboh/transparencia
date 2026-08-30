@@ -31,6 +31,8 @@ import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
+import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
+import { bool } from '@/lib/url-filtros';
 import { criarResolvedorLotacao } from '@/lib/lotacao-hierarquia';
 import { cn, nomeProprio, numero } from '@/lib/utils';
 import type { LinhaRanking, LinhaTeletrabalho, PeriodoTeletrabalho, ServidorFuncoes } from '@/lib/dashboard-data';
@@ -126,6 +128,13 @@ export function TeletrabalhoDashboard() {
   );
 
   const [somenteVigentes, setSomenteVigentes] = useState(false);
+
+  // Filtro compartilhável pela URL (a busca/lotação/ordenação da tabela ficam
+  // por conta do próprio TeletrabalhoTable).
+  useSincronizarUrl(
+    { vig: bool.escrever(somenteVigentes, false) },
+    (sp) => setSomenteVigentes(bool.ler(sp.get('vig'), false)),
+  );
 
   const rankingFiltrado = useMemo(
     () => (somenteVigentes ? teletrabalho.ranking.filter(estaVigente) : teletrabalho.ranking),

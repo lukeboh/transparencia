@@ -16,10 +16,14 @@ import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
+import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
+import { bool, excluidos, incluidos } from '@/lib/url-filtros';
 import { brlCompacto, numero } from '@/lib/utils';
 import { ehSubstituto } from '@/lib/perfis-fiscalizacao';
 import { CATEGORIAS_VALOR, categoriaDoValor, type CategoriaValorId } from '@/lib/categorias-valor';
 import type { ContratoResumo, LinhaRanking, ServidorFuncoes } from '@/lib/dashboard-data';
+
+const IDS_FAIXA_VALOR = CATEGORIAS_VALOR.map((c) => c.id);
 
 /** Chave "FC-3" / "CJ-1" da função comissionada, ou null. FC antes de CJ, depois pelo nível. */
 function ordenarFuncao(a: string, b: string): number {
@@ -155,6 +159,35 @@ export function FiscaisDashboard() {
       setFuncoesSelecionadas(todasFuncoes);
     }
   }, [todasFuncoes]);
+
+  // Filtros do card de filtro, compartilháveis pela URL. A busca/ordenação da
+  // tabela ficam por conta do próprio RankingTable.
+  useSincronizarUrl(
+    {
+      papeis: incluidos.escrever(todosPapeis, papeisSelecionados),
+      func: incluidos.escrever(todasFuncoes, funcoesSelecionadas),
+      faixas_off: excluidos.escrever(IDS_FAIXA_VALOR, categoriasSelecionadas),
+      subs: bool.escrever(considerarSubstitutos, true),
+      vig: bool.escrever(somenteVigentes, false),
+      semfunc: bool.escrever(incluirSemFuncao, true),
+      // esquema antigo ("guardava os desmarcados"): limpa se aparecer num link
+      func_off: null,
+      papeis_off: null,
+    },
+    (sp) => {
+      const p = sp.get('papeis');
+      if (p !== null) setPapeisSelecionados(incluidos.ler(todosPapeis, p));
+      const f = sp.get('func');
+      if (f !== null) setFuncoesSelecionadas(incluidos.ler(todasFuncoes, f));
+      const xo = sp.get('faixas_off');
+      if (xo !== null) {
+        setCategoriasSelecionadas(excluidos.ler(IDS_FAIXA_VALOR, xo) as CategoriaValorId[]);
+      }
+      setConsiderarSubstitutos(bool.ler(sp.get('subs'), true));
+      setSomenteVigentes(bool.ler(sp.get('vig'), false));
+      setIncluirSemFuncao(bool.ler(sp.get('semfunc'), true));
+    },
+  );
 
   // Papéis que efetivamente filtram o ranking: quando "considerar substitutos"
   // está desligado, os papéis 🔄 saem da conta (e some quem só entra como

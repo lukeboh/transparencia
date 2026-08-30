@@ -34,9 +34,13 @@ import {
 } from '@/components/ui/table';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
 import { cn, nomeProprio, numero } from '@/lib/utils';
+import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
+import { inteiro, ordem } from '@/lib/url-filtros';
 import type { ColunaExport } from '@/lib/exportar-dados';
 import type { ServidorFuncoes } from '@/lib/dashboard-data';
 import type { ResolvedorLotacao } from '@/lib/lotacao-hierarquia';
+
+const CAMPOS_ORD_FUNCOES = new Set(['nome', 'funcoes', 'lotacao']);
 
 const LINHAS_POR_PAGINA = 25;
 const LISTA_LOTACOES_ID = 'funcoes-lotacoes';
@@ -201,6 +205,27 @@ export function FuncoesTable({
   const [busca, setBusca] = useState('');
   const [filtroLotacao, setFiltroLotacao] = useState('');
   const [ordenacao, setOrdenacao] = useState<Ordenacao | null>(null);
+
+  useSincronizarUrl(
+    {
+      q: busca || undefined,
+      lot: filtroLotacao || undefined,
+      ord: ordem.escrever(ordenacao?.campo, ordenacao?.direcao),
+      pg: inteiro.escrever(pagina, 0),
+    },
+    (sp) => {
+      const q = sp.get('q');
+      if (q) setBusca(q);
+      const lot = sp.get('lot');
+      if (lot) setFiltroLotacao(lot);
+      const o = ordem.ler(sp.get('ord'));
+      if (o && CAMPOS_ORD_FUNCOES.has(o.campo)) {
+        setOrdenacao({ campo: o.campo as CampoOrdenavel, direcao: o.direcao });
+      }
+      const pg = inteiro.ler(sp.get('pg'), 0, 0);
+      if (pg > 0) setPagina(pg);
+    },
+  );
 
   // Caminho hierárquico ("menor / … / maior") por nome de lotação, resolvido
   // uma vez contra a árvore de unidades. Vazio quando o nome não resolve —

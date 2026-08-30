@@ -32,9 +32,13 @@ import { Papeis } from '@/components/dashboard/ranking-table';
 import { FuncoesBadges, funcaoDestaque } from '@/components/dashboard/funcoes-table';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
 import { cn, nomeProprio, numero } from '@/lib/utils';
+import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
+import { inteiro, ordem } from '@/lib/url-filtros';
 import type { ColunaExport } from '@/lib/exportar-dados';
 import type { LinhaRanking, LinhaTeletrabalho, ServidorFuncoes } from '@/lib/dashboard-data';
 import type { ResolvedorLotacao } from '@/lib/lotacao-hierarquia';
+
+const CAMPOS_ORD_TELETRAB = new Set(['nome', 'dias', 'lotacao', 'situacao']);
 
 const LINHAS_POR_PAGINA = 25;
 
@@ -146,6 +150,27 @@ export function TeletrabalhoTable({
   const [busca, setBusca] = useState('');
   const [buscaLotacao, setBuscaLotacao] = useState('');
   const [ordenacao, setOrdenacao] = useState<Ordenacao | null>(null);
+
+  useSincronizarUrl(
+    {
+      q: busca || undefined,
+      lot: buscaLotacao || undefined,
+      ord: ordem.escrever(ordenacao?.campo, ordenacao?.direcao),
+      pg: inteiro.escrever(pagina, 0),
+    },
+    (sp) => {
+      const q = sp.get('q');
+      if (q) setBusca(q);
+      const lot = sp.get('lot');
+      if (lot) setBuscaLotacao(lot);
+      const o = ordem.ler(sp.get('ord'));
+      if (o && CAMPOS_ORD_TELETRAB.has(o.campo)) {
+        setOrdenacao({ campo: o.campo as CampoOrdenavel, direcao: o.direcao });
+      }
+      const pg = inteiro.ler(sp.get('pg'), 0, 0);
+      if (pg > 0) setPagina(pg);
+    },
+  );
 
   // A posição (#) é sempre a do ranking original por dias consolidados,
   // para que filtro e reordenação não escondam o rank real de ninguém

@@ -13,7 +13,15 @@ import { cn, numero, percentual } from '@/lib/utils';
 import type { ColunaExport } from '@/lib/exportar-dados';
 import { achatarUnidades, somaFiscais, somaFuncoes, type LinhaUnidade } from '@/lib/unidades-flat';
 import type { UnidadeNode } from '@/lib/dashboard-data';
-import { CATEGORIAS_UNIDADE, classificarUnidades, rotuloCategoria, type CategoriaUnidade } from '@/lib/unidades-categoria';
+import {
+  CATEGORIAS_UNIDADE,
+  IDS_CATEGORIA,
+  classificarUnidades,
+  rotuloCategoria,
+  type CategoriaUnidade,
+} from '@/lib/unidades-categoria';
+import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
+import { bool, excluidos } from '@/lib/url-filtros';
 
 const PROFUNDIDADE_PADRAO_EXPANDIDA = 2;
 
@@ -315,6 +323,34 @@ export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeN
   function mostrarTodasCategorias() {
     setCategoriasAtivas(new Set(CATEGORIAS_UNIDADE.map((c) => c.id)));
   }
+
+  useSincronizarUrl(
+    {
+      q: busca || undefined,
+      tipos_off: excluidos.escrever(IDS_CATEGORIA, [...categoriasAtivas]),
+      det: bool.escrever(nivelGlobal === 'detalhado', false),
+      base: baseGlobal === 'unidade' ? 'unidade' : undefined,
+    },
+    (sp) => {
+      const q = sp.get('q');
+      if (q) setBusca(q);
+
+      const off = sp.get('tipos_off');
+      if (off !== null) {
+        setCategoriasAtivas(new Set(excluidos.ler(IDS_CATEGORIA, off) as CategoriaUnidade[]));
+      }
+
+      if (bool.ler(sp.get('det'), false)) {
+        setNivelGlobal('detalhado');
+        setDetalhadoIds(idsTodos(arvore));
+      }
+
+      if (sp.get('base') === 'unidade') {
+        setBaseGlobal('unidade');
+        setBaseGeralIds(new Set());
+      }
+    },
+  );
 
   const buscaNormalizada = normalizarBusca(busca);
 

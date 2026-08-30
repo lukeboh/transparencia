@@ -38,8 +38,12 @@ import { BotaoExportar } from '@/components/dashboard/botao-exportar';
 import { brlCompleto, cn, nomeProprio, numero } from '@/lib/utils';
 import { categoriasDeContratos, descricaoFaixa } from '@/lib/categorias-valor';
 import { rotuloPerfil } from '@/lib/perfis-fiscalizacao';
+import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
+import { inteiro, ordem } from '@/lib/url-filtros';
 import type { ColunaExport } from '@/lib/exportar-dados';
 import type { ContratoResumo, LinhaRanking, ServidorFuncoes } from '@/lib/dashboard-data';
+
+const CAMPOS_ORD_RANKING = new Set(['nome', 'contratos', 'valor', 'empenhado', 'pago']);
 
 const LINHAS_POR_PAGINA = 25;
 const MAX_PAPEIS_VISIVEIS = 2;
@@ -186,6 +190,24 @@ export function RankingTable({
   const [busca, setBusca] = useState('');
   const [ordenacao, setOrdenacao] = useState<Ordenacao | null>(null);
   const [selecionado, setSelecionado] = useState<LinhaRanking | null>(null);
+
+  useSincronizarUrl(
+    {
+      q: busca || undefined,
+      ord: ordem.escrever(ordenacao?.campo, ordenacao?.direcao),
+      pg: inteiro.escrever(pagina, 0),
+    },
+    (sp) => {
+      const q = sp.get('q');
+      if (q) setBusca(q);
+      const o = ordem.ler(sp.get('ord'));
+      if (o && CAMPOS_ORD_RANKING.has(o.campo)) {
+        setOrdenacao({ campo: o.campo as CampoOrdenavel, direcao: o.direcao });
+      }
+      const pg = inteiro.ler(sp.get('pg'), 0, 0);
+      if (pg > 0) setPagina(pg);
+    },
+  );
 
   // A posição (#) é sempre a do ranking original por valor consolidado,
   // para que filtro e reordenação não escondam o rank real de ninguém.

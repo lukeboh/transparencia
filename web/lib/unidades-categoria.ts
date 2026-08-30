@@ -53,6 +53,9 @@ export const CATEGORIAS_UNIDADE: CategoriaInfo[] = [
   },
 ];
 
+/** Só os ids dos toggles, na ordem da tela — universo dos filtros de tipo. */
+export const IDS_CATEGORIA = CATEGORIAS_UNIDADE.map((c) => c.id);
+
 const ROTULO_POR_CATEGORIA = new Map<CategoriaUnidade, string>([
   ['tribunal', 'Tribunal'],
   ...CATEGORIAS_UNIDADE.map((c) => [c.id, c.rotulo] as const),
