@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Briefcase, Building2, GitBranch, Laptop, Percent, Users } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Briefcase, Building2, GitBranch, HardHat, Laptop, Percent, Users } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { UnidadeArvore } from '@/components/dashboard/unidade-arvore';
 import { DadosStatus } from '@/components/dashboard/dados-status';
@@ -31,7 +31,12 @@ export function UnidadesDashboard() {
   const totalFolhas = useMemo(() => (unidades.arvore ? contarFolhas(unidades.arvore) : 0), [unidades.arvore]);
 
   const { naoLocalizados } = unidades;
-  const totalNaoLocalizados = naoLocalizados.servidores + naoLocalizados.teletrabalho + naoLocalizados.ambiguos;
+  const totalNaoLocalizados =
+    naoLocalizados.servidores +
+    naoLocalizados.teletrabalho +
+    naoLocalizados.terceirizados +
+    naoLocalizados.ambiguos;
+  const totalTerceirizados = unidades.arvore ? unidades.arvore.consolidado.terceirizados : 0;
 
   return (
     <main className="max-w-none px-4 py-8 sm:px-6 lg:px-8">
@@ -103,12 +108,26 @@ export function UnidadesDashboard() {
         </p>
       ) : (
         <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               titulo="Servidores na estrutura"
               valor={numero(unidades.totalServidoresTSE)}
               detalhe="total consolidado no TSE"
               icone={<Users className="h-4 w-4" aria-hidden />}
+            />
+            <StatCard
+              titulo={
+                <span className="inline-flex items-center gap-1">
+                  Terceirizados alocados <DicaTermo id="terceirizados" />
+                </span>
+              }
+              valor={numero(totalTerceirizados)}
+              detalhe={
+                unidades.terceirizadosCompetencia
+                  ? `estimado · PDF de ${unidades.terceirizadosCompetencia}`
+                  : 'estimado do PDF mensal do TSE'
+              }
+              icone={<HardHat className="h-4 w-4" aria-hidden />}
             />
             <StatCard
               titulo={
@@ -127,7 +146,7 @@ export function UnidadesDashboard() {
                 </span>
               }
               valor={numero(totalNaoLocalizados)}
-              detalhe={`${numero(naoLocalizados.servidores)} servidor(es) · ${numero(naoLocalizados.teletrabalho)} teletrabalho · ${numero(naoLocalizados.ambiguos)} ambíguo(s)`}
+              detalhe={`${numero(naoLocalizados.servidores)} servidor(es) · ${numero(naoLocalizados.teletrabalho)} teletrabalho · ${numero(naoLocalizados.terceirizados)} terceirizado(s) · ${numero(naoLocalizados.ambiguos)} ambíguo(s)`}
               icone={<GitBranch className="h-4 w-4" aria-hidden />}
             />
           </div>
@@ -147,7 +166,14 @@ export function UnidadesDashboard() {
         fiscais consolidados em um chip cada) e &ldquo;Base do %&rdquo; (geral = percentual sobre o total de
         servidores do TSE; unidade = sobre os servidores da própria unidade — nesse caso a linha &ldquo;Servidores
         vigentes&rdquo; mostra sempre 100%, já que é a própria base). Uma pessoa pode ter mais de um papel de
-        fiscal/gestor, então a soma dos chips de fiscal pode passar de 100%.
+        fiscal/gestor, então a soma dos chips de fiscal pode passar de 100%.{' '}
+        <strong>Terceirizados alocados</strong> vem de outra fonte: o PDF mensal de &ldquo;postos de trabalho
+        &ndash; contratos de cessão de mão de obra&rdquo; do TSE
+        {unidades.terceirizadosCompetencia ? ` (competência ${unidades.terceirizadosCompetencia})` : ''}. Cada
+        posto é ligado à unidade pela sigla da coluna &ldquo;Alocação&rdquo;; como o arquivo é um PDF escaneado,
+        alguns registros não são localizados e o total por unidade é aproximado. Não são servidores públicos —
+        entram numa contagem à parte, e o percentual mostrado é sobre os servidores da própria unidade (pode
+        passar de 100% em unidades de vigilância, limpeza ou obras).
         <AppVersion />
       </footer>
     </main>

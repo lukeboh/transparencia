@@ -8,7 +8,7 @@
 import type { UnidadeMetricas, UnidadeNode } from './dashboard-data';
 import { somaFiscais, somaFuncoes } from './unidades-flat';
 
-export type MetricaBaseId = 'servidores' | 'fc' | 'cj' | 'fiscais' | 'teletrabalho';
+export type MetricaBaseId = 'servidores' | 'fc' | 'cj' | 'fiscais' | 'teletrabalho' | 'terceirizados';
 export type VarianteId = 'unidade' | 'consolidada' | 'orgao_direto' | 'orgao_subarvore';
 
 interface MetricaBase {
@@ -50,6 +50,12 @@ const METRICAS_BASE: MetricaBase[] = [
     grupo: 'Teletrabalho',
     descricao: 'Percentual de servidores em teletrabalho',
     valor: (m) => m.teletrabalho,
+  },
+  {
+    id: 'terceirizados',
+    grupo: 'Terceirizados',
+    descricao: 'Terceirizados por servidor (aprox., do PDF mensal do TSE)',
+    valor: (m) => m.terceirizados,
   },
 ];
 
@@ -144,6 +150,7 @@ export const RELACOES_PADRAO: string[] = [
   'cj__consolidada',
   'fiscais__consolidada',
   'teletrabalho__consolidada',
+  'terceirizados__consolidada',
 ];
 
 /** Mesma regra de `percentual()` em utils.ts: 1 casa abaixo de 10%, inteiro

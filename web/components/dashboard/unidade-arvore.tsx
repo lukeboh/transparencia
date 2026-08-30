@@ -75,6 +75,8 @@ const COLUNAS_EXPORT_UNIDADES: ColunaExport<LinhaUnidade>[] = [
   { cabecalho: 'Fiscais (consolidado)', valor: (u) => somaFiscais(u.node.consolidado) },
   { cabecalho: 'Teletrabalho (direto)', valor: (u) => u.node.direto.teletrabalho },
   { cabecalho: 'Teletrabalho (consolidado)', valor: (u) => u.node.consolidado.teletrabalho },
+  { cabecalho: 'Terceirizados (direto)', valor: (u) => u.node.direto.terceirizados },
+  { cabecalho: 'Terceirizados (consolidado)', valor: (u) => u.node.consolidado.terceirizados },
 ];
 
 interface UnidadeCardProps {
@@ -197,6 +199,17 @@ function UnidadeCard({
             <span className="text-muted-foreground">Em teletrabalho vigentes</span>
             <span className="font-medium tabular-nums">
               {numero(metricas.teletrabalho)} · {percentual(metricas.teletrabalho, denominador)}%
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1 text-muted-foreground">
+              Terceirizados alocados <DicaTermo id="terceirizados" />
+            </span>
+            <span
+              className="font-medium tabular-nums"
+              title="Percentual sobre os servidores desta unidade — pode passar de 100%"
+            >
+              {numero(metricas.terceirizados)} · {percentual(metricas.terceirizados, denominador)}%
             </span>
           </div>
         </CardContent>

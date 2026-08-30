@@ -16,6 +16,7 @@ const entradaFuncoes = process.argv[4] ?? path.join(raiz, 'data/tse_funcoes.json
 const entradaAgentes = process.argv[5] ?? path.join(raiz, 'data/tse_agentes.json');
 const entradaTeletrabalho = process.argv[6] ?? path.join(raiz, 'data/tse_teletrabalho.json');
 const entradaUnidades = process.argv[7] ?? path.join(raiz, 'data/tse_unidades.json');
+const entradaTerceirizados = process.argv[8] ?? path.join(raiz, 'data/tse_terceirizados.json');
 const saida = process.argv[3] ?? path.join(raiz, 'web/lib/dashboard-data.ts');
 
 async function main() {
@@ -71,8 +72,22 @@ async function main() {
     );
   }
 
+  let terceirizados = [];
+  let terceirizadosCompetencia = null;
+  if (existsSync(entradaTerceirizados)) {
+    const t = JSON.parse(await readFile(entradaTerceirizados, 'utf8'));
+    terceirizados = Array.isArray(t) ? t : t.registros ?? [];
+    terceirizadosCompetencia = t?.competencia?.rotulo ?? null;
+  } else {
+    console.warn(
+      `[Aviso] '${entradaTerceirizados}' não foi encontrado — contagem de terceirizados por unidade sairá zerada. ` +
+      'Rode "npm run tse:scrape-terceirizados" para gerá-lo.',
+    );
+  }
+
   const excecoes = carregarExcecoes();
-  const dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos, excecoes, movimentosTeletrabalho, arvoreUnidades);
+  const dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos, excecoes, movimentosTeletrabalho, arvoreUnidades, terceirizados);
+  dados.unidades.terceirizadosCompetencia = terceirizadosCompetencia;
   await escreverDashboardData(dados, saida);
   console.log(
     `  ${contratos.length} contratos · ${dados.evolucao.length} anos · ${dados.categorias.length} fatias de categoria`,
@@ -80,8 +95,10 @@ async function main() {
   if (dados.unidades.arvore) {
     const { naoLocalizados } = dados.unidades;
     console.log(
-      `  unidades: ${dados.unidades.totalServidoresTSE} servidores na árvore · não localizados: ` +
-      `${naoLocalizados.servidores} servidor(es), ${naoLocalizados.teletrabalho} teletrabalho, ${naoLocalizados.ambiguos} ambíguo(s)`,
+      `  unidades: ${dados.unidades.totalServidoresTSE} servidores na árvore · ` +
+      `${dados.unidades.arvore.consolidado.terceirizados} terceirizados na árvore · não localizados: ` +
+      `${naoLocalizados.servidores} servidor(es), ${naoLocalizados.teletrabalho} teletrabalho, ` +
+      `${naoLocalizados.terceirizados} terceirizado(s), ${naoLocalizados.ambiguos} ambíguo(s)`,
     );
   }
 }
@@ -277,6 +294,8 @@ export interface UnidadeMetricas {
   funcoes: FuncaoContagem[];
   fiscais: FiscalContagem[];
   teletrabalho: number;
+  /** Profissionais terceirizados (postos de contratos de cessão de mão de obra) alocados na unidade. Estimado do PDF mensal do TSE — ver naoLocalizados.terceirizados. */
+  terceirizados: number;
 }
 
 export interface UnidadeNode {
@@ -295,12 +314,16 @@ export interface UnidadesData {
   arvore: UnidadeNode | null;
   /** Total consolidado de servidores no nó raiz — denominador fixo da % de "Servidores vigentes" em qualquer nó da árvore. */
   totalServidoresTSE: number;
-  /** Pessoas/registros que não puderam ser posicionados na árvore por não achar (ou achar mais de uma vez) a unidade pelo nome — ver agregarUnidades.js. */
+  /** Competência (mês/ano) do PDF de terceirizados usado — null quando a fonte não foi raspada. */
+  terceirizadosCompetencia: string | null;
+  /** Pessoas/registros que não puderam ser posicionados na árvore por não achar (ou achar mais de uma vez) a unidade pelo nome/sigla — ver agregarUnidades.js. */
   naoLocalizados: {
     servidores: number;
     teletrabalho: number;
+    /** Terceirizados cuja "Alocação" no PDF não casou com nenhuma sigla da árvore. */
+    terceirizados: number;
     ambiguos: number;
-    exemplos: { servidores: string[]; teletrabalho: string[] };
+    exemplos: { servidores: string[]; teletrabalho: string[]; terceirizados: string[] };
   };
 }
 
@@ -341,6 +364,11 @@ export function urlTeletrabalho(nome: string) {
 /** URL da página de detalhe (lista de agentes públicos) de uma unidade, na consulta pública do TSE — para conferir a origem dos dados de um nó. */
 export function urlUnidadeDetalhe(id: string) {
   return \`https://transparencia.tse.jus.br/transparenciaDadosServidores/smvc/relatorios/lotacao-geral/sem-assinatura/agrupamento-por-unidade/detalhe/\${id}\`;
+}
+
+/** Página do TSE com os PDFs mensais de profissionais terceirizados (contratos de cessão de mão de obra). */
+export function urlTerceirizados() {
+  return 'https://www.tse.jus.br/transparencia-e-prestacao-de-contas/pessoal/profissionais-terceirizados-contratos-com-cessao-de-mao-de-obra';
 }
 
 export const dashboardData: DashboardData = ${JSON.stringify(dados)};

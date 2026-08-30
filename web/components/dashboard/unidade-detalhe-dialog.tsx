@@ -4,7 +4,12 @@ import { Dialog, DialogHeader } from '@/components/ui/dialog';
 import { FiscalChips, FuncaoChips } from '@/components/dashboard/unidade-chips';
 import { BotaoFonteExterna } from '@/components/dashboard/botao-fonte-externa';
 import { numero, percentual } from '@/lib/utils';
-import { urlUnidadeDetalhe, type UnidadeMetricas, type UnidadeNode } from '@/lib/dashboard-data';
+import {
+  urlTerceirizados,
+  urlUnidadeDetalhe,
+  type UnidadeMetricas,
+  type UnidadeNode,
+} from '@/lib/dashboard-data';
 
 function contarSubarvore(no: UnidadeNode): number {
   return no.children.reduce((s, filho) => s + 1 + contarSubarvore(filho), 0);
@@ -50,6 +55,12 @@ function BlocoMetricas({
           <dt className="text-muted-foreground">Em teletrabalho vigente</dt>
           <dd className="font-medium tabular-nums">
             {numero(metricas.teletrabalho)} · {percentual(metricas.teletrabalho, totalServidoresTSE)}% do TSE
+          </dd>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <dt className="text-muted-foreground">Terceirizados alocados</dt>
+          <dd className="font-medium tabular-nums" title="Estimado do PDF mensal do TSE">
+            {numero(metricas.terceirizados)} · {percentual(metricas.terceirizados, metricas.servidores)}% dos servidores
           </dd>
         </div>
       </dl>
@@ -132,15 +143,25 @@ export function UnidadeDetalheDialog({
       </div>
 
       <div className="flex flex-col gap-2 border-t border-border p-3 text-xs text-muted-foreground">
-        Percentuais sempre sobre o total de servidores do TSE. Os números vêm do cruzamento, por nome
-        de unidade, entre a estrutura oficial e as relações de agentes públicos, teletrabalho e fiscais
-        de contrato — pequenas divergências de grafia entre as fontes podem deslocar alguns registros.
-        <BotaoFonteExterna
-          href={urlUnidadeDetalhe(node.id)}
-          titulo="Abre a página desta unidade no portal de transparência do TSE, em nova aba"
-        >
-          Fonte externa — unidade no portal do TSE
-        </BotaoFonteExterna>
+        Percentuais de servidores, funções, fiscais e teletrabalho são sobre o total de servidores do
+        TSE; o de terceirizados é sobre os servidores da própria unidade (pode passar de 100%). Tudo
+        vem de cruzamento por nome/sigla de unidade entre a estrutura oficial e as relações de agentes
+        públicos, teletrabalho, fiscais de contrato e o PDF mensal de terceirizados — pequenas
+        divergências de grafia entre as fontes podem deslocar alguns registros.
+        <div className="flex flex-wrap gap-2">
+          <BotaoFonteExterna
+            href={urlUnidadeDetalhe(node.id)}
+            titulo="Abre a página desta unidade no portal de transparência do TSE, em nova aba"
+          >
+            Fonte externa — unidade no portal do TSE
+          </BotaoFonteExterna>
+          <BotaoFonteExterna
+            href={urlTerceirizados()}
+            titulo="Abre a página dos PDFs mensais de profissionais terceirizados do TSE, em nova aba"
+          >
+            Fonte externa — terceirizados (PDF do TSE)
+          </BotaoFonteExterna>
+        </div>
       </div>
     </Dialog>
   );

@@ -124,3 +124,31 @@ test('agregarUnidades: teletrabalho sem unidade correspondente vai para naoLocal
   const { naoLocalizados } = agregarUnidades(arvoreFixture(), [], teletrabalho);
   assert.equal(naoLocalizados.teletrabalho, 1);
 });
+
+test('agregarUnidades: terceirizados casam pela SIGLA da alocação (menor sigla conhecida do caminho) e consolidam na subárvore', () => {
+  const terceirizados = [
+    { alocacao: 'SEA/DIVC/TSE' }, // menor sigla conhecida = SEA
+    { alocacao: 'SEA' },
+    { alocacao: 'Sexyz/SEB/DIVC' }, // Sexyz não existe -> cai em SEB
+    { alocacao: 'DIVC' }, // direto na divisão
+  ];
+  const { arvore } = agregarUnidades(arvoreFixture(), [], undefined, [], terceirizados);
+  const divisao = arvore.children[0];
+  const secaoA = divisao.children[0];
+  const secaoB = divisao.children[1];
+
+  assert.equal(secaoA.direto.terceirizados, 2);
+  assert.equal(secaoB.direto.terceirizados, 1);
+  assert.equal(divisao.direto.terceirizados, 1);
+  assert.equal(divisao.consolidado.terceirizados, 4);
+  assert.equal(arvore.consolidado.terceirizados, 4);
+});
+
+test('agregarUnidades: terceirizado com alocação sem sigla conhecida vai para naoLocalizados.terceirizados', () => {
+  const { naoLocalizados } = agregarUnidades(arvoreFixture(), [], undefined, [], [
+    { alocacao: 'FOO/BAR' },
+    { alocacao: '' },
+  ]);
+  assert.equal(naoLocalizados.terceirizados, 2);
+  assert.equal(naoLocalizados.exemplos.terceirizados.length, 2);
+});

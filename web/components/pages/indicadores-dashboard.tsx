@@ -105,14 +105,19 @@ export function IndicadoresDashboard() {
       )}
 
       <footer className="mt-8 text-xs text-muted-foreground">
-        Cada coluna é uma relação percentual: uma métrica (servidores, com FC, com CJ, fiscais, teletrabalho)
-        sobre um denominador. Variantes: <strong>unidade</strong> (só quem está lotado exatamente no nó),{' '}
+        Cada coluna é uma relação percentual: uma métrica (servidores, com FC, com CJ, fiscais, teletrabalho,
+        terceirizados) sobre um denominador. Variantes: <strong>unidade</strong> (só quem está lotado exatamente no nó),{' '}
         <strong>consolidada</strong> (o nó e toda a subárvore), <strong>órgão · direto</strong> (valor do nó
         sobre o total de servidores do TSE) e <strong>órgão · subárvore</strong> (valor consolidado sobre o
         total do TSE). &ldquo;—&rdquo; aparece quando o denominador é zero (unidade sem servidor lotado
         direto). &ldquo;Fiscais&rdquo; soma papéis: quem tem mais de um papel conta em cada um, então o
         percentual pode passar de 100% e a barra trava em 100%. Tudo reflete só o momento atual (relação de
-        agentes públicos vigente, contratos vigentes, teletrabalho em aberto).
+        agentes públicos vigente, contratos vigentes, teletrabalho em aberto). &ldquo;Terceirizados&rdquo; é
+        a razão terceirizados/servidores, estimada do PDF mensal do TSE de postos de cessão de mão de obra
+        {estado.dados.unidades.terceirizadosCompetencia
+          ? ` (competência ${estado.dados.unidades.terceirizadosCompetencia})`
+          : ''}
+        {' '}— aproximada, já que a fonte é um PDF escaneado.
         <AppVersion />
       </footer>
     </main>

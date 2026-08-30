@@ -85,6 +85,11 @@ export const GLOSSARIO = {
     texto:
       'Agrupam os responsáveis pela soma dos contratos sob sua responsabilidade, para comparar quem concentra os maiores valores.',
   },
+  terceirizados: {
+    titulo: 'Terceirizados alocados',
+    texto:
+      'Profissionais de empresas contratadas para prestar serviço no TSE (contratos de cessão de mão de obra: vigilância, limpeza, copa, motoristas, TI, etc.). O número é estimado a partir do PDF mensal do TSE, cruzando a coluna "Alocação" com a sigla da unidade — alguns registros não são localizados. Não são servidores públicos e entram numa contagem à parte.',
+  },
 } as const satisfies Record<string, VerbeteGlossario>;
 
 export type TermoId = keyof typeof GLOSSARIO;

@@ -28,7 +28,7 @@ function normalizeUnidade(texto) {
     .toUpperCase();
 }
 
-function indexarArvore(no, porId, idPorNomeNormalizado) {
+function indexarArvore(no, porId, idPorNomeNormalizado, idPorSigla) {
   const id = String(no.id);
   const parentId = no.parentidAsString != null ? String(no.parentidAsString) : null;
   const filhosIds = (no.children ?? []).map((filho) => String(filho.id));
@@ -41,7 +41,12 @@ function indexarArvore(no, porId, idPorNomeNormalizado) {
     idPorNomeNormalizado.set(chave, lista);
   }
 
-  for (const filho of no.children ?? []) indexarArvore(filho, porId, idPorNomeNormalizado);
+  // Índice por SIGLA (no.name) — o cruzamento de terceirizados é por sigla, não
+  // por nome. Fica com o primeiro nó de cada sigla (siglas repetem pouco).
+  const sig = normalizeUnidade(no.name);
+  if (sig && !idPorSigla.has(sig)) idPorSigla.set(sig, id);
+
+  for (const filho of no.children ?? []) indexarArvore(filho, porId, idPorNomeNormalizado, idPorSigla);
 }
 
 function funcoesParaArray(map) {
@@ -84,22 +89,32 @@ function somarFiscais(...listas) {
  *   conceito de "vigente = tem período em aberto" em vez de reimplementar).
  * @param {Array} rankingResponsaveis ranking de fiscais/gestores (rankResponsaveis.js) — usado só
  *   para saber, por pessoa, quais papéis ela tem em contratos.
+ * @param {Array} terceirizados registros crus de scrapeTerceirizados.js (um por profissional,
+ *   com a `alocacao` = caminho de siglas do posto de trabalho).
  */
-function agregarUnidades(arvoreBruta, agentesPublicos = [], teletrabalho = { ranking: [] }, rankingResponsaveis = []) {
+function agregarUnidades(
+  arvoreBruta,
+  agentesPublicos = [],
+  teletrabalho = { ranking: [] },
+  rankingResponsaveis = [],
+  terceirizados = [],
+) {
   const porId = new Map();
   const idPorNomeNormalizado = new Map();
-  indexarArvore(arvoreBruta, porId, idPorNomeNormalizado);
+  const idPorSigla = new Map();
+  indexarArvore(arvoreBruta, porId, idPorNomeNormalizado, idPorSigla);
 
   const metricas = new Map();
   for (const id of porId.keys()) {
-    metricas.set(id, { servidores: 0, funcoesMap: new Map(), fiscaisMap: new Map(), teletrabalho: 0 });
+    metricas.set(id, { servidores: 0, funcoesMap: new Map(), fiscaisMap: new Map(), teletrabalho: 0, terceirizados: 0 });
   }
 
   const naoLocalizados = {
     servidores: 0,
     teletrabalho: 0,
+    terceirizados: 0,
     ambiguos: 0,
-    exemplos: { servidores: [], teletrabalho: [] },
+    exemplos: { servidores: [], teletrabalho: [], terceirizados: [] },
   };
 
   function resolverId(nomeUnidade) {
@@ -109,6 +124,39 @@ function agregarUnidades(arvoreBruta, agentesPublicos = [], teletrabalho = { ran
     if (!ids || ids.length === 0) return { id: null, ambiguo: false };
     if (ids.length > 1) return { id: null, ambiguo: true };
     return { id: ids[0], ambiguo: false };
+  }
+
+  const ALIAS_SIGLA = { CCJE: 'ACCJE', CONJULEG: 'COJULEG' };
+
+  /**
+   * Resolve a "Alocação" de um terceirizado (caminho de siglas, do menor nível
+   * para o maior — ex.: "Seget/Cosen/SAD/TSE") para o id do nó mais específico
+   * que existe na árvore. Gabinetes de ministro caem todos no nó "MINISTROS".
+   */
+  function resolverSigla(alocacao) {
+    if (!alocacao) return null;
+    const bruto = String(alocacao).trim();
+
+    // "GABINETE MINISTRO/MINISTRA X - XX", "GAB MINISTRO ...", "GAB-XX",
+    // "NOME SOBRENOME - XX" (sufixo de 2-3 letras = código do gabinete).
+    if (
+      /\bMINISTR[OA]\b/i.test(bruto) ||
+      /\bGAB[.\- ]?[A-Z]{2,3}\b/i.test(bruto) ||
+      /\s[-–]\s[A-Z]{2,3}$/.test(bruto)
+    ) {
+      return idPorSigla.get('MIN') ?? null;
+    }
+
+    const tokens = bruto
+      .split(/[\/,]|\s+[eE]\s+|\s+/)
+      .map((t) => normalizeUnidade(t).replace(/\.+$/, ''))
+      .filter(Boolean);
+    for (let tok of tokens) {
+      if (ALIAS_SIGLA[tok]) tok = ALIAS_SIGLA[tok];
+      const id = idPorSigla.get(tok);
+      if (id) return id;
+    }
+    return null;
   }
 
   const rankingPorNome = new Map(rankingResponsaveis.map((r, i) => [normalizeNome(r.nome), i]));
@@ -170,6 +218,19 @@ function agregarUnidades(arvoreBruta, agentesPublicos = [], teletrabalho = { ran
     metricas.get(id).teletrabalho += 1;
   }
 
+  // --- Terceirizados (postos de trabalho de contratos de cessão de mão de obra) ---
+  for (const t of terceirizados) {
+    const id = resolverSigla(t.alocacao);
+    if (!id) {
+      naoLocalizados.terceirizados += 1;
+      if (naoLocalizados.exemplos.terceirizados.length < MAX_EXEMPLOS) {
+        naoLocalizados.exemplos.terceirizados.push(t.alocacao || '(sem alocação)');
+      }
+      continue;
+    }
+    metricas.get(id).terceirizados += 1;
+  }
+
   // --- Consolidação bottom-up ---
   function construir(id) {
     const raw = porId.get(id);
@@ -181,12 +242,14 @@ function agregarUnidades(arvoreBruta, agentesPublicos = [], teletrabalho = { ran
       funcoes: funcoesParaArray(metrica.funcoesMap),
       fiscais: fiscaisParaArray(metrica.fiscaisMap),
       teletrabalho: metrica.teletrabalho,
+      terceirizados: metrica.terceirizados,
     };
     const consolidado = {
       servidores: direto.servidores + filhos.reduce((s, f) => s + f.consolidado.servidores, 0),
       funcoes: somarFuncoes(direto.funcoes, ...filhos.map((f) => f.consolidado.funcoes)),
       fiscais: somarFiscais(direto.fiscais, ...filhos.map((f) => f.consolidado.fiscais)),
       teletrabalho: direto.teletrabalho + filhos.reduce((s, f) => s + f.consolidado.teletrabalho, 0),
+      terceirizados: direto.terceirizados + filhos.reduce((s, f) => s + f.consolidado.terceirizados, 0),
     };
 
     return { id, nome: raw.nome, sigla: raw.sigla, parentId: raw.parentId, direto, consolidado, children: filhos };

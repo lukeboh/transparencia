@@ -11,7 +11,7 @@ import { aplicarExcecoes } from './excecoes.js';
 
 const MAX_FATIAS = 5; // demais categorias somadas em "Outros"
 
-function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [], excecoes = [], movimentosTeletrabalho = [], arvoreUnidades = null) {
+function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [], excecoes = [], movimentosTeletrabalho = [], arvoreUnidades = null, terceirizados = []) {
   contratos = aplicarExcecoes(contratos, excecoes);
   const hoje = new Date().toISOString().slice(0, 10);
 
@@ -90,8 +90,18 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
   const { servidores: servidoresFuncoes, rankingComFuncao } = agregarFuncoes(agentesPublicos, movimentosFuncoes, contratos);
   const teletrabalho = agregarTeletrabalho(movimentosTeletrabalho, rankingCompleto, hoje);
   const unidades = arvoreUnidades
-    ? agregarUnidades(arvoreUnidades, agentesPublicos, teletrabalho, rankingVigentes)
-    : { arvore: null, totalServidoresTSE: 0, naoLocalizados: { servidores: 0, teletrabalho: 0, ambiguos: 0, exemplos: { servidores: [], teletrabalho: [] } } };
+    ? agregarUnidades(arvoreUnidades, agentesPublicos, teletrabalho, rankingVigentes, terceirizados)
+    : {
+        arvore: null,
+        totalServidoresTSE: 0,
+        naoLocalizados: {
+          servidores: 0,
+          teletrabalho: 0,
+          terceirizados: 0,
+          ambiguos: 0,
+          exemplos: { servidores: [], teletrabalho: [], terceirizados: [] },
+        },
+      };
   const calcMediana = (arr) => {
     const s = [...arr].sort((a, b) => a - b);
     const m = Math.floor(s.length / 2);
