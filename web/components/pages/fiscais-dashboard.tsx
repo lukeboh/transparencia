@@ -141,7 +141,9 @@ export function FiscaisDashboard() {
 
   const [papeisSelecionados, setPapeisSelecionados] = useState<string[]>([]);
   const [considerarSubstitutos, setConsiderarSubstitutos] = useState(true);
-  const [somenteVigentes, setSomenteVigentes] = useState(false);
+  // Regra do projeto: filtro Vigente começa LIGADO (ver README, "Regra: filtro
+  // Vigente sempre ligado por padrão"); "Limpar" ainda o desliga (ver tudo).
+  const [somenteVigentes, setSomenteVigentes] = useState(true);
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState<CategoriaValorId[]>(() =>
     CATEGORIAS_VALOR.map((c) => c.id),
   );
@@ -168,7 +170,7 @@ export function FiscaisDashboard() {
       func: incluidos.escrever(todasFuncoes, funcoesSelecionadas),
       faixas_off: excluidos.escrever(IDS_FAIXA_VALOR, categoriasSelecionadas),
       subs: bool.escrever(considerarSubstitutos, true),
-      vig: bool.escrever(somenteVigentes, false),
+      vig: bool.escrever(somenteVigentes, true),
       semfunc: bool.escrever(incluirSemFuncao, true),
       // esquema antigo ("guardava os desmarcados"): limpa se aparecer num link
       func_off: null,
@@ -184,7 +186,7 @@ export function FiscaisDashboard() {
         setCategoriasSelecionadas(excluidos.ler(IDS_FAIXA_VALOR, xo) as CategoriaValorId[]);
       }
       setConsiderarSubstitutos(bool.ler(sp.get('subs'), true));
-      setSomenteVigentes(bool.ler(sp.get('vig'), false));
+      setSomenteVigentes(bool.ler(sp.get('vig'), true));
       setIncluirSemFuncao(bool.ler(sp.get('semfunc'), true));
     },
   );

@@ -128,13 +128,15 @@ export function TeletrabalhoDashboard() {
     [emTeletrabalhoAgora, resumo.totalAgentesPublicos],
   );
 
-  const [somenteVigentes, setSomenteVigentes] = useState(false);
+  // Regra do projeto: filtro Vigente começa LIGADO (ver README, "Regra: filtro
+  // Vigente sempre ligado por padrão"). O usuário desliga para ver o histórico.
+  const [somenteVigentes, setSomenteVigentes] = useState(true);
 
   // Filtro compartilhável pela URL (a busca/lotação/ordenação da tabela ficam
   // por conta do próprio TeletrabalhoTable).
   useSincronizarUrl(
-    { vig: bool.escrever(somenteVigentes, false) },
-    (sp) => setSomenteVigentes(bool.ler(sp.get('vig'), false)),
+    { vig: bool.escrever(somenteVigentes, true) },
+    (sp) => setSomenteVigentes(bool.ler(sp.get('vig'), true)),
   );
 
   const rankingFiltrado = useMemo(

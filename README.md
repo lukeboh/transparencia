@@ -131,8 +131,15 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   contrato de cessão (link para o modal **Detalhes do Contrato**), **mês de
   início** (primeira competência em que o nome aparece) e **mês de fim** (só
   quando a pessoa deixa de constar na competência mais recente — saída
-  definitiva; em branco = ainda contratado). Filtros por nome e por lotação,
-  toggle de situação (ativos / encerrados / todos), KPI por contrato
+  definitiva; em branco = ainda contratado). Tabela de terceirizados com
+  filtros por nome e por lotação e toggle **Vigente** (padrão ligado — ver
+  "Regra: filtro Vigente sempre ligado por padrão", na seção Dashboard web);
+  tabela de **contratos de cessão** com filtro textual por empresa, toggle
+  **Vigente** (contratos com terceirizado ativo hoje) e ordenação da coluna
+  Contrato quebrando "NN/AAAA" por ano→número ou número→ano (× asc/desc).
+  Ambas as tabelas colapsáveis. O KPI **Terceirizados ativos** é uma rosca
+  dos ativos agrupados por contrato de cessão, com atalho para a tabela já
+  com o filtro Vigente ligado. KPI por contrato
   (terceirizados ativos e no histórico, com desempate de contratos de número
   igual pela empresa) e um "Registro de falhas" com quem ficou sem lotação
   identificada, sem alocação no PDF ou com contrato não vinculado ao
@@ -144,7 +151,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   Compras.gov.br.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.22**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.23**.
 
 ## Dashboard web
 
@@ -280,6 +287,33 @@ Todo dado do dashboard é auditável contra a fonte oficial:
 Para isso o `dashboard-data.ts` embarca a tabela normalizada dos 1268
 contratos (id, número, objeto e fornecedor truncados, valor, ano, categoria,
 vigência) e cada linha do ranking referencia seus contratos por índice.
+
+### Regra: filtro "Vigente" sempre ligado por padrão
+
+**Todo filtro "Vigente" de qualquer página começa LIGADO.** "Vigente"
+significa sempre a mesma coisa: *está valendo agora — não é do passado, ainda
+não acabou* (contrato dentro do prazo, função comissionada atual, período de
+teletrabalho em aberto, terceirizado que ainda consta na listagem mais
+recente, contrato de cessão que ainda tem terceirizado alocado). Em regra o
+usuário quer ver **como está hoje**; para olhar o histórico ele **desliga o
+filtro de propósito**.
+
+Consequências para quem implementa:
+
+- o `useState` do toggle nasce `true`; o codec de URL (`bool.escrever` /
+  `bool.ler` em `web/lib/url-filtros.ts`) usa `true` como padrão, então o
+  parâmetro `vig` (ou equivalente) só aparece na URL quando o filtro está
+  **desligado** — link curto no caso comum e sem mudar de sentido se o padrão
+  mudar;
+- o controle visual padrão é `VigenteToggle`
+  (`web/components/dashboard/card-controles.tsx`);
+- "Limpar" / "ver tudo" de um painel de filtro pode desligar o Vigente (é uma
+  ação explícita de "quero o universo inteiro") — isso não contradiz a regra,
+  que é só sobre o **estado inicial**.
+
+Páginas com filtro Vigente hoje: `/fiscais`, `/funcoes`, `/teletrabalho` e
+`/terceirizados` (um para a tabela de terceirizados e outro para a de
+contratos de cessão).
 
 ## Como os dados são obtidos
 

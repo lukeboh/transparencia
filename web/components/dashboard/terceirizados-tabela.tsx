@@ -31,6 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
+import { ColapsarBotao, VigenteToggle } from '@/components/dashboard/card-controles';
 import { cn, mesAnoCurto, numero } from '@/lib/utils';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
 import { inteiro, ordem } from '@/lib/url-filtros';
@@ -154,13 +155,15 @@ function CabecalhoOrdenavel({
 
 export function TerceirizadosTabela({
   pessoas,
-  totalGeral,
+  vigente,
+  onVigenteChange,
   onVerContrato,
 }: {
-  /** Já filtradas pela situação (ativos/encerrados) escolhida na página. */
+  /** Lista completa — o filtro Vigente (padrão ligado) recorta os ativos. */
   pessoas: TerceirizadoPessoa[];
-  /** Total de terceirizados sem nenhum filtro — para o rodapé "filtrados de N". */
-  totalGeral: number;
+  /** Controlado pela página (para o KPI "Terceirizados ativos" poder ligá-lo ao rolar até aqui). */
+  vigente: boolean;
+  onVigenteChange: (v: boolean) => void;
   onVerContrato: (pessoa: TerceirizadoPessoa) => void;
 }) {
   const [pagina, setPagina] = useState(0);
@@ -168,6 +171,7 @@ export function TerceirizadosTabela({
   const [filtroLotacao, setFiltroLotacao] = useState('');
   // null = ordem natural, que já vem alfabética por nome do agregador.
   const [ordenacao, setOrdenacao] = useState<Ordenacao | null>(null);
+  const [colapsado, setColapsado] = useState(false);
 
   useSincronizarUrl(
     {
@@ -190,12 +194,18 @@ export function TerceirizadosTabela({
     },
   );
 
+  // 1º recorte: Vigente (só quem ainda consta na competência mais recente).
+  const base = useMemo(
+    () => (vigente ? pessoas.filter((p) => p.ativo) : pessoas),
+    [pessoas, vigente],
+  );
+
   const opcoesLotacao = useMemo(
     () =>
-      Array.from(new Set(pessoas.map(lotacaoTexto).filter(Boolean))).sort((a, b) =>
+      Array.from(new Set(base.map(lotacaoTexto).filter(Boolean))).sort((a, b) =>
         a.localeCompare(b, 'pt-BR'),
       ),
-    [pessoas],
+    [base],
   );
 
   const buscarLotacao = useCallback(
@@ -206,7 +216,7 @@ export function TerceirizadosTabela({
   const linhasVisiveis = useMemo(() => {
     const termo = normalizar(busca.trim());
     const termoLot = normalizar(filtroLotacao.trim());
-    let filtradas = pessoas;
+    let filtradas = base;
     if (termo) filtradas = filtradas.filter((p) => normalizar(p.nome).includes(termo));
     if (termoLot) filtradas = filtradas.filter((p) => normalizar(buscarLotacao(p)).includes(termoLot));
     if (!ordenacao) return filtradas;
@@ -228,12 +238,13 @@ export function TerceirizadosTabela({
       if (!fa || !fb) return fa ? -1 : fb ? 1 : 0;
       return fator * fa.localeCompare(fb);
     });
-  }, [pessoas, busca, filtroLotacao, ordenacao, buscarLotacao]);
+  }, [base, busca, filtroLotacao, ordenacao, buscarLotacao]);
 
   const totalPaginas = Math.max(1, Math.ceil(linhasVisiveis.length / LINHAS_POR_PAGINA));
   const paginaAtual = Math.min(pagina, totalPaginas - 1);
   const inicio = paginaAtual * LINHAS_POR_PAGINA;
   const linhas = linhasVisiveis.slice(inicio, inicio + LINHAS_POR_PAGINA);
+  const temBusca = Boolean(busca.trim() || filtroLotacao.trim());
 
   const colunasExport = useMemo<ColunaExport<TerceirizadoPessoa>[]>(
     () => [
@@ -263,166 +274,199 @@ export function TerceirizadosTabela({
   }
 
   return (
-    <Card>
+    <Card id="tabela-terceirizados" className="scroll-mt-4">
       <CardHeader>
-        <CardTitle className="text-base font-semibold">Terceirizados</CardTitle>
-        <CardDescription>
-          Um profissional por linha, com a unidade de lotação (até 3 níveis), o contrato de cessão de
-          mão de obra e o intervalo em que consta nos PDFs mensais do TSE.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <CampoFiltro
-            valor={busca}
-            aoMudar={(v) => {
-              setBusca(v);
-              setPagina(0);
-            }}
-            placeholder="Filtrar por nome…"
-            rotulo="Filtrar por nome"
-            icone={Search}
-          />
-          <CampoFiltro
-            valor={filtroLotacao}
-            aoMudar={(v) => {
-              setFiltroLotacao(v);
-              setPagina(0);
-            }}
-            placeholder="Filtrar por lotação…"
-            rotulo="Filtrar por lotação"
-            icone={MapPin}
-            listId={LISTA_LOTACOES_ID}
-          />
-          <datalist id={LISTA_LOTACOES_ID}>
-            {opcoesLotacao.map((o) => (
-              <option key={o} value={o} />
-            ))}
-          </datalist>
-          <BotaoExportar
-            linhas={linhasVisiveis}
-            colunas={colunasExport}
-            nomeArquivo="terceirizados"
-            nomeAba="Terceirizados"
-            className="sm:ml-auto"
-          />
-        </div>
-
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                <CabecalhoOrdenavel rotulo="Nome" campo="nome" ordenacao={ordenacao} onOrdenar={ordenarPor} />
-              </TableHead>
-              <TableHead>
-                <CabecalhoOrdenavel rotulo="Lotação" campo="lotacao" ordenacao={ordenacao} onOrdenar={ordenarPor} />
-              </TableHead>
-              <TableHead>Contrato</TableHead>
-              <TableHead>
-                <CabecalhoOrdenavel rotulo="Início" campo="inicio" ordenacao={ordenacao} onOrdenar={ordenarPor} />
-              </TableHead>
-              <TableHead>
-                <CabecalhoOrdenavel rotulo="Fim" campo="fim" ordenacao={ordenacao} onOrdenar={ordenarPor} />
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {linhas.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
-                  Nenhum terceirizado encontrado{busca ? ` para “${busca}”` : ''}
-                </TableCell>
-              </TableRow>
-            ) : (
-              linhas.map((p, i) => (
-                <TableRow key={`${p.nome}-${p.contrato}-${inicio + i}`}>
-                  <TableCell className="font-medium">{p.nome}</TableCell>
-                  <TableCell>
-                    {lotacaoTexto(p) ? (
-                      <span className="text-xs text-muted-foreground" title={p.lotacaoAlocacao || undefined}>
-                        {lotacaoTexto(p)}
-                      </span>
-                    ) : (
-                      <span
-                        className="text-xs text-amber-600 dark:text-amber-500"
-                        title={p.lotacaoAlocacao ? `Alocação no PDF: ${p.lotacaoAlocacao}` : 'Sem alocação no PDF'}
-                      >
-                        não identificada
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <button
-                      type="button"
-                      onClick={() => onVerContrato(p)}
-                      className="text-xs font-medium text-primary hover:underline"
-                      title="Ver detalhes do contrato"
-                    >
-                      {p.contrato || '—'}
-                    </button>
-                  </TableCell>
-                  <TableCell className="text-xs tabular-nums text-muted-foreground">
-                    {p.mesInicio ? mesAnoCurto(p.mesInicio) : '—'}
-                  </TableCell>
-                  <TableCell className="text-xs tabular-nums">
-                    {p.mesFim ? (
-                      <span className="text-muted-foreground">{mesAnoCurto(p.mesFim)}</span>
-                    ) : (
-                      <span className="rounded-sm bg-secondary px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-secondary-foreground">
-                        contratado
-                      </span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-        <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground md:hidden">
-          <MoveHorizontal className="h-3 w-3 shrink-0" aria-hidden />
-          Deslize a tabela para o lado para ver mais colunas
-        </p>
-
-        <div className="mt-4 flex items-center justify-between gap-4">
-          <p className="text-xs text-muted-foreground">
-            {linhasVisiveis.length === 0
-              ? `0 de ${numero(pessoas.length)}`
-              : `Exibindo ${numero(inicio + 1)}–${numero(inicio + linhas.length)} de ${numero(linhasVisiveis.length)}`}
-            {(busca.trim() || filtroLotacao.trim()) && linhasVisiveis.length !== pessoas.length && (
-              <> (filtrados de {numero(pessoas.length)})</>
-            )}
-            {pessoas.length !== totalGeral && <> · {numero(totalGeral)} no total</>}
-          </p>
-          <div className="flex items-center gap-1.5">
-            <BotaoPagina onClick={() => setPagina(0)} disabled={paginaAtual === 0} aria-label="Primeira página">
-              <ChevronsLeft className="h-4 w-4" aria-hidden />
-            </BotaoPagina>
-            <BotaoPagina
-              onClick={() => setPagina(paginaAtual - 1)}
-              disabled={paginaAtual === 0}
-              aria-label="Página anterior"
-            >
-              <ChevronLeft className="h-4 w-4" aria-hidden />
-            </BotaoPagina>
-            <span className="px-2 text-xs text-muted-foreground tabular-nums">
-              {numero(paginaAtual + 1)} / {numero(totalPaginas)}
-            </span>
-            <BotaoPagina
-              onClick={() => setPagina(paginaAtual + 1)}
-              disabled={paginaAtual >= totalPaginas - 1}
-              aria-label="Próxima página"
-            >
-              <ChevronRight className="h-4 w-4" aria-hidden />
-            </BotaoPagina>
-            <BotaoPagina
-              onClick={() => setPagina(totalPaginas - 1)}
-              disabled={paginaAtual >= totalPaginas - 1}
-              aria-label="Última página"
-            >
-              <ChevronsRight className="h-4 w-4" aria-hidden />
-            </BotaoPagina>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <CardTitle className="text-base font-semibold">Terceirizados</CardTitle>
+            <CardDescription>
+              Um profissional por linha, com a unidade de lotação (até 3 níveis), o contrato de cessão
+              de mão de obra e o intervalo em que consta nos PDFs mensais do TSE.
+            </CardDescription>
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <VigenteToggle
+              ligado={vigente}
+              onChange={(v) => {
+                onVigenteChange(v);
+                setPagina(0);
+              }}
+              titulo="Vigente: só quem ainda consta na listagem mais recente. Desligue para incluir quem já saiu."
+            />
+            <BotaoExportar
+              linhas={linhasVisiveis}
+              colunas={colunasExport}
+              nomeArquivo="terceirizados"
+              nomeAba="Terceirizados"
+            />
+            <ColapsarBotao colapsado={colapsado} onToggle={() => setColapsado((c) => !c)} rotulo="a tabela" />
           </div>
         </div>
+      </CardHeader>
+      <CardContent>
+        {colapsado ? (
+          <p className="text-sm text-muted-foreground">
+            {numero(base.length)} {vigente ? 'terceirizados vigentes' : 'terceirizados no total'}
+            {vigente && base.length !== pessoas.length && <> · {numero(pessoas.length)} no histórico</>}
+            {' — '}
+            <button
+              type="button"
+              onClick={() => setColapsado(false)}
+              className="font-medium text-primary hover:underline"
+            >
+              expandir
+            </button>
+          </p>
+        ) : (
+          <>
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <CampoFiltro
+                valor={busca}
+                aoMudar={(v) => {
+                  setBusca(v);
+                  setPagina(0);
+                }}
+                placeholder="Filtrar por nome…"
+                rotulo="Filtrar por nome"
+                icone={Search}
+              />
+              <CampoFiltro
+                valor={filtroLotacao}
+                aoMudar={(v) => {
+                  setFiltroLotacao(v);
+                  setPagina(0);
+                }}
+                placeholder="Filtrar por lotação…"
+                rotulo="Filtrar por lotação"
+                icone={MapPin}
+                listId={LISTA_LOTACOES_ID}
+              />
+              <datalist id={LISTA_LOTACOES_ID}>
+                {opcoesLotacao.map((o) => (
+                  <option key={o} value={o} />
+                ))}
+              </datalist>
+            </div>
+
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    <CabecalhoOrdenavel rotulo="Nome" campo="nome" ordenacao={ordenacao} onOrdenar={ordenarPor} />
+                  </TableHead>
+                  <TableHead>
+                    <CabecalhoOrdenavel rotulo="Lotação" campo="lotacao" ordenacao={ordenacao} onOrdenar={ordenarPor} />
+                  </TableHead>
+                  <TableHead>Contrato</TableHead>
+                  <TableHead>
+                    <CabecalhoOrdenavel rotulo="Início" campo="inicio" ordenacao={ordenacao} onOrdenar={ordenarPor} />
+                  </TableHead>
+                  <TableHead>
+                    <CabecalhoOrdenavel rotulo="Fim" campo="fim" ordenacao={ordenacao} onOrdenar={ordenarPor} />
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {linhas.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                      Nenhum terceirizado encontrado{busca ? ` para “${busca}”` : ''}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  linhas.map((p, i) => (
+                    <TableRow key={`${p.nome}-${p.contrato}-${inicio + i}`}>
+                      <TableCell className="font-medium">{p.nome}</TableCell>
+                      <TableCell>
+                        {lotacaoTexto(p) ? (
+                          <span className="text-xs text-muted-foreground" title={p.lotacaoAlocacao || undefined}>
+                            {lotacaoTexto(p)}
+                          </span>
+                        ) : (
+                          <span
+                            className="text-xs text-amber-600 dark:text-amber-500"
+                            title={p.lotacaoAlocacao ? `Alocação no PDF: ${p.lotacaoAlocacao}` : 'Sem alocação no PDF'}
+                          >
+                            não identificada
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <button
+                          type="button"
+                          onClick={() => onVerContrato(p)}
+                          className="text-xs font-medium text-primary hover:underline"
+                          title="Ver detalhes do contrato"
+                        >
+                          {p.contrato || '—'}
+                        </button>
+                      </TableCell>
+                      <TableCell className="text-xs tabular-nums text-muted-foreground">
+                        {p.mesInicio ? mesAnoCurto(p.mesInicio) : '—'}
+                      </TableCell>
+                      <TableCell className="text-xs tabular-nums">
+                        {p.mesFim ? (
+                          <span className="text-muted-foreground">{mesAnoCurto(p.mesFim)}</span>
+                        ) : (
+                          <span className="rounded-sm bg-secondary px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-secondary-foreground">
+                            contratado
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground md:hidden">
+              <MoveHorizontal className="h-3 w-3 shrink-0" aria-hidden />
+              Deslize a tabela para o lado para ver mais colunas
+            </p>
+
+            <div className="mt-4 flex items-center justify-between gap-4">
+              <p className="text-xs text-muted-foreground">
+                {linhasVisiveis.length === 0
+                  ? `0 de ${numero(base.length)}`
+                  : `Exibindo ${numero(inicio + 1)}–${numero(inicio + linhas.length)} de ${numero(linhasVisiveis.length)}`}
+                {temBusca && linhasVisiveis.length !== base.length && (
+                  <> (filtrados de {numero(base.length)})</>
+                )}
+                {vigente && base.length !== pessoas.length && (
+                  <> · {numero(pessoas.length)} no histórico</>
+                )}
+              </p>
+              <div className="flex items-center gap-1.5">
+                <BotaoPagina onClick={() => setPagina(0)} disabled={paginaAtual === 0} aria-label="Primeira página">
+                  <ChevronsLeft className="h-4 w-4" aria-hidden />
+                </BotaoPagina>
+                <BotaoPagina
+                  onClick={() => setPagina(paginaAtual - 1)}
+                  disabled={paginaAtual === 0}
+                  aria-label="Página anterior"
+                >
+                  <ChevronLeft className="h-4 w-4" aria-hidden />
+                </BotaoPagina>
+                <span className="px-2 text-xs text-muted-foreground tabular-nums">
+                  {numero(paginaAtual + 1)} / {numero(totalPaginas)}
+                </span>
+                <BotaoPagina
+                  onClick={() => setPagina(paginaAtual + 1)}
+                  disabled={paginaAtual >= totalPaginas - 1}
+                  aria-label="Próxima página"
+                >
+                  <ChevronRight className="h-4 w-4" aria-hidden />
+                </BotaoPagina>
+                <BotaoPagina
+                  onClick={() => setPagina(totalPaginas - 1)}
+                  disabled={paginaAtual >= totalPaginas - 1}
+                  aria-label="Última página"
+                >
+                  <ChevronsRight className="h-4 w-4" aria-hidden />
+                </BotaoPagina>
+              </div>
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

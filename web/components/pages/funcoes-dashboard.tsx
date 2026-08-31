@@ -70,8 +70,9 @@ export function FuncoesDashboard() {
   const [papeisSelecionados, setPapeisSelecionados] = useState<string[]>([]);
   // Toggle "Vigente" do filtro: quando ativo, só entram servidores com função
   // vigente hoje (funcaoAtual), e o casamento com os níveis selecionados
-  // ignora o histórico de mandatos.
-  const [somenteVigentes, setSomenteVigentes] = useState(false);
+  // ignora o histórico de mandatos. Regra do projeto: começa LIGADO (ver
+  // README, "Regra: filtro Vigente sempre ligado por padrão").
+  const [somenteVigentes, setSomenteVigentes] = useState(true);
 
   const servidoresFiltrados = useMemo(() => {
     const todosNiveis =
@@ -128,7 +129,7 @@ export function FuncoesDashboard() {
     {
       func: incluidos.escrever(todasFuncoes, funcoesSelecionadas),
       papeis: incluidos.escrever(todosPapeis, papeisSelecionados),
-      vig: bool.escrever(somenteVigentes, false),
+      vig: bool.escrever(somenteVigentes, true),
       // esquema antigo ("guardava os desmarcados"): limpa se aparecer num link
       func_off: null,
       papeis_off: null,
@@ -138,7 +139,7 @@ export function FuncoesDashboard() {
       if (f !== null) setFuncoesSelecionadas(incluidos.ler(todasFuncoes, f));
       const p = sp.get('papeis');
       if (p !== null) setPapeisSelecionados(incluidos.ler(todosPapeis, p));
-      setSomenteVigentes(bool.ler(sp.get('vig'), false));
+      setSomenteVigentes(bool.ler(sp.get('vig'), true));
     },
   );
 

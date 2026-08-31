@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ColapsarBotao } from '@/components/dashboard/card-controles';
 import {
   Table,
   TableBody,
@@ -60,14 +61,11 @@ export function TerceirizadosFalhasCard({ falhas }: { falhas: TerceirizadoFalha[
                 nomeAba="Falhas"
               />
             )}
-            <button
-              type="button"
-              onClick={() => setAberto((a) => !a)}
-              className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            >
-              {aberto ? 'Recolher' : 'Ver lista'}
-              {aberto ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-            </button>
+            <ColapsarBotao
+              colapsado={!aberto}
+              onToggle={() => setAberto((a) => !a)}
+              rotulo="a lista de falhas"
+            />
           </div>
         </div>
       </CardHeader>

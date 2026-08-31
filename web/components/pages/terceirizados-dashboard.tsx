@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   AlertTriangle,
+  ArrowDown,
   ArrowLeft,
   ArrowUpRight,
   Briefcase,
@@ -15,23 +16,25 @@ import {
   UserMinus,
   Users,
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/dashboard/stat-card';
+import { ContagemDonut, type FatiaContagem } from '@/components/dashboard/contagem-donut';
 import { TerceirizadosTabela } from '@/components/dashboard/terceirizados-tabela';
 import { TerceirizadosContratosCard } from '@/components/dashboard/terceirizados-contratos-card';
 import { TerceirizadosFalhasCard } from '@/components/dashboard/terceirizados-falhas-card';
 import { DetalhesContratoDialog } from '@/components/dashboard/detalhes-contrato-dialog';
 import { DadosStatus } from '@/components/dashboard/dados-status';
 import { DicaTermo } from '@/components/ui/dica-termo';
-import { PillToggle } from '@/components/ui/pill-toggle';
 import { AppVersion } from '@/components/app-version';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
+import { bool } from '@/lib/url-filtros';
 import { mesAnoLongo, numero } from '@/lib/utils';
 import { urlTerceirizados, type ContratoResumo, type TerceirizadoPessoa } from '@/lib/dashboard-data';
 
-type Situacao = 'ativos' | 'encerrados' | 'todos';
+const MAX_FATIAS_CONTRATO = 5;
 
 interface ModalContrato {
   numero: string;
@@ -52,15 +55,15 @@ export function TerceirizadosDashboard() {
   const estado = useDadosDashboard();
   const { terceirizados: t, contratos } = estado.dados;
 
-  const [situacao, setSituacao] = useState<Situacao>('ativos');
   const [modal, setModal] = useState<ModalContrato | null>(null);
+  // Filtro Vigente da tabela de terceirizados, controlado aqui para o KPI
+  // "Terceirizados ativos" poder garantir que ele fique LIGADO ao rolar até a
+  // tabela. Regra do projeto: começa ligado (ver README).
+  const [vigenteTerc, setVigenteTerc] = useState(true);
 
   useSincronizarUrl(
-    { sit: situacao === 'ativos' ? undefined : situacao },
-    (sp) => {
-      const s = sp.get('sit');
-      if (s === 'encerrados' || s === 'todos') setSituacao(s);
-    },
+    { vig: bool.escrever(vigenteTerc, true) },
+    (sp) => setVigenteTerc(bool.ler(sp.get('vig'), true)),
   );
 
   const contratoPorId = useMemo(
@@ -73,14 +76,31 @@ export function TerceirizadosDashboard() {
     return m;
   }, [t.porContrato]);
 
-  const pessoasFiltradas = useMemo(() => {
-    if (situacao === 'ativos') return t.pessoas.filter((p) => p.ativo);
-    if (situacao === 'encerrados') return t.pessoas.filter((p) => !p.ativo);
-    return t.pessoas;
-  }, [t.pessoas, situacao]);
+  // Rosca do KPI "Terceirizados ativos": ativos agrupados por contrato de
+  // cessão, top 5 + "Outros".
+  const fatiasAtivosPorContrato = useMemo<FatiaContagem[]>(() => {
+    const comAtivos = t.porContrato
+      .filter((c) => c.ativos > 0)
+      .sort((a, b) => b.ativos - a.ativos);
+    const fatias: FatiaContagem[] = comAtivos
+      .slice(0, MAX_FATIAS_CONTRATO)
+      .map((c) => ({ rotulo: c.contrato, quantidade: c.ativos }));
+    const resto = comAtivos.slice(MAX_FATIAS_CONTRATO);
+    if (resto.length) {
+      fatias.push({ rotulo: 'Outros', quantidade: resto.reduce((s, c) => s + c.ativos, 0) });
+    }
+    return fatias;
+  }, [t.porContrato]);
 
-  const contratosVinculados = t.porContrato.filter((c) => c.contratoId != null).length;
+  const contratosComAtivos = t.porContrato.filter((c) => c.ativos > 0).length;
   const semHistoricoUtil = t.historicoMeses <= 1;
+
+  function irParaTabela() {
+    setVigenteTerc(true);
+    requestAnimationFrame(() =>
+      document.getElementById('tabela-terceirizados')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
+  }
 
   function abrirContratoDePessoa(p: TerceirizadoPessoa) {
     setModal({
@@ -141,13 +161,39 @@ export function TerceirizadosDashboard() {
       </header>
 
       <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            titulo="Terceirizados ativos"
-            valor={numero(t.ativos)}
-            detalhe={t.competenciaAtual ? `na listagem de ${rotuloCompetencia}` : 'sem histórico disponível'}
-            icone={<HardHat className="h-4 w-4" aria-hidden />}
-          />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <Card className="transition-colors duration-200 sm:col-span-2 lg:col-span-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-muted-foreground">Terceirizados ativos</CardTitle>
+              <HardHat className="h-4 w-4 text-muted-foreground" aria-hidden />
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-1">
+              {fatiasAtivosPorContrato.length > 0 ? (
+                <ContagemDonut
+                  fatias={fatiasAtivosPorContrato}
+                  unidadeSingular="terceirizado"
+                  unidadePlural="terceirizados"
+                />
+              ) : (
+                <div className="py-4 text-center">
+                  <div className="text-3xl font-semibold tabular-nums">{numero(t.ativos)}</div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {t.competenciaAtual ? `na listagem de ${rotuloCompetencia}` : 'sem histórico disponível'}
+                  </p>
+                </div>
+              )}
+              <p className="text-center text-xs text-muted-foreground">
+                por contrato de cessão{t.competenciaAtual ? ` · ${rotuloCompetencia}` : ''}
+              </p>
+              <button
+                type="button"
+                onClick={irParaTabela}
+                className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                Ver na tabela (Vigente) <ArrowDown className="h-3 w-3" aria-hidden />
+              </button>
+            </CardContent>
+          </Card>
           <StatCard
             titulo={
               <span className="inline-flex items-center gap-1">
@@ -161,7 +207,7 @@ export function TerceirizadosDashboard() {
           <StatCard
             titulo="Contratos de cessão"
             valor={numero(t.contratos)}
-            detalhe={`${numero(contratosVinculados)} vinculados ao Compras.gov.br`}
+            detalhe={`${numero(contratosComAtivos)} com terceirizado ativo hoje`}
             icone={<FileText className="h-4 w-4" aria-hidden />}
           />
           <StatCard
@@ -185,31 +231,22 @@ export function TerceirizadosDashboard() {
           </p>
         )}
 
-        <TerceirizadosContratosCard contratos={t.porContrato} onVerContrato={(c) =>
-          setModal({
-            numero: c.contrato,
-            contrato: c.contratoId ? contratoPorId.get(c.contratoId) ?? null : null,
-            empresa: c.empresa || c.fornecedor || '',
-            qtde: c.total,
-          })
-        } />
-
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium">Situação:</span>
-          <PillToggle pressionado={situacao === 'ativos'} onClick={() => setSituacao('ativos')}>
-            Ativos ({numero(t.ativos)})
-          </PillToggle>
-          <PillToggle pressionado={situacao === 'encerrados'} onClick={() => setSituacao('encerrados')}>
-            Encerrados ({numero(t.encerrados)})
-          </PillToggle>
-          <PillToggle pressionado={situacao === 'todos'} onClick={() => setSituacao('todos')}>
-            Todos ({numero(t.totalPessoas)})
-          </PillToggle>
-        </div>
+        <TerceirizadosContratosCard
+          contratos={t.porContrato}
+          onVerContrato={(c) =>
+            setModal({
+              numero: c.contrato,
+              contrato: c.contratoId ? contratoPorId.get(c.contratoId) ?? null : null,
+              empresa: c.empresa || c.fornecedor || '',
+              qtde: c.total,
+            })
+          }
+        />
 
         <TerceirizadosTabela
-          pessoas={pessoasFiltradas}
-          totalGeral={t.totalPessoas}
+          pessoas={t.pessoas}
+          vigente={vigenteTerc}
+          onVigenteChange={setVigenteTerc}
           onVerContrato={abrirContratoDePessoa}
         />
 
