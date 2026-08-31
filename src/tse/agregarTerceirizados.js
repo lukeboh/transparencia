@@ -389,19 +389,25 @@ function agregarTerceirizados(entradaTerceirizados, arvoreUnidades = null, contr
 
   const ativos = pessoas.filter((p) => p.ativo).length;
   const usadas = new Set(chavesUsadas);
-  const rotuloPorChave = new Map(competencias.map((c) => [c.chave, c.rotulo ?? c.chave]));
+  const infoPorChave = new Map(competencias.map((c) => [c.chave, c]));
+  const meta = (chave) => {
+    const c = infoPorChave.get(chave);
+    return {
+      chave,
+      rotulo: c?.rotulo ?? chave,
+      mes: c?.mes ?? null,
+      ano: c?.ano ?? null,
+      /** URL do PDF mensal do TSE dessa competência (para auditar as falhas). */
+      arquivoUrl: c?.arquivoUrl ?? null,
+    };
+  };
   const descOrdenadas = [...competenciasDescartadas].sort();
   return {
-    competencias: competencias
-      .filter((c) => usadas.has(c.chave))
-      .map((c) => ({ chave: c.chave, rotulo: c.rotulo ?? c.chave, mes: c.mes ?? null, ano: c.ano ?? null })),
+    competencias: competencias.filter((c) => usadas.has(c.chave)).map((c) => meta(c.chave)),
     competenciaAtual: competenciaAtualUsada,
     historicoMeses: semHistorico ? 0 : chavesUsadas.length,
     /** Competências ignoradas por falha estrutural de extração do PDF (colunas mapeadas errado). */
-    competenciasDescartadas: descOrdenadas.map((chave) => ({
-      chave,
-      rotulo: rotuloPorChave.get(chave) ?? chave,
-    })),
+    competenciasDescartadas: descOrdenadas.map(meta),
     totalPessoas: pessoas.length,
     ativos,
     encerrados: pessoas.length - ativos,

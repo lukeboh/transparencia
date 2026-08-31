@@ -357,6 +357,8 @@ export interface CompetenciaTerceirizados {
   rotulo: string;
   mes: number | null;
   ano: number | null;
+  /** URL do PDF mensal do TSE dessa competência — para auditar uma falha na fonte. null se a fonte não trouxe. */
+  arquivoUrl: string | null;
 }
 
 export interface TerceirizadoPessoa {
@@ -420,7 +422,7 @@ export interface TerceirizadosData {
   /** competencias.length — quando 1, "mês de fim" ainda não é observável. */
   historicoMeses: number;
   /** Competências ignoradas por falha estrutural de extração do PDF (colunas mapeadas errado no OCR). */
-  competenciasDescartadas: { chave: string; rotulo: string }[];
+  competenciasDescartadas: CompetenciaTerceirizados[];
   totalPessoas: number;
   ativos: number;
   encerrados: number;

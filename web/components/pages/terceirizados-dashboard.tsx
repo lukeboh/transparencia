@@ -322,8 +322,25 @@ export function TerceirizadosDashboard() {
             {t.competenciasDescartadas.length} competência
             {t.competenciasDescartadas.length === 1 ? '' : 's'} descartada
             {t.competenciasDescartadas.length === 1 ? '' : 's'} por falha de extração do PDF (colunas
-            mapeadas errado no OCR): {t.competenciasDescartadas.map((c) => c.rotulo).join(', ')}. Não
-            entram no cálculo de mês de início/fim.
+            mapeadas errado no OCR):{' '}
+            {t.competenciasDescartadas.map((c, i) => (
+              <span key={c.chave}>
+                {i > 0 && ', '}
+                {c.arquivoUrl ? (
+                  <a
+                    href={c.arquivoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {c.rotulo}
+                  </a>
+                ) : (
+                  c.rotulo
+                )}
+              </span>
+            ))}
+            . Não entram no cálculo de mês de início/fim.
           </p>
         )}
 
@@ -336,7 +353,7 @@ export function TerceirizadosDashboard() {
           onVerContrato={abrirContratoDePessoa}
         />
 
-        <TerceirizadosFalhasCard falhas={t.falhas} />
+        <TerceirizadosFalhasCard falhas={t.falhas} competencias={t.competencias} />
       </div>
 
       <footer className="mt-8 text-xs text-muted-foreground">
