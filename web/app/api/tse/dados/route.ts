@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 // Pipeline compartilhado com os scripts CLI (fora de web/): o scrape roda no
 // servidor do app porque a fonte não envia CORS nem expõe o cookie/CSRF a
 // outros domínios — o navegador não conseguiria fazê-lo diretamente.
@@ -18,6 +19,30 @@ export const dynamic = 'force-dynamic';
 const TTL_MS = 6 * 60 * 60 * 1000; // idade máxima antes de re-scrape automático
 const INTERVALO_ERRO_MS = 10 * 60 * 1000; // espera após falha antes de tentar de novo
 const ARQUIVO_CACHE = path.join(process.cwd(), '.cache', 'tse-dados.json');
+
+// Terceirizados é a única fonte que NÃO é raspada aqui: vem de um PDF mensal do
+// TSE, atualizado à mão por `npm run tse:scrape-terceirizados` e versionado em
+// data/tse_terceirizados.json. O rebuild em runtime só precisa reler esse
+// arquivo e repassá-lo ao agregador — senão a contagem de terceirizados por
+// unidade zera assim que o dado "da fonte" substitui o snapshot embutido.
+const CANDIDATOS_TERCEIRIZADOS = [
+  path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../../data/tse_terceirizados.json'),
+  path.join(process.cwd(), '..', 'data', 'tse_terceirizados.json'),
+  path.join(process.cwd(), 'data', 'tse_terceirizados.json'),
+];
+
+async function carregarTerceirizados(): Promise<{ registros: unknown[]; competencia: string | null }> {
+  for (const arq of CANDIDATOS_TERCEIRIZADOS) {
+    try {
+      const t = JSON.parse(await fs.readFile(arq, 'utf8'));
+      const registros = Array.isArray(t) ? t : (t?.registros ?? []);
+      return { registros, competencia: t?.competencia?.rotulo ?? null };
+    } catch {
+      // tenta o próximo caminho
+    }
+  }
+  return { registros: [], competencia: null };
+}
 
 interface Progresso {
   // 'agentes' é a fonte primária (relação atual de agentes públicos) — uma
@@ -113,6 +138,14 @@ async function carregarDoDisco(e: EstadoCache) {
   } catch {
     // sem cache em disco: o cliente segue com o snapshot embutido no bundle
   }
+
+  // Cache gravado antes de existir a contagem de terceirizados: descarta só o
+  // `dados` já agregado (mantém os *Brutos* p/ o rebuild ser rápido). Enquanto
+  // o rebuild não termina o cliente usa o snapshot embutido, que já tem
+  // terceirizados — melhor do que servir uma versão com tudo zerado.
+  if (e.dados?.unidades && !('terceirizadosCompetencia' in e.dados.unidades)) {
+    e.dados = null;
+  }
 }
 
 function deveAtualizar(e: EstadoCache) {
@@ -179,7 +212,17 @@ function iniciarAtualizacao(e: EstadoCache) {
       e.progresso = { fase: 'teletrabalho', feitos: 1, total: 1 };
 
       const excecoes = carregarExcecoes();
-      e.dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos, excecoes, teletrabalho, unidadesArvore) as DashboardData;
+      const terceirizados = await carregarTerceirizados();
+      e.dados = agregarDashboard(
+        contratos,
+        movimentosFuncoes,
+        agentesPublicos,
+        excecoes,
+        teletrabalho,
+        unidadesArvore,
+        terceirizados.registros,
+      ) as DashboardData;
+      if (e.dados.unidades) e.dados.unidades.terceirizadosCompetencia = terceirizados.competencia;
       await fs.mkdir(path.dirname(ARQUIVO_CACHE), { recursive: true });
       const persistido: CachePersistido = {
         dados: e.dados,

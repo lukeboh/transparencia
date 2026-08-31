@@ -22,6 +22,7 @@ declare module '*src/tse/agregarDashboard.js' {
     excecoes?: unknown[],
     movimentosTeletrabalho?: unknown[],
     arvoreUnidades?: unknown,
+    terceirizados?: unknown[],
   ): unknown;
 }
 
