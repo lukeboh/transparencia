@@ -10,6 +10,10 @@ export interface FatiaContagem {
   quantidade: number;
   /** Cor explícita da fatia — sobrepõe o ciclo de cores por índice (usado quando cada rótulo já tem uma cor fixa de domínio, ex.: faixas de valor). */
   cor?: string;
+  /** Linha secundária na legenda (ex.: nome da empresa contratada). */
+  sub?: string;
+  /** Carga opaca devolvida em onSelecionar (ex.: o objeto do contrato). */
+  meta?: unknown;
 }
 
 // Mesma paleta categórica de 5 slots + cinza de de-ênfase usada em
@@ -34,14 +38,20 @@ function ContagemTooltip({
   payload,
   unidadeSingular,
   unidadePlural,
-}: TooltipProps<number, string> & { unidadeSingular: string; unidadePlural: string }) {
+  formatar,
+}: TooltipProps<number, string> & {
+  unidadeSingular: string;
+  unidadePlural: string;
+  formatar: (n: number) => string;
+}) {
   if (!active || !payload?.length) return null;
   const fatia = payload[0].payload as FatiaContagem;
   return (
     <div className="rounded-md border border-border bg-popover px-2.5 py-1.5 text-popover-foreground shadow-md text-xs">
-      <span className="font-semibold">{fatia.rotulo}</span>{' '}
+      <span className="font-semibold">{fatia.rotulo}</span>
+      {fatia.sub && <span className="text-muted-foreground/80"> · {fatia.sub}</span>}{' '}
       <span className="text-muted-foreground">
-        · {numero(fatia.quantidade)} {fatia.quantidade === 1 ? unidadeSingular : unidadePlural}
+        · {formatar(fatia.quantidade)} {fatia.quantidade === 1 ? unidadeSingular : unidadePlural}
       </span>
     </div>
   );
@@ -58,15 +68,23 @@ export function ContagemDonut({
   tamanho = 168,
   unidadeSingular = 'servidor',
   unidadePlural = 'servidores',
+  formatar = numero,
+  onSelecionar,
 }: {
   fatias: FatiaContagem[];
   tamanho?: number;
   /** Nome da unidade contada, para o rótulo central e o tooltip (ex.: "contrato"/"contratos"). */
   unidadeSingular?: string;
   unidadePlural?: string;
+  /** Formata `quantidade` no centro, legenda e tooltip. Default: inteiro com separador. Para donut de valor: `brlCompacto`. */
+  formatar?: (n: number) => string;
+  /** Se informado, clicar numa fatia ou item da legenda chama isto. */
+  onSelecionar?: (fatia: FatiaContagem, index: number) => void;
 }) {
   const [ativa, setAtiva] = useState<number | undefined>(undefined);
   const total = fatias.reduce((s, f) => s + f.quantidade, 0);
+  const comSub = fatias.some((f) => f.sub);
+  const clicavel = (f: FatiaContagem) => Boolean(onSelecionar && f.meta !== undefined);
 
   if (total === 0) {
     return <p className="py-4 text-center text-xs text-muted-foreground">Nenhum {unidadeSingular} no filtro atual.</p>;
@@ -78,7 +96,13 @@ export function ContagemDonut({
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Tooltip
-              content={<ContagemTooltip unidadeSingular={unidadeSingular} unidadePlural={unidadePlural} />}
+              content={
+                <ContagemTooltip
+                  unidadeSingular={unidadeSingular}
+                  unidadePlural={unidadePlural}
+                  formatar={formatar}
+                />
+              }
               allowEscapeViewBox={{ x: true, y: true }}
               wrapperStyle={{ zIndex: 20 }}
             />
@@ -96,6 +120,11 @@ export function ContagemDonut({
               activeShape={FatiaAtiva}
               onMouseEnter={(_, index) => setAtiva(index)}
               onMouseLeave={() => setAtiva(undefined)}
+              onClick={(_, index) => {
+                const f = fatias[index];
+                if (f && clicavel(f)) onSelecionar?.(f, index);
+              }}
+              className={onSelecionar ? '[&_.recharts-sector]:cursor-pointer' : undefined}
               isAnimationActive={false}
             >
               {fatias.map((fatia, index) => (
@@ -105,29 +134,47 @@ export function ContagemDonut({
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-semibold tabular-nums">{numero(total)}</span>
+          <span className="text-xl font-semibold tabular-nums">{formatar(total)}</span>
           <span className="text-[10px] text-muted-foreground">{unidadePlural}</span>
         </div>
       </div>
-      <ul className="flex flex-wrap justify-center gap-x-2 gap-y-0.5" aria-label="Legenda">
-        {fatias.map((fatia, index) => (
-          <li
-            key={fatia.rotulo}
-            onMouseEnter={() => setAtiva(index)}
-            onMouseLeave={() => setAtiva(undefined)}
-            className="flex items-center gap-1 text-[10px] text-muted-foreground"
-          >
-            <span
-              aria-hidden
-              className="h-1.5 w-1.5 shrink-0 rounded-[2px]"
-              style={{ backgroundColor: corFatia(fatia, index) }}
-            />
-            <span className="max-w-[140px] truncate" title={fatia.rotulo}>
-              {fatia.rotulo}
-            </span>{' '}
-            ({numero(fatia.quantidade)})
-          </li>
-        ))}
+      <ul
+        className={
+          comSub
+            ? 'flex w-full flex-col gap-0.5'
+            : 'flex flex-wrap justify-center gap-x-2 gap-y-0.5'
+        }
+        aria-label="Legenda"
+      >
+        {fatias.map((fatia, index) => {
+          const podeClicar = clicavel(fatia);
+          return (
+            <li
+              key={fatia.rotulo}
+              onMouseEnter={() => setAtiva(index)}
+              onMouseLeave={() => setAtiva(undefined)}
+              onClick={podeClicar ? () => onSelecionar?.(fatia, index) : undefined}
+              className={[
+                'flex items-center gap-1 text-[10px] text-muted-foreground',
+                podeClicar ? 'cursor-pointer rounded-sm px-1 -mx-1 hover:bg-accent hover:text-accent-foreground' : '',
+              ].join(' ')}
+            >
+              <span
+                aria-hidden
+                className="h-1.5 w-1.5 shrink-0 rounded-[2px]"
+                style={{ backgroundColor: corFatia(fatia, index) }}
+              />
+              <span
+                className={comSub ? 'min-w-0 flex-1 truncate' : 'max-w-[140px] truncate'}
+                title={fatia.sub ? `${fatia.rotulo} · ${fatia.sub}` : fatia.rotulo}
+              >
+                <span className="font-medium text-foreground/80">{fatia.rotulo}</span>
+                {fatia.sub && <span className="text-muted-foreground/70"> · {fatia.sub}</span>}
+              </span>{' '}
+              <span className="shrink-0 tabular-nums">({formatar(fatia.quantidade)})</span>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

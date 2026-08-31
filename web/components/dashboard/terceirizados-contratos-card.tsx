@@ -173,7 +173,7 @@ export function TerceirizadosContratosCard({
   const temFiltro = Boolean(filtroEmpresa.trim());
 
   return (
-    <Card>
+    <Card id="contratos-cessao" className="scroll-mt-4">
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">

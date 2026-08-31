@@ -31,10 +31,23 @@ import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
 import { bool } from '@/lib/url-filtros';
-import { mesAnoLongo, numero } from '@/lib/utils';
-import { urlTerceirizados, type ContratoResumo, type TerceirizadoPessoa } from '@/lib/dashboard-data';
+import { brlCompacto, mesAnoLongo, numero } from '@/lib/utils';
+import {
+  urlTerceirizados,
+  type ContratoResumo,
+  type ContratoTerceirizados,
+  type TerceirizadoPessoa,
+} from '@/lib/dashboard-data';
 
-const MAX_FATIAS_CONTRATO = 5;
+// Rosca "Terceirizados ativos": os N contratos de cessão mais volumosos, o
+// resto somado em "Outros".
+const MAX_FATIAS_CONTRATO = 10;
+
+/** Nome da contratada para a legenda: prefere o do PDF; senão o do Comprasnet sem o CNPJ na frente. */
+function nomeEmpresa(c: ContratoTerceirizados) {
+  const doComprasnet = (c.fornecedor ?? '').replace(/^\s*[\d./-]+\s*-\s*/, '').trim();
+  return c.empresa || doComprasnet || '—';
+}
 
 interface ModalContrato {
   numero: string;
@@ -77,17 +90,42 @@ export function TerceirizadosDashboard() {
   }, [t.porContrato]);
 
   // Rosca do KPI "Terceirizados ativos": ativos agrupados por contrato de
-  // cessão, top 5 + "Outros".
+  // cessão, os 10 mais volumosos + "Outros". Cada fatia leva o objeto do
+  // contrato em `meta` para abrir o modal "Detalhes do Contrato" no clique.
   const fatiasAtivosPorContrato = useMemo<FatiaContagem[]>(() => {
     const comAtivos = t.porContrato
       .filter((c) => c.ativos > 0)
       .sort((a, b) => b.ativos - a.ativos);
     const fatias: FatiaContagem[] = comAtivos
       .slice(0, MAX_FATIAS_CONTRATO)
-      .map((c) => ({ rotulo: c.contrato, quantidade: c.ativos }));
+      .map((c) => ({ rotulo: c.contrato, quantidade: c.ativos, sub: nomeEmpresa(c), meta: c }));
     const resto = comAtivos.slice(MAX_FATIAS_CONTRATO);
     if (resto.length) {
-      fatias.push({ rotulo: 'Outros', quantidade: resto.reduce((s, c) => s + c.ativos, 0) });
+      fatias.push({
+        rotulo: 'Outros',
+        quantidade: resto.reduce((s, c) => s + c.ativos, 0),
+        sub: `${resto.length} contrato${resto.length === 1 ? '' : 's'}`,
+      });
+    }
+    return fatias;
+  }, [t.porContrato]);
+
+  // Rosca do KPI "Contratos de cessão": os 10 contratos de maior valor global
+  // + "Outros". Mesma mecânica de clique → modal "Detalhes do Contrato".
+  const fatiasValorPorContrato = useMemo<FatiaContagem[]>(() => {
+    const comValor = t.porContrato
+      .filter((c) => (c.valorGlobal ?? 0) > 0)
+      .sort((a, b) => (b.valorGlobal ?? 0) - (a.valorGlobal ?? 0));
+    const fatias: FatiaContagem[] = comValor
+      .slice(0, MAX_FATIAS_CONTRATO)
+      .map((c) => ({ rotulo: c.contrato, quantidade: c.valorGlobal ?? 0, sub: nomeEmpresa(c), meta: c }));
+    const resto = comValor.slice(MAX_FATIAS_CONTRATO);
+    if (resto.length) {
+      fatias.push({
+        rotulo: 'Outros',
+        quantidade: resto.reduce((s, c) => s + (c.valorGlobal ?? 0), 0),
+        sub: `${resto.length} contrato${resto.length === 1 ? '' : 's'}`,
+      });
     }
     return fatias;
   }, [t.porContrato]);
@@ -102,12 +140,25 @@ export function TerceirizadosDashboard() {
     );
   }
 
+  function irParaContratos() {
+    document.getElementById('contratos-cessao')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function abrirContratoDePessoa(p: TerceirizadoPessoa) {
     setModal({
       numero: p.contrato,
       contrato: p.contratoId ? contratoPorId.get(p.contratoId) ?? null : null,
       empresa: p.empresa,
       qtde: qtdePorContrato.get(p.contrato) ?? 0,
+    });
+  }
+
+  function abrirModalContrato(c: ContratoTerceirizados) {
+    setModal({
+      numero: c.contrato,
+      contrato: c.contratoId ? contratoPorId.get(c.contratoId) ?? null : null,
+      empresa: c.empresa || c.fornecedor || '',
+      qtde: c.total,
     });
   }
 
@@ -161,7 +212,7 @@ export function TerceirizadosDashboard() {
       </header>
 
       <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
           <Card className="transition-colors duration-200 sm:col-span-2 lg:col-span-2">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-muted-foreground">Terceirizados ativos</CardTitle>
@@ -173,6 +224,10 @@ export function TerceirizadosDashboard() {
                   fatias={fatiasAtivosPorContrato}
                   unidadeSingular="terceirizado"
                   unidadePlural="terceirizados"
+                  onSelecionar={(f) => {
+                    const c = f.meta as ContratoTerceirizados | undefined;
+                    if (c) abrirModalContrato(c);
+                  }}
                 />
               ) : (
                 <div className="py-4 text-center">
@@ -194,6 +249,43 @@ export function TerceirizadosDashboard() {
               </button>
             </CardContent>
           </Card>
+
+          <Card className="transition-colors duration-200 sm:col-span-2 lg:col-span-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-muted-foreground">Contratos de cessão</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" aria-hidden />
+            </CardHeader>
+            <CardContent className="flex flex-col items-center gap-1">
+              {fatiasValorPorContrato.length > 0 ? (
+                <ContagemDonut
+                  fatias={fatiasValorPorContrato}
+                  unidadeSingular="valor global"
+                  unidadePlural="valor global"
+                  formatar={brlCompacto}
+                  onSelecionar={(f) => {
+                    const c = f.meta as ContratoTerceirizados | undefined;
+                    if (c) abrirModalContrato(c);
+                  }}
+                />
+              ) : (
+                <div className="py-4 text-center">
+                  <div className="text-3xl font-semibold tabular-nums">{numero(t.contratos)}</div>
+                  <p className="mt-1 text-xs text-muted-foreground">contratos de cessão</p>
+                </div>
+              )}
+              <p className="text-center text-xs text-muted-foreground">
+                {numero(t.contratos)} contratos · {numero(contratosComAtivos)} com terceirizado ativo
+              </p>
+              <button
+                type="button"
+                onClick={irParaContratos}
+                className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                Ver a lista de contratos <ArrowDown className="h-3 w-3" aria-hidden />
+              </button>
+            </CardContent>
+          </Card>
+
           <StatCard
             titulo={
               <span className="inline-flex items-center gap-1">
@@ -203,12 +295,6 @@ export function TerceirizadosDashboard() {
             valor={numero(t.encerrados)}
             detalhe={semHistoricoUtil ? 'requer +1 mês de histórico' : 'com mês de fim registrado'}
             icone={<UserMinus className="h-4 w-4" aria-hidden />}
-          />
-          <StatCard
-            titulo="Contratos de cessão"
-            valor={numero(t.contratos)}
-            detalhe={`${numero(contratosComAtivos)} com terceirizado ativo hoje`}
-            icone={<FileText className="h-4 w-4" aria-hidden />}
           />
           <StatCard
             titulo={
@@ -241,17 +327,7 @@ export function TerceirizadosDashboard() {
           </p>
         )}
 
-        <TerceirizadosContratosCard
-          contratos={t.porContrato}
-          onVerContrato={(c) =>
-            setModal({
-              numero: c.contrato,
-              contrato: c.contratoId ? contratoPorId.get(c.contratoId) ?? null : null,
-              empresa: c.empresa || c.fornecedor || '',
-              qtde: c.total,
-            })
-          }
-        />
+        <TerceirizadosContratosCard contratos={t.porContrato} onVerContrato={abrirModalContrato} />
 
         <TerceirizadosTabela
           pessoas={t.pessoas}
