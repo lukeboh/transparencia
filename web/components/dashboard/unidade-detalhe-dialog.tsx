@@ -21,12 +21,14 @@ function BlocoMetricas({
   legenda,
   metricas,
   totalServidoresTSE,
+  totalTerceirizadosTSE,
   onVerNomes,
 }: {
   titulo: string;
   legenda: string;
   metricas: UnidadeMetricas;
   totalServidoresTSE: number;
+  totalTerceirizadosTSE: number;
   onVerNomes?: () => void;
 }) {
   return (
@@ -73,8 +75,8 @@ function BlocoMetricas({
                 ver nomes
               </button>
             )}
-            <span className="font-medium tabular-nums" title="Estimado do PDF mensal do TSE">
-              {numero(metricas.terceirizados)} · {percentual(metricas.terceirizados, metricas.servidores)}% dos servidores
+            <span className="font-medium tabular-nums" title="Parcela do total de terceirizados do TSE">
+              {numero(metricas.terceirizados)} · {percentual(metricas.terceirizados, totalTerceirizadosTSE)}% dos terceirizados do TSE
             </span>
           </dd>
         </div>
@@ -93,6 +95,7 @@ export function UnidadeDetalheDialog({
   caminho,
   categoriaRotulo,
   totalServidoresTSE,
+  totalTerceirizadosTSE,
   onVerTerceirizados,
   open,
   onClose,
@@ -102,6 +105,7 @@ export function UnidadeDetalheDialog({
   caminho: string[];
   categoriaRotulo?: string;
   totalServidoresTSE: number;
+  totalTerceirizadosTSE: number;
   /** Abre a modal de nomes de terceirizados — `consolidar` = incluir a subárvore. Ausente = sem o botão "ver nomes". */
   onVerTerceirizados?: (consolidar: boolean) => void;
   open: boolean;
@@ -137,6 +141,7 @@ export function UnidadeDetalheDialog({
             legenda="quem está lotado exatamente aqui"
             metricas={node.direto}
             totalServidoresTSE={totalServidoresTSE}
+            totalTerceirizadosTSE={totalTerceirizadosTSE}
             onVerNomes={onVerTerceirizados ? () => onVerTerceirizados(false) : undefined}
           />
           <BlocoMetricas
@@ -148,6 +153,7 @@ export function UnidadeDetalheDialog({
             }
             metricas={node.consolidado}
             totalServidoresTSE={totalServidoresTSE}
+            totalTerceirizadosTSE={totalTerceirizadosTSE}
             onVerNomes={onVerTerceirizados ? () => onVerTerceirizados(true) : undefined}
           />
         </div>
@@ -164,10 +170,10 @@ export function UnidadeDetalheDialog({
 
       <div className="flex flex-col gap-2 border-t border-border p-3 text-xs text-muted-foreground">
         Percentuais de servidores, funções, fiscais e teletrabalho são sobre o total de servidores do
-        TSE; o de terceirizados é sobre os servidores da própria unidade (pode passar de 100%). Tudo
-        vem de cruzamento por nome/sigla de unidade entre a estrutura oficial e as relações de agentes
-        públicos, teletrabalho, fiscais de contrato e o PDF mensal de terceirizados — pequenas
-        divergências de grafia entre as fontes podem deslocar alguns registros.
+        TSE; o de terceirizados é a parcela do total de terceirizados do TSE que está nesta unidade
+        (soma 100% na raiz). Tudo vem de cruzamento por nome/sigla de unidade entre a estrutura oficial
+        e as relações de agentes públicos, teletrabalho, fiscais de contrato e o PDF mensal de
+        terceirizados — pequenas divergências de grafia entre as fontes podem deslocar alguns registros.
         <div className="flex flex-wrap gap-2">
           <BotaoFonteExterna
             href={urlUnidadeDetalhe(node.id)}

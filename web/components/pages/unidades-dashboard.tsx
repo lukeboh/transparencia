@@ -177,8 +177,8 @@ export function UnidadesDashboard() {
         {unidades.terceirizadosCompetencia ? ` (competência ${unidades.terceirizadosCompetencia})` : ''}. Cada
         posto é ligado à unidade pela sigla da coluna &ldquo;Alocação&rdquo;; como o arquivo é um PDF escaneado,
         alguns registros não são localizados e o total por unidade é aproximado. Não são servidores públicos —
-        entram numa contagem à parte, e o percentual mostrado é sobre os servidores da própria unidade (pode
-        passar de 100% em unidades de vigilância, limpeza ou obras).
+        entram numa contagem à parte, e o percentual mostrado é a parcela do total de terceirizados do TSE que
+        está naquela unidade (soma 100% na raiz).
         <AppVersion />
       </footer>
     </main>

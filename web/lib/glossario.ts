@@ -88,7 +88,7 @@ export const GLOSSARIO = {
   terceirizados: {
     titulo: 'Terceirizados alocados',
     texto:
-      'Profissionais de empresas contratadas para prestar serviço no TSE (contratos de cessão de mão de obra: vigilância, limpeza, copa, motoristas, TI, etc.). O número é estimado a partir do PDF mensal do TSE, cruzando a coluna "Alocação" com a sigla da unidade — alguns registros não são localizados. Não são servidores públicos e entram numa contagem à parte. O percentual é a razão terceirizados ÷ servidores (não é uma fatia de 100%): passa de 100% sempre que a unidade tem mais terceirizados que servidores — no TSE inteiro são ~1.335 terceirizados para ~922 servidores, daí ~145%.',
+      'Profissionais de empresas contratadas para prestar serviço no TSE (contratos de cessão de mão de obra: vigilância, limpeza, copa, motoristas, TI, etc.). O número é estimado a partir do PDF mensal do TSE, cruzando a coluna "Alocação" com a sigla da unidade — alguns registros não são localizados. Não são servidores públicos. O percentual é a parcela do total de terceirizados do TSE que está nesta unidade (ou na sua subárvore, quando consolidado); soma 100% na raiz.',
   },
 } as const satisfies Record<string, VerbeteGlossario>;
 

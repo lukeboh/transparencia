@@ -7,9 +7,9 @@ import { BotaoFonteExterna } from '@/components/dashboard/botao-fonte-externa';
 import { cn, numero } from '@/lib/utils';
 import { urlContrato, urlTerceirizados, type TerceirizadoUnidade } from '@/lib/dashboard-data';
 
-/** Item da modal: o registro cru + a unidade resolvida (sigla/nome). */
+/** Item da modal: o registro cru + o caminho da unidade (até 3 níveis) e o nome completo dela. */
 export interface TerceirizadoNaModal extends TerceirizadoUnidade {
-  unidadeSigla: string;
+  unidadeCaminho: string;
   unidadeNome: string;
 }
 
@@ -51,7 +51,7 @@ export function TerceirizadosDialog({
         normalizar(t.nome).includes(termo) ||
         normalizar(t.posto).includes(termo) ||
         normalizar(t.empresa).includes(termo) ||
-        normalizar(t.unidadeSigla).includes(termo) ||
+        normalizar(t.unidadeCaminho).includes(termo) ||
         normalizar(t.unidadeNome).includes(termo) ||
         normalizar(t.contrato).includes(termo),
     );
@@ -119,7 +119,7 @@ export function TerceirizadosDialog({
                     className="rounded bg-muted px-1.5 py-px text-[11px] font-medium text-muted-foreground"
                     title={t.unidadeNome}
                   >
-                    {t.unidadeSigla}
+                    {t.unidadeCaminho}
                   </span>
                 </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">

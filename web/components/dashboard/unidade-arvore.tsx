@@ -63,6 +63,17 @@ function indexarPorId(no: UnidadeNode, acc = new Map<string, UnidadeNode>()) {
   return acc;
 }
 
+/** Caminho hierárquico até 3 níveis, do menor para o maior, sem a raiz — ex.: "SETOT / CSELE / STI". */
+function caminhoAte3(no: UnidadeNode, porId: Map<string, UnidadeNode>): string {
+  const siglas: string[] = [];
+  let atual: UnidadeNode | undefined = no;
+  while (atual && atual.parentId !== null && siglas.length < 3) {
+    siglas.push(atual.sigla);
+    atual = porId.get(atual.parentId);
+  }
+  return siglas.join(' / ') || no.sigla;
+}
+
 // Exportação: uma linha por unidade, achatada de `achatarUnidades`.
 const COLUNAS_EXPORT_UNIDADES: ColunaExport<LinhaUnidade>[] = [
   { cabecalho: 'Caminho', valor: (u) => u.caminho },
@@ -84,6 +95,7 @@ interface UnidadeCardProps {
   node: UnidadeNode;
   profundidade: number;
   totalServidoresTSE: number;
+  totalTerceirizadosTSE: number;
   expandedIds: Set<string>;
   consolidadoIds: Set<string>;
   detalhadoIds: Set<string>;
@@ -102,6 +114,7 @@ function UnidadeCard({
   node,
   profundidade,
   totalServidoresTSE,
+  totalTerceirizadosTSE,
   expandedIds,
   consolidadoIds,
   detalhadoIds,
@@ -222,13 +235,12 @@ function UnidadeCard({
               )}
               <span
                 className="font-medium tabular-nums"
-                title="Razão terceirizados ÷ servidores — passa de 100% quando há mais terceirizados que servidores"
+                title="Parcela do total de terceirizados do TSE que está nesta unidade"
               >
                 {numero(metricas.terceirizados)}
                 <span className="font-normal text-muted-foreground">
                   {' · '}
-                  {percentual(metricas.terceirizados, denominador)}% dos servidores
-                  {modoBase === 'geral' ? ' do TSE' : ' da unidade'}
+                  {percentual(metricas.terceirizados, totalTerceirizadosTSE)}% dos terceirizados do TSE
                 </span>
               </span>
             </span>
@@ -244,6 +256,7 @@ function UnidadeCard({
               node={filho}
               profundidade={profundidade + 1}
               totalServidoresTSE={totalServidoresTSE}
+              totalTerceirizadosTSE={totalTerceirizadosTSE}
               expandedIds={expandedIds}
               consolidadoIds={consolidadoIds}
               detalhadoIds={detalhadoIds}
@@ -275,6 +288,7 @@ export function UnidadeArvore({
   terceirizadosCompetencia: string | null;
 }) {
   const porId = useMemo(() => indexarPorId(arvore), [arvore]);
+  const totalTerceirizadosTSE = arvore.consolidado.terceirizados;
   const categoriaPorId = useMemo(() => classificarUnidades(arvore), [arvore]);
 
   // Filtro de tipo: cada categoria liga/desliga a exibição dos nós dela na
@@ -531,14 +545,16 @@ export function UnidadeArvore({
     const { node, consolidar } = terceirizadosAlvo;
     const acc: TerceirizadoNaModal[] = [];
     const coletar = (n: UnidadeNode) => {
-      for (const t of terceirizadosPorUnidade.get(n.id) ?? []) {
-        acc.push({ ...t, unidadeSigla: n.sigla, unidadeNome: n.nome });
+      const lista = terceirizadosPorUnidade.get(n.id);
+      if (lista && lista.length > 0) {
+        const caminho = caminhoAte3(n, porId);
+        for (const t of lista) acc.push({ ...t, unidadeCaminho: caminho, unidadeNome: n.nome });
       }
       if (consolidar) for (const filho of n.children) coletar(filho);
     };
     coletar(node);
     return acc.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-  }, [terceirizadosAlvo, terceirizadosPorUnidade]);
+  }, [terceirizadosAlvo, terceirizadosPorUnidade, porId]);
 
   return (
     <div>
@@ -643,6 +659,7 @@ export function UnidadeArvore({
           node={arvore}
           profundidade={0}
           totalServidoresTSE={totalServidoresTSE}
+          totalTerceirizadosTSE={totalTerceirizadosTSE}
           expandedIds={expandedEfetivo}
           consolidadoIds={consolidadoIds}
           detalhadoIds={detalhadoIds}
@@ -662,6 +679,7 @@ export function UnidadeArvore({
         caminho={detalheCaminho}
         categoriaRotulo={detalheNode ? rotuloCategoria(categoriaPorId.get(detalheNode.id) ?? 'ramo') : ''}
         totalServidoresTSE={totalServidoresTSE}
+        totalTerceirizadosTSE={totalTerceirizadosTSE}
         onVerTerceirizados={(consolidar) => {
           if (detalheNode) setTerceirizadosAlvo({ node: detalheNode, consolidar });
         }}

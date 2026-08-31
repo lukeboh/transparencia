@@ -376,6 +376,7 @@ export function IndicadoresTable({
 
   const detalheLinha = detalheId ? linhas.find((l) => l.id === detalheId) ?? null : null;
   const detalheCaminho = detalheLinha ? detalheLinha.caminho.split(' / ').slice(0, -1) : [];
+  const tseTerceirizados = linhas.find((l) => l.nivel === 0)?.node.consolidado.terceirizados ?? 0;
 
   return (
     <>
@@ -607,6 +608,7 @@ export function IndicadoresTable({
       node={detalheLinha?.node ?? null}
       caminho={detalheCaminho}
       totalServidoresTSE={tseServidores}
+      totalTerceirizadosTSE={tseTerceirizados}
       open={detalheLinha !== null}
       onClose={() => setDetalheId(null)}
     />
