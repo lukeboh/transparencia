@@ -144,7 +144,10 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   **Contratos de cessão** = os 10 contratos de maior valor global + "Outros".
   KPI por contrato
   (terceirizados ativos e no histórico, com desempate de contratos de número
-  igual pela empresa) e um "Registro de falhas" com quem ficou sem lotação
+  igual entre modalidades pela empresa). O número do contrato é canonicalizado
+  (`canonicalContrato` em `nomesTerceirizados.js`): "1/2025", "01/2025" e
+  "00001/2025" são o mesmo contrato — também vale para espaço em volta da barra
+  e ano de 2 dígitos. Um "Registro de falhas" com quem ficou sem lotação
   identificada, sem alocação no PDF, com contrato não vinculado ao
   Compras.gov.br ou **sem nome** (linha do PDF que só trouxe o cargo).
   Limpeza da leitura do PDF em `src/tse/nomesTerceirizados.js`: o OCR
@@ -162,7 +165,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   Compras.gov.br.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.25**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.26**.
 
 ## Dashboard web
 

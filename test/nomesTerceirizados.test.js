@@ -1,6 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { separarNomePosto } from '../src/tse/nomesTerceirizados.js';
+import { separarNomePosto, canonicalContrato } from '../src/tse/nomesTerceirizados.js';
+
+test('canonicalContrato: "1/2025" e "01/2025" e "00001/2025" viram o mesmo id', () => {
+  assert.equal(canonicalContrato('1/2025'), '1/2025');
+  assert.equal(canonicalContrato('01/2025'), '1/2025');
+  assert.equal(canonicalContrato('00001/2025'), '1/2025');
+  assert.equal(canonicalContrato(' 08 / 2025 '), '8/2025');
+  assert.equal(canonicalContrato('00039/2019'), '39/2019');
+  assert.equal(canonicalContrato('13/22'), '13/2022');
+  assert.equal(canonicalContrato('2025NE000340'), '2025NE000340'); // sem barra: inalterado
+  assert.equal(canonicalContrato(''), '');
+});
 
 test('nome limpo + posto na coluna: passa direto', () => {
   const r = separarNomePosto('ADELCI RIBEIRO MONTEIRO JUNIOR', 'Desenvolvedor Back-end - Sênior');

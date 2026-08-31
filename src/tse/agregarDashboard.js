@@ -7,6 +7,7 @@ import { agregarFuncoes } from './agregarFuncoes.js';
 import { agregarTeletrabalho } from './agregarTeletrabalho.js';
 import { agregarUnidades } from './agregarUnidades.js';
 import { agregarTerceirizados } from './agregarTerceirizados.js';
+import { canonicalContrato } from './nomesTerceirizados.js';
 import { anoDe, paraDataISO } from './datas.js';
 import { aplicarExcecoes } from './excecoes.js';
 
@@ -100,7 +101,7 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
 
   // Cruza o número do contrato de cessão de mão de obra ("13/2022") com a base
   // do Comprasnet para linkar cada terceirizado ao detalhe do contrato.
-  const normContrato = (s) => String(s ?? '').trim().replace(/^0+(\d)/, '$1');
+  const normContrato = canonicalContrato;
   const idPorNumeroContrato = new Map();
   for (const c of contratosResumo) {
     const k = normContrato(c.numero);

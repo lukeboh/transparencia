@@ -19,7 +19,11 @@
 // agregarUnidades.js (gabinetes de ministro caem todos no nó "MIN").
 import { normalizeNome } from './rankResponsaveis.js';
 import { normalizeUnidade } from './agregarUnidades.js';
-import { separarNomePosto, carregarExcecoesTerceirizados } from './nomesTerceirizados.js';
+import {
+  separarNomePosto,
+  carregarExcecoesTerceirizados,
+  canonicalContrato,
+} from './nomesTerceirizados.js';
 
 const MAX_NIVEIS_LOTACAO = 3;
 // Competência com mais que isso de linhas sem nome recuperável é uma falha
@@ -57,8 +61,8 @@ function limparEmpresa(bruto) {
     .trim();
 }
 
-/** "013/2022" → "13/2022" — mesma normalização usada no cruzamento com o Comprasnet. */
-const normContrato = (s) => String(s ?? '').trim().replace(/^0+(\d)/, '$1');
+/** Identificador único de contrato (tira zeros à esquerda, etc.) — ver canonicalContrato. */
+const normContrato = canonicalContrato;
 
 const semAcentoUpper = (s) =>
   String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
@@ -270,7 +274,7 @@ function agregarTerceirizados(entradaTerceirizados, arvoreUnidades = null, contr
             tipo: 'nome-nao-identificado',
             nome: String(r.empregado ?? '').replace(/\s+/g, ' ').trim() || '(vazio)',
             alocacao: String(r.alocacao ?? '').trim(),
-            contrato: String(r.contrato ?? '').trim(),
+            contrato: canonicalContrato(r.contrato),
             competenciaMaisRecente: chave,
           });
         }
@@ -288,7 +292,7 @@ function agregarTerceirizados(entradaTerceirizados, arvoreUnidades = null, contr
       }
       p.ocorrencias.push({
         chave,
-        contrato: String(r.contrato ?? '').trim(),
+        contrato: canonicalContrato(r.contrato),
         empresa: limparEmpresa(r.empresa),
         posto: limpo.posto || limparPosto(r.posto),
         alocacao: String(r.alocacao ?? '').trim(),

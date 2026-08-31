@@ -12,7 +12,7 @@
 // pela própria fonte) é usado só como checagem cruzada manual (ver
 // scrapeUnidades.js) — nunca como fonte de verdade das contagens daqui.
 import { normalizeNome } from './rankResponsaveis.js';
-import { separarNomePosto } from './nomesTerceirizados.js';
+import { separarNomePosto, canonicalContrato } from './nomesTerceirizados.js';
 
 const MAX_EXEMPLOS = 30;
 
@@ -271,7 +271,7 @@ function agregarUnidades(
       nome: tituloNome(limpo.nome),
       posto: limparPosto(limpo.posto || t.posto),
       empresa: limparEmpresa(t.empresa),
-      contrato: String(t.contrato ?? '').trim(),
+      contrato: canonicalContrato(t.contrato),
       /** Preenchido em agregarDashboard cruzando `contrato` com a base do Comprasnet. */
       contratoId: null,
       /** Caminho de siglas cru da coluna "Alocação" do PDF (ex.: "Sebd/COINF/STI/TSE"). */

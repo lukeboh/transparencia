@@ -23,6 +23,24 @@ const semAcento = (s) =>
   (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '');
 const norm = (s) => semAcento(s).toUpperCase().replace(/[^A-Z]/g, '');
 
+/**
+ * Forma canônica de um número de contrato "NNN/AAAA": tira zeros à esquerda do
+ * número ("01/2025" = "1/2025" = "00001/2025"), normaliza espaços em volta da
+ * barra e expande ano de 2 dígitos ("13/22" → "13/2022"). É a mesma
+ * canonicalização já usada no cruzamento com o Comprasnet (cujos números vêm
+ * como "00039/2019"); aqui vira o identificador único do contrato em toda a
+ * agregação de terceirizados, para "1/2025" e "01/2025" não virarem duas
+ * linhas. Sem barra reconhecível, devolve a string aparada.
+ */
+export function canonicalContrato(bruto) {
+  const s = String(bruto ?? '').trim().replace(/\s*\/\s*/g, '/').replace(/\s+/g, ' ');
+  const m = /^(\d{1,6})\/(\d{2,4})$/.exec(s);
+  if (!m) return s;
+  const num = String(parseInt(m[1], 10));
+  const ano = m[2].length === 2 ? String(2000 + parseInt(m[2], 10)) : m[2];
+  return `${num}/${ano}`;
+}
+
 // Primeira palavra de uma expressão de cargo/posto (normalizada: sem acento,
 // maiúsculas, só letras). Nomes de pessoa não começam por nenhuma delas.
 const POSTO_INICIO = new Set([
