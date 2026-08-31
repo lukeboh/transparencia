@@ -596,6 +596,21 @@ públicos. Outras ideias ficam para depois de validar esta primeira entrega:
 histórico de aditivos por contrato, comparação de preços entre órgãos,
 alertas de contratos perto do vencimento, etc.
 
+### Peso de `data/tse_terceirizados.json` no histórico do `.git`
+
+O arquivo guarda o histórico bruto **por competência** (`porCompetencia`),
+hoje ~14 MB com 33 meses e ~1.300 linhas cada, pretty-print com 2 espaços —
+e só cresce a cada nova competência raspada (o scraper mantém o arquivo como
+superconjunto). Cada commit que inclua um scrape novo adiciona alguns MB ao
+`.git`. Opções para conter isso, quando incomodar:
+
+- gravar esse JSON **minificado** (sem os 2 espaços) — corta ~metade; hoje é
+  pretty-print só por consistência com os outros `data/*.json`;
+- ou mover o histórico bruto para um formato mais enxuto (NDJSON por
+  competência, ou só um índice de presença `nome × competência` em vez das
+  linhas completas repetidas mês a mês), deixando em `porCompetencia` apenas
+  o que `agregarTerceirizados.js` realmente consome.
+
 ### Melhorias pendentes no scraper de funções (`scrapeFuncoes.js`)
 
 - **Paralelizar também a busca dos índices de ano.** Hoje só o detalhe de
