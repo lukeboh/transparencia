@@ -75,9 +75,12 @@ async function main() {
   let terceirizados = [];
   let terceirizadosCompetencia = null;
   if (existsSync(entradaTerceirizados)) {
+    // Repassa o objeto completo (com `porCompetencia`) ao agregador — ele
+    // extrai a foto recente para a contagem por unidade e o histórico mês a
+    // mês para a tela /terceirizados. Aceita também o array cru legado.
     const t = JSON.parse(await readFile(entradaTerceirizados, 'utf8'));
-    terceirizados = Array.isArray(t) ? t : t.registros ?? [];
-    terceirizadosCompetencia = t?.competencia?.rotulo ?? null;
+    terceirizados = t;
+    terceirizadosCompetencia = t?.competenciaAtual?.rotulo ?? t?.competencia?.rotulo ?? null;
   } else {
     console.warn(
       `[Aviso] '${entradaTerceirizados}' não foi encontrado — contagem de terceirizados por unidade sairá zerada. ` +
@@ -346,6 +349,88 @@ export interface UnidadesData {
   };
 }
 
+/** Uma competência (mês/ano) do histórico de PDFs de terceirizados. */
+export interface CompetenciaTerceirizados {
+  /** "2026-07" — ordenável. */
+  chave: string;
+  /** "Julho/2026". */
+  rotulo: string;
+  mes: number | null;
+  ano: number | null;
+}
+
+export interface TerceirizadoPessoa {
+  /** Nome já em caixa de título. */
+  nome: string;
+  /** Lotação: até 3 siglas, da unidade mais específica para a mais alta (ex.: ["SETOT","CSELE","STI"]). Vazio quando a "Alocação" do PDF não casou com a árvore. */
+  lotacaoSiglas: string[];
+  /** Caminho de siglas cru da coluna "Alocação" do PDF — fallback e title. */
+  lotacaoAlocacao: string;
+  /** Contrato de cessão de mão de obra na competência mais recente em que a pessoa aparece ("31/2023"). */
+  contrato: string;
+  /** id do contrato na base do Comprasnet (para o modal "Detalhes do Contrato"), ou null quando não casou. */
+  contratoId: string | null;
+  /** Todos os contratos distintos por que a pessoa passou, em ordem cronológica. */
+  contratosHistorico: string[];
+  empresa: string;
+  posto: string;
+  /** Primeira competência em que o nome aparece ("2025-03"). */
+  mesInicio: string | null;
+  /** Última competência em que aparece — só quando já NÃO consta na mais recente (saída definitiva). null = ainda contratado. */
+  mesFim: string | null;
+  /** Atalho para mesFim === null. */
+  ativo: boolean;
+  /** Em quantas competências do histórico a pessoa aparece. */
+  competencias: number;
+}
+
+/** KPI por contrato de cessão de mão de obra. */
+export interface ContratoTerceirizados {
+  contrato: string;
+  contratoId: string | null;
+  empresa: string;
+  /** Terceirizados ativos hoje neste contrato. */
+  ativos: number;
+  /** Terceirizados que já passaram por este contrato (histórico). */
+  total: number;
+  /** Enriquecimento do Comprasnet — null quando o contrato não casou. */
+  valorGlobal: number | null;
+  valorEmpenhado: number | null;
+  valorPago: number | null;
+  vigente: boolean | null;
+  fornecedor: string | null;
+  objeto: string | null;
+  categoria: string | null;
+}
+
+export interface TerceirizadoFalha {
+  /** 'lotacao-nao-identificada' = "Alocação" não casou com a árvore; 'sem-alocacao' = coluna vazia no PDF; 'contrato-nao-vinculado' = número não achado no Comprasnet. */
+  tipo: 'lotacao-nao-identificada' | 'sem-alocacao' | 'contrato-nao-vinculado';
+  nome: string;
+  alocacao: string;
+  contrato: string;
+  competenciaMaisRecente: string;
+}
+
+export interface TerceirizadosData {
+  /** Competências do histórico, da mais antiga para a mais recente. */
+  competencias: CompetenciaTerceirizados[];
+  /** Chave da competência mais recente ("2026-07"), ou null sem histórico. */
+  competenciaAtual: string | null;
+  /** competencias.length — quando 1, "mês de fim" ainda não é observável. */
+  historicoMeses: number;
+  totalPessoas: number;
+  ativos: number;
+  encerrados: number;
+  /** Pessoas cuja lotação não pôde ser resolvida (subconjunto de falhas). */
+  semLotacao: number;
+  /** Nº de contratos de cessão distintos. */
+  contratos: number;
+  pessoas: TerceirizadoPessoa[];
+  porContrato: ContratoTerceirizados[];
+  falhas: TerceirizadoFalha[];
+}
+
 export interface DashboardData {
   geradoEm: string;
   fonte: string;
@@ -357,6 +442,7 @@ export interface DashboardData {
   funcoes: FuncoesData;
   teletrabalho: TeletrabalhoData;
   unidades: UnidadesData;
+  terceirizados: TerceirizadosData;
 }
 
 /** URL do contrato detalhado na consulta pública do Comprasnet. */

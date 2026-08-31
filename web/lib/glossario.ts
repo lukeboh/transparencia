@@ -90,6 +90,26 @@ export const GLOSSARIO = {
     texto:
       'Profissionais de empresas contratadas para prestar serviço no TSE (contratos de cessão de mão de obra: vigilância, limpeza, copa, motoristas, TI, etc.). O número é estimado a partir do PDF mensal do TSE, cruzando a coluna "Alocação" com a sigla da unidade — alguns registros não são localizados. Não são servidores públicos. O percentual é a parcela do total de terceirizados do TSE que está nesta unidade (ou na sua subárvore, quando consolidado); soma 100% na raiz.',
   },
+  terceirizadoMesInicio: {
+    titulo: 'Mês de início',
+    texto:
+      'Primeira competência (mês/ano) em que o nome do terceirizado aparece nos PDFs mensais do TSE. Não é necessariamente a data de admissão na empresa — é quando ele passou a constar na listagem pública.',
+  },
+  terceirizadoMesFim: {
+    titulo: 'Mês de fim',
+    texto:
+      'Última competência em que o terceirizado apareceu, mostrada só quando ele já não consta na listagem mais recente (saída definitiva). Em branco = ainda contratado na última competência disponível.',
+  },
+  terceirizadoFalhas: {
+    titulo: 'Registro de falhas',
+    texto:
+      'Terceirizados cuja lotação não foi identificada (a coluna "Alocação" do PDF não bateu com nenhuma sigla da estrutura do TSE, ou veio vazia) ou cujo contrato não foi vinculado ao Compras.gov.br. O PDF é escaneado (OCR), então parte das falhas é ruído de leitura.',
+  },
+  contratoCessao: {
+    titulo: 'Contrato de cessão de mão de obra',
+    texto:
+      'Contrato em que uma empresa fornece profissionais para trabalhar nas dependências do TSE (postos de trabalho), sem vínculo de servidor público. É a fonte da lista de terceirizados.',
+  },
 } as const satisfies Record<string, VerbeteGlossario>;
 
 export type TermoId = keyof typeof GLOSSARIO;

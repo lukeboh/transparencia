@@ -121,9 +121,30 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   apagado = desabilitado). No celular o card colapsa num botão "Filtro (N
   ativos)" que abre o mesmo conteúdo num sheet (`Dialog`); "Limpar" volta tudo
   ao estado permissivo.
+- ✅ Profissionais terceirizados (`/terceirizados`) — fonte: os PDFs mensais
+  de ["postos de trabalho – contratos de cessão de mão de obra" do TSE](https://www.tse.jus.br/transparencia-e-prestacao-de-contas/pessoal/profissionais-terceirizados-contratos-com-cessao-de-mao-de-obra)
+  (`src/tse/scrapeTerceirizados.js` baixa **todas** as competências listadas,
+  não só a mais recente, com cache incremental por competência em
+  `data/tse_terceirizados.json`). `src/tse/agregarTerceirizados.js` monta uma
+  linha por pessoa com: lotação (até 3 siglas, da unidade mais específica para
+  a mais alta, cruzando a coluna "Alocação" com a árvore de `/unidades`),
+  contrato de cessão (link para o modal **Detalhes do Contrato**), **mês de
+  início** (primeira competência em que o nome aparece) e **mês de fim** (só
+  quando a pessoa deixa de constar na competência mais recente — saída
+  definitiva; em branco = ainda contratado). Filtros por nome e por lotação,
+  toggle de situação (ativos / encerrados / todos), KPI por contrato
+  (terceirizados ativos e no histórico, com desempate de contratos de número
+  igual pela empresa) e um "Registro de falhas" com quem ficou sem lotação
+  identificada, sem alocação no PDF ou com contrato não vinculado ao
+  Compras.gov.br. O modal **Detalhes do Contrato**
+  (`web/components/dashboard/detalhes-contrato-dialog.tsx`) é o padrão novo
+  para detalhe de contrato: número, fornecedor, objeto em uma linha, valores
+  global/empenhado/pago, vigência (chip **VIGENTE**), classificação do app e —
+  para contratos de cessão — a quantidade de terceirizados, com link para o
+  Compras.gov.br.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.21**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.22**.
 
 ## Dashboard web
 
@@ -175,6 +196,7 @@ atualizar o snapshot embutido):
 ```bash
 npm run tse:scrape -- TSE data/tse_contratos.json   # extrai (raiz do repo)
 npm run tse:scrape-unidades                         # extrai a árvore de unidades
+npm run tse:scrape-terceirizados                    # baixa os PDFs mensais de terceirizados (todas as competências)
 cd web && npm run data                              # regrava o snapshot embutido
 ```
 
@@ -289,12 +311,12 @@ npm run tse:rank -- --in data/tse_contratos.json --top 30
 
 ### Dados raspados versionados no repositório
 
-Os cinco JSON de saída dos scrapers ficam **versionados** em `data/`:
+Os seis JSON de saída dos scrapers ficam **versionados** em `data/`:
 `tse_contratos.json`, `tse_funcoes.json`, `tse_agentes.json`,
-`tse_teletrabalho.json` e `tse_unidades.json`. Isso garante que um clone novo
-já traga o estado real (o `buildDashboardData.js` gera
-`web/lib/dashboard-data.ts` a partir deles) sem precisar rodar nenhum scrape,
-e — para os dois que fazem raspagem **incremental** — que o trabalho já
+`tse_teletrabalho.json`, `tse_unidades.json` e `tse_terceirizados.json`. Isso
+garante que um clone novo já traga o estado real (o `buildDashboardData.js`
+gera `web/lib/dashboard-data.ts` a partir deles) sem precisar rodar nenhum
+scrape, e — para os que fazem raspagem **incremental** — que o trabalho já
 acumulado não se perca.
 
 `scrapeContratos.js` e `scrapeFuncoes.js` releem o próprio arquivo de saída
@@ -303,7 +325,11 @@ portanto, um **superconjunto** da fonte viva: um contrato/portaria que a fonte
 venha a remover continua no arquivo versionado (é o comportamento desejado —
 preservar o que já foi raspado), e a fonte de contratos
 (`contratos.comprasnet.gov.br`) é a mais frágil de re-raspar por exigir
-sessão + cookie httponly + CSRF. `tse_agentes.json`, `tse_teletrabalho.json` e
+sessão + cookie httponly + CSRF. `scrapeTerceirizados.js` também é incremental,
+mas por **competência**: relê `tse_terceirizados.json` e só baixa/parseia os
+PDFs mensais de competências que ainda não estão no `porCompetencia` (use
+`--refazer` para ignorar o cache, `--limite N` para pegar só as N mais
+recentes). `tse_agentes.json`, `tse_teletrabalho.json` e
 `tse_unidades.json` não são incrementais (cada um é uma única requisição que
 devolve a base inteira) — são versionados só pela conveniência do clone
 pronto.
@@ -318,9 +344,9 @@ Consequências operacionais (as mesmas que `tse_funcoes.json` já tinha):
   (`web/.cache/tse-dados.json`, no `.gitignore`) nem o CSV derivado
   (`data/ranking_responsaveis.csv`) — esses continuam ignorados de propósito.
 
-A coerência do que o app mostra não depende de os cinco arquivos estarem
+A coerência do que o app mostra não depende de os seis arquivos estarem
 sincronizados entre si: ela vem de `web/lib/dashboard-data.ts` ser sempre
-regenerado a partir dos cinco juntos e commitado.
+regenerado a partir dos seis juntos e commitado.
 
 ### Nota sobre os valores
 
@@ -589,6 +615,19 @@ alertas de contratos perto do vencimento, etc.
   luz, reinício, etc.) perde todo o progresso. Salvar incrementalmente (ex.:
   a cada lote de portarias baixadas) permitiria que uma reinicialização
   retome de onde parou, ou pelo menos com perda mínima de esforço.
+- **Melhorias menores e pontuais.**
+  - **Melhorias menores e pontuais.**
+  1. Cada modal deve ter um nome para ficar fácil fazer referência e 
+  reutilização entre todas as funcionalidades.
+  2. Renomear funcionalidade funções para servidores, pois o objetivo não
+  é mostrar apenas os servidores que são fiscais, mas qualquer um. E ao 
+  clicar num servidor, o detalhamento não deve apenas mostrar os contratos 
+  que aquele servidor é, de alguma forma, fiscal. Deve mostrar tambem o 
+  histórico de FCs e CJs que aquele servidor já ocupou. A função em que está
+   atualmente deve ter o chip VIGENTE.
+  3. Onde existir o botão VIGENTE como filtro, ele deve estar ligado. Isso
+  quer dizer que esse é o padrão para qualquer funcionalidade. Os dados 
+  históricos só serão exibidos se for explicitamente solicitado.
 - **Bug conhecido: cache incremental do servidor pode reter nomes quebrados
   de versões antigas do parser, indefinidamente.** `scrapeFuncoes()` só
   busca portarias que ainda não estão em `cacheMovimentos` — uma portaria já

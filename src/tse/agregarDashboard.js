@@ -6,6 +6,7 @@ import { rankResponsaveis, normalizeNome } from './rankResponsaveis.js';
 import { agregarFuncoes } from './agregarFuncoes.js';
 import { agregarTeletrabalho } from './agregarTeletrabalho.js';
 import { agregarUnidades } from './agregarUnidades.js';
+import { agregarTerceirizados } from './agregarTerceirizados.js';
 import { anoDe, paraDataISO } from './datas.js';
 import { aplicarExcecoes } from './excecoes.js';
 
@@ -13,6 +14,13 @@ const MAX_FATIAS = 5; // demais categorias somadas em "Outros"
 
 function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [], excecoes = [], movimentosTeletrabalho = [], arvoreUnidades = null, terceirizados = []) {
   contratos = aplicarExcecoes(contratos, excecoes);
+  // `terceirizados` pode chegar como o objeto novo de scrapeTerceirizados.js
+  // (com histórico `porCompetencia`) ou como o array cru legado. A contagem por
+  // unidade (agregarUnidades) só quer a foto mais recente; o histórico completo
+  // vai para agregarTerceirizados.
+  const terceirizadosRegistros = Array.isArray(terceirizados)
+    ? terceirizados
+    : (terceirizados?.registros ?? []);
   const hoje = new Date().toISOString().slice(0, 10);
 
   const totalContratado = contratos.reduce((s, c) => s + (c.valorGlobal || 0), 0);
@@ -100,7 +108,7 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
   }
 
   const unidades = arvoreUnidades
-    ? agregarUnidades(arvoreUnidades, agentesPublicos, teletrabalho, rankingVigentes, terceirizados)
+    ? agregarUnidades(arvoreUnidades, agentesPublicos, teletrabalho, rankingVigentes, terceirizadosRegistros)
     : {
         arvore: null,
         totalServidoresTSE: 0,
@@ -116,6 +124,10 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
   for (const t of unidades.terceirizados ?? []) {
     t.contratoId = idPorNumeroContrato.get(normContrato(t.contrato)) ?? null;
   }
+
+  // Terceirizados como entidade própria: uma linha por pessoa, com lotação,
+  // contrato, mês de início/fim, KPI por contrato e registro de falhas.
+  const terceirizadosAgregado = agregarTerceirizados(terceirizados, arvoreUnidades, contratosResumo);
 
   const calcMediana = (arr) => {
     const s = [...arr].sort((a, b) => a - b);
@@ -193,6 +205,7 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
     },
     teletrabalho,
     unidades,
+    terceirizados: terceirizadosAgregado,
   };
 }
 

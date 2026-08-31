@@ -63,6 +63,29 @@ export function dataUTC(iso: string) {
   return iso.slice(0, 10).split('-').reverse().join('/');
 }
 
+const MESES_CURTO = [
+  'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
+  'jul', 'ago', 'set', 'out', 'nov', 'dez',
+];
+const MESES_LONGO = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+];
+
+/** "2026-07" → "jul/2026". Entrada inválida/nula → "—". */
+export function mesAnoCurto(chave: string | null | undefined): string {
+  const m = /^(\d{4})-(\d{2})$/.exec(chave ?? '');
+  if (!m) return '—';
+  return `${MESES_CURTO[Number(m[2]) - 1] ?? '??'}/${m[1]}`;
+}
+
+/** "2026-07" → "Julho/2026". Entrada inválida/nula → "—". */
+export function mesAnoLongo(chave: string | null | undefined): string {
+  const m = /^(\d{4})-(\d{2})$/.exec(chave ?? '');
+  if (!m) return '—';
+  return `${MESES_LONGO[Number(m[2]) - 1] ?? '??'}/${m[1]}`;
+}
+
 const PARTICULAS = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
 
 /** "RAFAEL FERNANDES DE BARROS" → "Rafael Fernandes de Barros". */

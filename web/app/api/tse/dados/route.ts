@@ -31,17 +31,20 @@ const CANDIDATOS_TERCEIRIZADOS = [
   path.join(process.cwd(), 'data', 'tse_terceirizados.json'),
 ];
 
-async function carregarTerceirizados(): Promise<{ registros: unknown[]; competencia: string | null }> {
+async function carregarTerceirizados(): Promise<{ entrada: unknown; competencia: string | null }> {
   for (const arq of CANDIDATOS_TERCEIRIZADOS) {
     try {
       const t = JSON.parse(await fs.readFile(arq, 'utf8'));
-      const registros = Array.isArray(t) ? t : (t?.registros ?? []);
-      return { registros, competencia: t?.competencia?.rotulo ?? null };
+      // Repassa o objeto completo (com `porCompetencia`) ao agregador.
+      return {
+        entrada: t,
+        competencia: t?.competenciaAtual?.rotulo ?? t?.competencia?.rotulo ?? null,
+      };
     } catch {
       // tenta o próximo caminho
     }
   }
-  return { registros: [], competencia: null };
+  return { entrada: [], competencia: null };
 }
 
 interface Progresso {
@@ -220,7 +223,9 @@ function iniciarAtualizacao(e: EstadoCache) {
         excecoes,
         teletrabalho,
         unidadesArvore,
-        terceirizados.registros,
+        // objeto { porCompetencia, ... } ou array cru legado — agregarDashboard
+        // (JS) aceita os dois; o tipo inferido do .js exige o cast.
+        terceirizados.entrada as unknown[],
       ) as DashboardData;
       if (e.dados.unidades) e.dados.unidades.terceirizadosCompetencia = terceirizados.competencia;
       await fs.mkdir(path.dirname(ARQUIVO_CACHE), { recursive: true });

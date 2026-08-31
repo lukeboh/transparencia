@@ -5,19 +5,28 @@
 // https://www.tse.jus.br/transparencia-e-prestacao-de-contas/pessoal/profissionais-terceirizados-contratos-com-cessao-de-mao-de-obra
 //
 // A fonte é só um PDF por mês (OCR, sem CSV/planilha/API). A página lista um
-// link por competência; pegamos o mais recente pelo mês/ano no próprio slug
-// do link. O PDF é uma tabela de 7 colunas:
+// link por competência; baixamos TODAS as competências que ela lista e
+// versionamos o histórico em data/tse_terceirizados.json — é o histórico
+// mês a mês que dá o "mês de início" (primeira vez que o profissional aparece)
+// e o "mês de fim" (última vez, quando ele some das listagens seguintes) de
+// cada terceirizado. Re-execuções são incrementais: só baixam os PDFs de
+// competências que ainda não estão no arquivo (use --refazer para ignorar o
+// cache, --limite N para baixar só as N mais recentes).
+//
+// O PDF é uma tabela de 7 colunas:
 //   Linha | Contrato | Empresa | CNPJ | Empregado | Posto de Trabalho | Alocação
 // A "Alocação" é um caminho de siglas do menor nível para o maior
 // (ex.: "Seget/Cosen/SAD/TSE"); às vezes uma sigla só, às vezes o nome de um
 // gabinete de ministro. O cruzamento com a árvore de unidades (por SIGLA) fica
-// em agregarUnidades.js — aqui só extraímos as linhas cruas.
+// em agregarTerceirizados.js / agregarUnidades.js — aqui só extraímos as
+// linhas cruas de cada competência.
 //
 // O parsing usa as coordenadas x/y de cada trecho de texto (pdfjs-dist): as
 // âncoras das colunas saem do cabeçalho, então mesmo com a diagramação
 // irregular do PDF a coluna "Alocação" é recuperada de forma confiável
 // (~98% das linhas numeradas).
-import { writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
@@ -37,24 +46,40 @@ const MESES_ROTULO = [
 const semAcento = (s) =>
   (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '');
 
-/** Lê a página de listagem e devolve o link da competência mais recente. */
-export async function descobrirArquivoMaisRecente(html) {
+/** "2026-07" — chave estável e ordenável de uma competência. */
+export const chaveCompetencia = (mes, ano) => `${ano}-${String(mes).padStart(2, '0')}`;
+
+/**
+ * Lê a página de listagem e devolve TODAS as competências reconhecidas, uma por
+ * link `dados-cts`, ordenadas da mais antiga para a mais recente e sem
+ * duplicatas (fica com o primeiro link de cada competência).
+ */
+export function descobrirArquivos(html) {
   const links = [...html.matchAll(/href="([^"]*dados-cts[^"]*)"/gi)].map((m) => m[1]);
-  let melhor = null;
+  const porChave = new Map();
   for (const href of links) {
     const slug = semAcento(decodeURIComponent(href)).toLowerCase();
     const m = slug.match(/(janeiro|fevereiro|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)[-_ ]+(\d{4})/);
     if (!m) continue;
     const mes = MESES.indexOf(m[1]) + 1;
     const ano = Number(m[2]);
-    const chave = ano * 12 + mes;
-    if (!melhor || chave > melhor.chave) melhor = { href, mes, ano, chave };
+    const chave = chaveCompetencia(mes, ano);
+    if (porChave.has(chave)) continue;
+    porChave.set(chave, {
+      href,
+      competencia: { mes, ano, chave, rotulo: `${MESES_ROTULO[mes - 1]}/${ano}` },
+    });
   }
-  if (!melhor) throw new Error('Nenhum link de arquivo mensal reconhecido na página de listagem.');
-  return {
-    href: melhor.href,
-    competencia: { mes: melhor.mes, ano: melhor.ano, rotulo: `${MESES_ROTULO[melhor.mes - 1]}/${melhor.ano}` },
-  };
+  return [...porChave.values()].sort((a, b) =>
+    a.competencia.chave.localeCompare(b.competencia.chave),
+  );
+}
+
+/** Lê a página de listagem e devolve o link da competência mais recente. */
+export async function descobrirArquivoMaisRecente(html) {
+  const todos = descobrirArquivos(html);
+  if (todos.length === 0) throw new Error('Nenhum link de arquivo mensal reconhecido na página de listagem.');
+  return todos[todos.length - 1];
 }
 
 /** Agrupa os trechos de texto de uma página em linhas visuais (tolerância em y). */
@@ -150,36 +175,100 @@ export async function parsePdfTerceirizados(dados) {
   return registros;
 }
 
+/** Lê o arquivo já gravado (se houver) para reaproveitar competências parseadas. */
+async function lerCacheExistente(saida) {
+  if (!existsSync(saida)) return { porCompetencia: {}, competencias: [] };
+  try {
+    const j = JSON.parse(await readFile(saida, 'utf8'));
+    return {
+      porCompetencia: j?.porCompetencia ?? {},
+      competencias: Array.isArray(j?.competencias) ? j.competencias : [],
+    };
+  } catch {
+    return { porCompetencia: {}, competencias: [] };
+  }
+}
+
 async function main() {
   const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
   const saida = path.join(raiz, 'data/tse_terceirizados.json');
 
-  console.log('Buscando a competência mais recente…');
+  const args = process.argv.slice(2);
+  const refazer = args.includes('--refazer');
+  const limiteArg = args.find((a) => a.startsWith('--limite'));
+  const limite = limiteArg ? Number(limiteArg.split(/[=\s]/)[1] ?? args[args.indexOf(limiteArg) + 1]) : Infinity;
+
+  console.log('Buscando a lista de competências…');
   const htmlListagem = await (await fetch(PAGINA_LISTAGEM)).text();
-  const { href, competencia } = await descobrirArquivoMaisRecente(htmlListagem);
-  console.log(`  competência: ${competencia.rotulo}`);
-  console.log(`  arquivo: ${href}`);
+  let arquivos = descobrirArquivos(htmlListagem);
+  if (arquivos.length === 0) throw new Error('Nenhum link de arquivo mensal reconhecido na página de listagem.');
+  if (Number.isFinite(limite)) arquivos = arquivos.slice(-limite);
+  console.log(`  ${arquivos.length} competência(s): ${arquivos.map((a) => a.competencia.rotulo).join(', ')}`);
 
-  const respPdf = await fetch(href, { redirect: 'follow' });
-  if (!respPdf.ok) throw new Error(`Falha ao baixar o PDF (${respPdf.status}).`);
-  const buffer = new Uint8Array(await respPdf.arrayBuffer());
-  console.log(`  ${(buffer.length / 1024).toFixed(0)} KB baixados, parseando…`);
+  const cache = refazer ? { porCompetencia: {}, competencias: [] } : await lerCacheExistente(saida);
+  const porCompetencia = { ...cache.porCompetencia };
+  const metaPorChave = new Map(cache.competencias.map((c) => [c.chave, c]));
 
-  const registros = await parsePdfTerceirizados(buffer);
-  const comAlocacao = registros.filter((r) => r.alocacao).length;
-  console.log(`  ${registros.length} profissionais · ${comAlocacao} com alocação`);
+  for (const { href, competencia } of arquivos) {
+    const { chave, rotulo } = competencia;
+    if (!refazer && Array.isArray(porCompetencia[chave]) && porCompetencia[chave].length > 0) {
+      console.log(`  ${rotulo}: já no cache (${porCompetencia[chave].length} linhas) — pulando`);
+      continue;
+    }
+    console.log(`  ${rotulo}: baixando ${href}`);
+    const respPdf = await fetch(href, { redirect: 'follow' });
+    if (!respPdf.ok) {
+      console.warn(`    ⚠ falha ao baixar (${respPdf.status}) — competência ignorada nesta execução`);
+      continue;
+    }
+    const buffer = new Uint8Array(await respPdf.arrayBuffer());
+    let registros;
+    try {
+      registros = await parsePdfTerceirizados(buffer);
+    } catch (err) {
+      console.warn(`    ⚠ falha ao parsear (${err.message}) — competência ignorada nesta execução`);
+      continue;
+    }
+    const comAlocacao = registros.filter((r) => r.alocacao).length;
+    console.log(`    ${(buffer.length / 1024).toFixed(0)} KB · ${registros.length} profissionais · ${comAlocacao} com alocação`);
+    porCompetencia[chave] = registros;
+    metaPorChave.set(chave, {
+      ...competencia,
+      arquivoUrl: href,
+      total: registros.length,
+      comAlocacao,
+      extraidoEm: new Date().toISOString(),
+    });
+  }
+
+  // Só as competências efetivamente presentes em porCompetencia, ordenadas asc.
+  const competencias = [...metaPorChave.values()]
+    .filter((c) => Array.isArray(porCompetencia[c.chave]))
+    .sort((a, b) => a.chave.localeCompare(b.chave));
+  if (competencias.length === 0) throw new Error('Nenhuma competência pôde ser baixada/parseada.');
+  const atual = competencias[competencias.length - 1];
+  const registrosAtual = porCompetencia[atual.chave];
 
   const payload = {
     geradoEm: new Date().toISOString(),
     fonte: PAGINA_LISTAGEM,
-    arquivoUrl: href,
-    competencia,
-    total: registros.length,
-    registros,
+    // Compat: consumidores antigos leem `competencia`/`arquivoUrl`/`registros`
+    // como a foto do mês mais recente.
+    arquivoUrl: atual.arquivoUrl,
+    competencia: { mes: atual.mes, ano: atual.ano, rotulo: atual.rotulo },
+    competenciaAtual: { mes: atual.mes, ano: atual.ano, chave: atual.chave, rotulo: atual.rotulo },
+    competencias,
+    total: registrosAtual.length,
+    registros: registrosAtual,
+    // Histórico bruto por competência — entrada do agregador de "mês de
+    // início / mês de fim" (ver src/tse/agregarTerceirizados.js).
+    porCompetencia,
   };
   await mkdir(path.dirname(saida), { recursive: true });
   await writeFile(saida, JSON.stringify(payload, null, 2), 'utf8');
-  console.log(`Gravado ${saida}`);
+  console.log(
+    `Gravado ${saida} — ${competencias.length} competência(s), ${registrosAtual.length} terceirizados na mais recente (${atual.rotulo}).`,
+  );
 }
 
 const isMain = Boolean(
