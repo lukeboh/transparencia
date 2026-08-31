@@ -152,3 +152,20 @@ test('agregarUnidades: terceirizado com alocação sem sigla conhecida vai para 
   assert.equal(naoLocalizados.terceirizados, 2);
   assert.equal(naoLocalizados.exemplos.terceirizados.length, 2);
 });
+
+test('agregarUnidades: devolve lista achatada de terceirizados (nome em título, ordem alfabética, com unidadeId)', () => {
+  const terceirizados = [
+    { alocacao: 'SEB/DIVC', empregado: 'ZÉLIA NUNES', posto: 'Copeira', empresa: 'ACME LTDA 12.345.678/0001-90', contrato: '9/2025' },
+    { alocacao: 'SEA', empregado: 'ana paula', posto: '05', empresa: '', contrato: '1/2024' },
+    { alocacao: 'FOO', empregado: 'Fulano Perdido', posto: 'X', empresa: 'Y', contrato: '2/2020' },
+  ];
+  const { terceirizados: lista, naoLocalizados } = agregarUnidades(arvoreFixture(), [], undefined, [], terceirizados);
+
+  assert.equal(lista.length, 2); // "Fulano Perdido" não resolve
+  assert.deepEqual(lista.map((t) => t.nome), ['Ana Paula', 'Zélia Nunes']); // alfabético + título
+  assert.equal(lista[0].posto, ''); // "05" é ruído -> limpo
+  assert.equal(lista[1].posto, 'Copeira');
+  assert.equal(lista[1].empresa, 'ACME LTDA'); // CNPJ removido
+  assert.ok(lista[0].unidadeId); // aponta para um nó real
+  assert.equal(naoLocalizados.terceirizados, 1);
+});

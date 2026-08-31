@@ -128,6 +128,37 @@ function agregarUnidades(
 
   const ALIAS_SIGLA = { CCJE: 'ACCJE', CONJULEG: 'COJULEG' };
 
+  const CONECTIVOS = new Set(['de', 'da', 'do', 'dos', 'das', 'e']);
+  /** "ACASSIO EVANGELISTA DOS SANTOS" / "acassio..." → "Acassio Evangelista dos Santos". */
+  function tituloNome(bruto) {
+    return String(bruto ?? '')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLowerCase()
+      .split(' ')
+      .map((p, i) => (i > 0 && CONECTIVOS.has(p) ? p : p.charAt(0).toUpperCase() + p.slice(1)))
+      .join(' ');
+  }
+  /** Limpa a coluna "Posto": ruído puro (só código CBO, dígitos) vira ''. */
+  function limparPosto(bruto) {
+    const s = String(bruto ?? '').replace(/\s+/g, ' ').trim();
+    if (!s || /^[\d\s.,;:/\-]+$/.test(s)) return '';
+    return s;
+  }
+  /** Limpa a coluna "Empresa": tira o CNPJ grudado e pontuação solta no fim. */
+  function limparEmpresa(bruto) {
+    const s = String(bruto ?? '')
+      .replace(/\d{2}[.,]\d{3}[.,]\d{3,4}\/\d{3,4}-\d{2,3}/g, '')
+      .replace(/\s+/g, ' ')
+      .replace(/[\s.,-]+$/, '')
+      .trim();
+    return s;
+  }
+
+  // Lista achatada (uma entrada por terceirizado localizado) para a UI montar
+  // a modal de nomes por unidade — direto no nó ou consolidado na subárvore.
+  const terceirizadosResolvidos = [];
+
   /**
    * Resolve a "Alocação" de um terceirizado (caminho de siglas, do menor nível
    * para o maior — ex.: "Seget/Cosen/SAD/TSE") para o id do nó mais específico
@@ -229,7 +260,15 @@ function agregarUnidades(
       continue;
     }
     metricas.get(id).terceirizados += 1;
+    terceirizadosResolvidos.push({
+      unidadeId: id,
+      nome: tituloNome(t.empregado),
+      posto: limparPosto(t.posto),
+      empresa: limparEmpresa(t.empresa),
+      contrato: String(t.contrato ?? '').trim(),
+    });
   }
+  terceirizadosResolvidos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
   // --- Consolidação bottom-up ---
   function construir(id) {
@@ -261,6 +300,7 @@ function agregarUnidades(
     arvore,
     totalServidoresTSE: arvore.consolidado.servidores,
     naoLocalizados,
+    terceirizados: terceirizadosResolvidos,
   };
 }
 

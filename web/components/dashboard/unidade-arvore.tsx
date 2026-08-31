@@ -1,18 +1,19 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, Info, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Info, ListOrdered, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PillToggle } from '@/components/ui/pill-toggle';
 import { FiscalChips, FuncaoChips, type BasePercentual, type NivelDetalhe } from '@/components/dashboard/unidade-chips';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
 import { UnidadeDetalheDialog } from '@/components/dashboard/unidade-detalhe-dialog';
+import { TerceirizadosDialog } from '@/components/dashboard/terceirizados-dialog';
 import { DicaTermo } from '@/components/ui/dica-termo';
 import { InfoDica } from '@/components/ui/info-dica';
 import { cn, numero, percentual } from '@/lib/utils';
 import type { ColunaExport } from '@/lib/exportar-dados';
 import { achatarUnidades, somaFiscais, somaFuncoes, type LinhaUnidade } from '@/lib/unidades-flat';
-import type { UnidadeNode } from '@/lib/dashboard-data';
+import type { TerceirizadoUnidade, UnidadeNode } from '@/lib/dashboard-data';
 import {
   CATEGORIAS_UNIDADE,
   IDS_CATEGORIA,
@@ -94,6 +95,7 @@ interface UnidadeCardProps {
   onToggleDetalhe: (id: string) => void;
   onToggleBase: (id: string) => void;
   onAbrirDetalhe: (id: string) => void;
+  onAbrirTerceirizados: (node: UnidadeNode, consolidar: boolean) => void;
 }
 
 function UnidadeCard({
@@ -110,6 +112,7 @@ function UnidadeCard({
   onToggleDetalhe,
   onToggleBase,
   onAbrirDetalhe,
+  onAbrirTerceirizados,
 }: UnidadeCardProps) {
   const filhosRender = filhosVisiveisPorId.get(node.id) ?? node.children;
   const temFilhos = filhosRender.length > 0;
@@ -205,11 +208,24 @@ function UnidadeCard({
             <span className="inline-flex items-center gap-1 text-muted-foreground">
               Terceirizados alocados <DicaTermo id="terceirizados" />
             </span>
-            <span
-              className="font-medium tabular-nums"
-              title="Percentual sobre os servidores desta unidade — pode passar de 100%"
-            >
-              {numero(metricas.terceirizados)} · {percentual(metricas.terceirizados, denominador)}%
+            <span className="inline-flex items-center gap-2">
+              {metricas.terceirizados > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onAbrirTerceirizados(node, consolidar)}
+                  className="inline-flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  title={`Ver os ${numero(metricas.terceirizados)} nomes${consolidar ? ' (com subunidades)' : ''}`}
+                >
+                  <ListOrdered className="h-3.5 w-3.5" aria-hidden />
+                  ver nomes
+                </button>
+              )}
+              <span
+                className="font-medium tabular-nums"
+                title="Percentual sobre os servidores desta unidade — pode passar de 100%"
+              >
+                {numero(metricas.terceirizados)} · {percentual(metricas.terceirizados, denominador)}%
+              </span>
             </span>
           </div>
         </CardContent>
@@ -233,6 +249,7 @@ function UnidadeCard({
               onToggleDetalhe={onToggleDetalhe}
               onToggleBase={onToggleBase}
               onAbrirDetalhe={onAbrirDetalhe}
+              onAbrirTerceirizados={onAbrirTerceirizados}
             />
           ))}
         </div>
@@ -241,7 +258,17 @@ function UnidadeCard({
   );
 }
 
-export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeNode; totalServidoresTSE: number }) {
+export function UnidadeArvore({
+  arvore,
+  totalServidoresTSE,
+  terceirizados,
+  terceirizadosCompetencia,
+}: {
+  arvore: UnidadeNode;
+  totalServidoresTSE: number;
+  terceirizados: TerceirizadoUnidade[];
+  terceirizadosCompetencia: string | null;
+}) {
   const porId = useMemo(() => indexarPorId(arvore), [arvore]);
   const categoriaPorId = useMemo(() => classificarUnidades(arvore), [arvore]);
 
@@ -271,6 +298,18 @@ export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeN
   const [busca, setBusca] = useState('');
   // Primeiro nível de detalhamento de uma unidade — modal interno.
   const [detalheId, setDetalheId] = useState<string | null>(null);
+  // Modal de nomes de terceirizados: nó alvo + se é a visão consolidada (subárvore).
+  const [terceirizadosAlvo, setTerceirizadosAlvo] = useState<{ node: UnidadeNode; consolidar: boolean } | null>(null);
+
+  const terceirizadosPorUnidade = useMemo(() => {
+    const m = new Map<string, TerceirizadoUnidade[]>();
+    for (const t of terceirizados) {
+      const lista = m.get(t.unidadeId);
+      if (lista) lista.push(t);
+      else m.set(t.unidadeId, [t]);
+    }
+    return m;
+  }, [terceirizados]);
 
   function toggleExpand(id: string) {
     setExpandedIds((atual) => {
@@ -479,6 +518,22 @@ export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeN
     return siglas;
   }, [detalheNode, porId]);
 
+  // Nomes para a modal: se consolidado, junta o nó e toda a subárvore; se folha,
+  // só o nó. Cada balde já está em ordem alfabética global, então concatenar por
+  // uma travessia depth-first e reordenar mantém a lista numerada correta.
+  const terceirizadosDaModal = useMemo(() => {
+    if (!terceirizadosAlvo) return [];
+    const { node, consolidar } = terceirizadosAlvo;
+    const acc: TerceirizadoUnidade[] = [];
+    const coletar = (n: UnidadeNode) => {
+      const lista = terceirizadosPorUnidade.get(n.id);
+      if (lista) acc.push(...lista);
+      if (consolidar) for (const filho of n.children) coletar(filho);
+    };
+    coletar(node);
+    return acc.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  }, [terceirizadosAlvo, terceirizadosPorUnidade]);
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -592,6 +647,7 @@ export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeN
           onToggleDetalhe={toggleDetalhe}
           onToggleBase={toggleBase}
           onAbrirDetalhe={setDetalheId}
+          onAbrirTerceirizados={(node, consolidar) => setTerceirizadosAlvo({ node, consolidar })}
         />
       )}
 
@@ -600,8 +656,24 @@ export function UnidadeArvore({ arvore, totalServidoresTSE }: { arvore: UnidadeN
         caminho={detalheCaminho}
         categoriaRotulo={detalheNode ? rotuloCategoria(categoriaPorId.get(detalheNode.id) ?? 'ramo') : ''}
         totalServidoresTSE={totalServidoresTSE}
+        onVerTerceirizados={(consolidar) => {
+          if (detalheNode) setTerceirizadosAlvo({ node: detalheNode, consolidar });
+        }}
         open={detalheNode !== null}
         onClose={() => setDetalheId(null)}
+      />
+
+      <TerceirizadosDialog
+        titulo={
+          terceirizadosAlvo
+            ? `Terceirizados · ${terceirizadosAlvo.node.sigla}`
+            : 'Terceirizados'
+        }
+        subtitulo={terceirizadosAlvo?.consolidar ? 'com subunidades' : 'só nesta unidade'}
+        itens={terceirizadosDaModal}
+        competencia={terceirizadosCompetencia}
+        open={terceirizadosAlvo !== null}
+        onClose={() => setTerceirizadosAlvo(null)}
       />
     </div>
   );

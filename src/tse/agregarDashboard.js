@@ -94,6 +94,7 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
     : {
         arvore: null,
         totalServidoresTSE: 0,
+        terceirizados: [],
         naoLocalizados: {
           servidores: 0,
           teletrabalho: 0,

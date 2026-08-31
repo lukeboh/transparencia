@@ -151,7 +151,12 @@ export function UnidadesDashboard() {
             />
           </div>
 
-          <UnidadeArvore arvore={unidades.arvore} totalServidoresTSE={unidades.totalServidoresTSE} />
+          <UnidadeArvore
+            arvore={unidades.arvore}
+            totalServidoresTSE={unidades.totalServidoresTSE}
+            terceirizados={unidades.terceirizados}
+            terceirizadosCompetencia={unidades.terceirizadosCompetencia}
+          />
         </div>
       )}
 

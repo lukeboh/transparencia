@@ -1,5 +1,6 @@
 'use client';
 
+import { ListOrdered } from 'lucide-react';
 import { Dialog, DialogHeader } from '@/components/ui/dialog';
 import { FiscalChips, FuncaoChips } from '@/components/dashboard/unidade-chips';
 import { BotaoFonteExterna } from '@/components/dashboard/botao-fonte-externa';
@@ -20,11 +21,13 @@ function BlocoMetricas({
   legenda,
   metricas,
   totalServidoresTSE,
+  onVerNomes,
 }: {
   titulo: string;
   legenda: string;
   metricas: UnidadeMetricas;
   totalServidoresTSE: number;
+  onVerNomes?: () => void;
 }) {
   return (
     <div className="rounded-lg border border-border bg-card p-3">
@@ -59,8 +62,20 @@ function BlocoMetricas({
         </div>
         <div className="flex items-center justify-between gap-2">
           <dt className="text-muted-foreground">Terceirizados alocados</dt>
-          <dd className="font-medium tabular-nums" title="Estimado do PDF mensal do TSE">
-            {numero(metricas.terceirizados)} · {percentual(metricas.terceirizados, metricas.servidores)}% dos servidores
+          <dd className="inline-flex items-center gap-2">
+            {onVerNomes && metricas.terceirizados > 0 && (
+              <button
+                type="button"
+                onClick={onVerNomes}
+                className="inline-flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              >
+                <ListOrdered className="h-3.5 w-3.5" aria-hidden />
+                ver nomes
+              </button>
+            )}
+            <span className="font-medium tabular-nums" title="Estimado do PDF mensal do TSE">
+              {numero(metricas.terceirizados)} · {percentual(metricas.terceirizados, metricas.servidores)}% dos servidores
+            </span>
           </dd>
         </div>
       </dl>
@@ -78,6 +93,7 @@ export function UnidadeDetalheDialog({
   caminho,
   categoriaRotulo,
   totalServidoresTSE,
+  onVerTerceirizados,
   open,
   onClose,
 }: {
@@ -86,6 +102,8 @@ export function UnidadeDetalheDialog({
   caminho: string[];
   categoriaRotulo?: string;
   totalServidoresTSE: number;
+  /** Abre a modal de nomes de terceirizados — `consolidar` = incluir a subárvore. Ausente = sem o botão "ver nomes". */
+  onVerTerceirizados?: (consolidar: boolean) => void;
   open: boolean;
   onClose: () => void;
 }) {
@@ -119,6 +137,7 @@ export function UnidadeDetalheDialog({
             legenda="quem está lotado exatamente aqui"
             metricas={node.direto}
             totalServidoresTSE={totalServidoresTSE}
+            onVerNomes={onVerTerceirizados ? () => onVerTerceirizados(false) : undefined}
           />
           <BlocoMetricas
             titulo="Com as subunidades"
@@ -129,6 +148,7 @@ export function UnidadeDetalheDialog({
             }
             metricas={node.consolidado}
             totalServidoresTSE={totalServidoresTSE}
+            onVerNomes={onVerTerceirizados ? () => onVerTerceirizados(true) : undefined}
           />
         </div>
 

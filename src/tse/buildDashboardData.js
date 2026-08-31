@@ -310,12 +310,27 @@ export interface UnidadeNode {
   children: UnidadeNode[];
 }
 
+export interface TerceirizadoUnidade {
+  /** id do nó da árvore em que o posto foi alocado (ver UnidadeNode.id). */
+  unidadeId: string;
+  /** Nome do profissional, já em caixa de título. */
+  nome: string;
+  /** Posto de trabalho / função; '' quando a fonte só trouxe ruído (código CBO). */
+  posto: string;
+  /** Empresa contratada, sem o CNPJ grudado; '' quando não veio no PDF. */
+  empresa: string;
+  /** Número do contrato de cessão de mão de obra ("13/2022"). */
+  contrato: string;
+}
+
 export interface UnidadesData {
   arvore: UnidadeNode | null;
   /** Total consolidado de servidores no nó raiz — denominador fixo da % de "Servidores vigentes" em qualquer nó da árvore. */
   totalServidoresTSE: number;
   /** Competência (mês/ano) do PDF de terceirizados usado — null quando a fonte não foi raspada. */
   terceirizadosCompetencia: string | null;
+  /** Lista achatada de terceirizados localizados (um por posto), ordenada por nome — a UI filtra por unidade/subárvore para a modal de nomes. */
+  terceirizados: TerceirizadoUnidade[];
   /** Pessoas/registros que não puderam ser posicionados na árvore por não achar (ou achar mais de uma vez) a unidade pelo nome/sigla — ver agregarUnidades.js. */
   naoLocalizados: {
     servidores: number;
