@@ -166,6 +166,8 @@ test('agregarUnidades: devolve lista achatada de terceirizados (nome em título,
   assert.equal(lista[0].posto, ''); // "05" é ruído -> limpo
   assert.equal(lista[1].posto, 'Copeira');
   assert.equal(lista[1].empresa, 'ACME LTDA'); // CNPJ removido
+  assert.equal(lista[1].alocacao, 'SEB/DIVC'); // caminho cru preservado
+  assert.equal(lista[1].contratoId, null); // só agregarDashboard preenche
   assert.ok(lista[0].unidadeId); // aponta para um nó real
   assert.equal(naoLocalizados.terceirizados, 1);
 });

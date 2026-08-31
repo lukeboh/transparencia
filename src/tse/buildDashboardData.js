@@ -321,6 +321,10 @@ export interface TerceirizadoUnidade {
   empresa: string;
   /** Número do contrato de cessão de mão de obra ("13/2022"). */
   contrato: string;
+  /** id do contrato na base do Comprasnet (para urlContrato), ou null quando não casou. */
+  contratoId: string | null;
+  /** Caminho de siglas cru da coluna "Alocação" do PDF (ex.: "Sebd/COINF/STI/TSE"). */
+  alocacao: string;
 }
 
 export interface UnidadesData {

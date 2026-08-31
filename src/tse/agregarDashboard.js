@@ -89,6 +89,16 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
   const rankingVigentes = rankResponsaveis(vigentes);
   const { servidores: servidoresFuncoes, rankingComFuncao } = agregarFuncoes(agentesPublicos, movimentosFuncoes, contratos);
   const teletrabalho = agregarTeletrabalho(movimentosTeletrabalho, rankingCompleto, hoje);
+
+  // Cruza o número do contrato de cessão de mão de obra ("13/2022") com a base
+  // do Comprasnet para linkar cada terceirizado ao detalhe do contrato.
+  const normContrato = (s) => String(s ?? '').trim().replace(/^0+(\d)/, '$1');
+  const idPorNumeroContrato = new Map();
+  for (const c of contratosResumo) {
+    const k = normContrato(c.numero);
+    if (k && !idPorNumeroContrato.has(k)) idPorNumeroContrato.set(k, c.id);
+  }
+
   const unidades = arvoreUnidades
     ? agregarUnidades(arvoreUnidades, agentesPublicos, teletrabalho, rankingVigentes, terceirizados)
     : {
@@ -103,6 +113,10 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
           exemplos: { servidores: [], teletrabalho: [], terceirizados: [] },
         },
       };
+  for (const t of unidades.terceirizados ?? []) {
+    t.contratoId = idPorNumeroContrato.get(normContrato(t.contrato)) ?? null;
+  }
+
   const calcMediana = (arr) => {
     const s = [...arr].sort((a, b) => a - b);
     const m = Math.floor(s.length / 2);

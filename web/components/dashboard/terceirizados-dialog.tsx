@@ -1,11 +1,17 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Search, X } from 'lucide-react';
+import { ExternalLink, Search, X } from 'lucide-react';
 import { Dialog, DialogHeader } from '@/components/ui/dialog';
 import { BotaoFonteExterna } from '@/components/dashboard/botao-fonte-externa';
 import { cn, numero } from '@/lib/utils';
-import { urlTerceirizados, type TerceirizadoUnidade } from '@/lib/dashboard-data';
+import { urlContrato, urlTerceirizados, type TerceirizadoUnidade } from '@/lib/dashboard-data';
+
+/** Item da modal: o registro cru + a unidade resolvida (sigla/nome). */
+export interface TerceirizadoNaModal extends TerceirizadoUnidade {
+  unidadeSigla: string;
+  unidadeNome: string;
+}
 
 function normalizar(texto: string) {
   return texto
@@ -30,7 +36,7 @@ export function TerceirizadosDialog({
 }: {
   titulo: string;
   subtitulo?: string;
-  itens: TerceirizadoUnidade[];
+  itens: TerceirizadoNaModal[];
   competencia: string | null;
   open: boolean;
   onClose: () => void;
@@ -44,7 +50,10 @@ export function TerceirizadosDialog({
       (t) =>
         normalizar(t.nome).includes(termo) ||
         normalizar(t.posto).includes(termo) ||
-        normalizar(t.empresa).includes(termo),
+        normalizar(t.empresa).includes(termo) ||
+        normalizar(t.unidadeSigla).includes(termo) ||
+        normalizar(t.unidadeNome).includes(termo) ||
+        normalizar(t.contrato).includes(termo),
     );
   }, [itens, busca]);
 
@@ -103,14 +112,35 @@ export function TerceirizadosDialog({
               <span className="w-7 shrink-0 pt-0.5 text-right text-xs tabular-nums text-muted-foreground">
                 {i + 1}.
               </span>
-              <span className="min-w-0">
-                <span className="block text-sm font-medium">{t.nome}</span>
-                {(t.posto || t.empresa) && (
-                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                    {[t.posto, t.empresa].filter(Boolean).join(' · ')}
-                    {t.contrato && <span className="text-muted-foreground/70"> · contrato {t.contrato}</span>}
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  <span className="text-sm font-medium">{t.nome}</span>
+                  <span
+                    className="rounded bg-muted px-1.5 py-px text-[11px] font-medium text-muted-foreground"
+                    title={t.unidadeNome}
+                  >
+                    {t.unidadeSigla}
                   </span>
-                )}
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  {[t.posto, t.empresa].filter(Boolean).join(' · ')}
+                  {(t.posto || t.empresa) && t.contrato && ' · '}
+                  {t.contrato &&
+                    (t.contratoId ? (
+                      <a
+                        href={urlContrato(t.contratoId)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-0.5 text-primary hover:underline"
+                        title="Abrir o contrato no Compras.gov.br, em nova aba"
+                      >
+                        contrato {t.contrato}
+                        <ExternalLink className="h-3 w-3" aria-hidden />
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground/70">contrato {t.contrato}</span>
+                    ))}
+                </span>
               </span>
             </li>
           ))}

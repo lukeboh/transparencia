@@ -266,6 +266,10 @@ function agregarUnidades(
       posto: limparPosto(t.posto),
       empresa: limparEmpresa(t.empresa),
       contrato: String(t.contrato ?? '').trim(),
+      /** Preenchido em agregarDashboard cruzando `contrato` com a base do Comprasnet. */
+      contratoId: null,
+      /** Caminho de siglas cru da coluna "Alocação" do PDF (ex.: "Sebd/COINF/STI/TSE"). */
+      alocacao: String(t.alocacao ?? '').trim(),
     });
   }
   terceirizadosResolvidos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));

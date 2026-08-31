@@ -7,7 +7,7 @@ import { PillToggle } from '@/components/ui/pill-toggle';
 import { FiscalChips, FuncaoChips, type BasePercentual, type NivelDetalhe } from '@/components/dashboard/unidade-chips';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
 import { UnidadeDetalheDialog } from '@/components/dashboard/unidade-detalhe-dialog';
-import { TerceirizadosDialog } from '@/components/dashboard/terceirizados-dialog';
+import { TerceirizadosDialog, type TerceirizadoNaModal } from '@/components/dashboard/terceirizados-dialog';
 import { DicaTermo } from '@/components/ui/dica-termo';
 import { InfoDica } from '@/components/ui/info-dica';
 import { cn, numero, percentual } from '@/lib/utils';
@@ -222,9 +222,14 @@ function UnidadeCard({
               )}
               <span
                 className="font-medium tabular-nums"
-                title="Percentual sobre os servidores desta unidade — pode passar de 100%"
+                title="Razão terceirizados ÷ servidores — passa de 100% quando há mais terceirizados que servidores"
               >
-                {numero(metricas.terceirizados)} · {percentual(metricas.terceirizados, denominador)}%
+                {numero(metricas.terceirizados)}
+                <span className="font-normal text-muted-foreground">
+                  {' · '}
+                  {percentual(metricas.terceirizados, denominador)}% dos servidores
+                  {modoBase === 'geral' ? ' do TSE' : ' da unidade'}
+                </span>
               </span>
             </span>
           </div>
@@ -519,15 +524,16 @@ export function UnidadeArvore({
   }, [detalheNode, porId]);
 
   // Nomes para a modal: se consolidado, junta o nó e toda a subárvore; se folha,
-  // só o nó. Cada balde já está em ordem alfabética global, então concatenar por
-  // uma travessia depth-first e reordenar mantém a lista numerada correta.
-  const terceirizadosDaModal = useMemo(() => {
+  // só o nó. Cada item ganha a sigla/nome da unidade em que foi alocado (útil
+  // na visão consolidada, em que as linhas vêm de subunidades diferentes).
+  const terceirizadosDaModal = useMemo<TerceirizadoNaModal[]>(() => {
     if (!terceirizadosAlvo) return [];
     const { node, consolidar } = terceirizadosAlvo;
-    const acc: TerceirizadoUnidade[] = [];
+    const acc: TerceirizadoNaModal[] = [];
     const coletar = (n: UnidadeNode) => {
-      const lista = terceirizadosPorUnidade.get(n.id);
-      if (lista) acc.push(...lista);
+      for (const t of terceirizadosPorUnidade.get(n.id) ?? []) {
+        acc.push({ ...t, unidadeSigla: n.sigla, unidadeNome: n.nome });
+      }
       if (consolidar) for (const filho of n.children) coletar(filho);
     };
     coletar(node);
