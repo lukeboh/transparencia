@@ -22,6 +22,7 @@ const ROTULO: Record<TerceirizadoFalha['tipo'], string> = {
   'lotacao-nao-identificada': 'Lotação não identificada',
   'sem-alocacao': 'Sem alocação no PDF',
   'contrato-nao-vinculado': 'Contrato não vinculado',
+  'nome-nao-identificado': 'Nome não identificado',
 };
 
 const COLUNAS_EXPORT: ColunaExport<TerceirizadoFalha>[] = [

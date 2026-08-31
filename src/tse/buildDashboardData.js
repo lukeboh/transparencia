@@ -404,8 +404,8 @@ export interface ContratoTerceirizados {
 }
 
 export interface TerceirizadoFalha {
-  /** 'lotacao-nao-identificada' = "Alocação" não casou com a árvore; 'sem-alocacao' = coluna vazia no PDF; 'contrato-nao-vinculado' = número não achado no Comprasnet. */
-  tipo: 'lotacao-nao-identificada' | 'sem-alocacao' | 'contrato-nao-vinculado';
+  /** 'lotacao-nao-identificada' = "Alocação" não casou com a árvore; 'sem-alocacao' = coluna vazia no PDF; 'contrato-nao-vinculado' = número não achado no Comprasnet; 'nome-nao-identificado' = a linha do PDF trouxe só o cargo, sem nome. */
+  tipo: 'lotacao-nao-identificada' | 'sem-alocacao' | 'contrato-nao-vinculado' | 'nome-nao-identificado';
   nome: string;
   alocacao: string;
   contrato: string;
@@ -413,12 +413,14 @@ export interface TerceirizadoFalha {
 }
 
 export interface TerceirizadosData {
-  /** Competências do histórico, da mais antiga para a mais recente. */
+  /** Competências do histórico EFETIVAMENTE usadas, da mais antiga para a mais recente (exclui as descartadas). */
   competencias: CompetenciaTerceirizados[];
   /** Chave da competência mais recente ("2026-07"), ou null sem histórico. */
   competenciaAtual: string | null;
   /** competencias.length — quando 1, "mês de fim" ainda não é observável. */
   historicoMeses: number;
+  /** Competências ignoradas por falha estrutural de extração do PDF (colunas mapeadas errado no OCR). */
+  competenciasDescartadas: { chave: string; rotulo: string }[];
   totalPessoas: number;
   ativos: number;
   encerrados: number;

@@ -142,8 +142,16 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   com o filtro Vigente ligado. KPI por contrato
   (terceirizados ativos e no histórico, com desempate de contratos de número
   igual pela empresa) e um "Registro de falhas" com quem ficou sem lotação
-  identificada, sem alocação no PDF ou com contrato não vinculado ao
-  Compras.gov.br. O modal **Detalhes do Contrato**
+  identificada, sem alocação no PDF, com contrato não vinculado ao
+  Compras.gov.br ou **sem nome** (linha do PDF que só trouxe o cargo).
+  Limpeza da leitura do PDF em `src/tse/nomesTerceirizados.js`: o OCR
+  frequentemente gruda o cargo no fim do nome ("ABADIA CORREA CORTE Técnico
+  em Secretariado…") ou joga o nome para dentro do campo empresa — a
+  heurística desgruda/resgata; competências em que isso quebra >40% das
+  linhas (2023-04 e 2023-08) são **descartadas inteiras** do cálculo de
+  mês de início/fim; o resíduo pode ser corrigido à mão em
+  `data/tse_terceirizados_excecoes.json` (`descartar` / `renomear`). O modal
+  **Detalhes do Contrato**
   (`web/components/dashboard/detalhes-contrato-dialog.tsx`) é o padrão novo
   para detalhe de contrato: número, fornecedor, objeto em uma linha, valores
   global/empenhado/pago, vigência (chip **VIGENTE**), classificação do app e —
@@ -151,7 +159,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   Compras.gov.br.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.23**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.24**.
 
 ## Dashboard web
 

@@ -12,6 +12,7 @@
 // pela própria fonte) é usado só como checagem cruzada manual (ver
 // scrapeUnidades.js) — nunca como fonte de verdade das contagens daqui.
 import { normalizeNome } from './rankResponsaveis.js';
+import { separarNomePosto } from './nomesTerceirizados.js';
 
 const MAX_EXEMPLOS = 30;
 
@@ -260,10 +261,15 @@ function agregarUnidades(
       continue;
     }
     metricas.get(id).terceirizados += 1;
+    // Desgruda "NOME + cargo" / resgata nome do campo empresa (ver
+    // nomesTerceirizados.js). Linhas que são só cargo (semNome) contam na
+    // unidade mas não entram na lista de nomes.
+    const limpo = separarNomePosto(t.empregado, t.posto, t.empresa);
+    if (limpo.semNome) continue;
     terceirizadosResolvidos.push({
       unidadeId: id,
-      nome: tituloNome(t.empregado),
-      posto: limparPosto(t.posto),
+      nome: tituloNome(limpo.nome),
+      posto: limparPosto(limpo.posto || t.posto),
       empresa: limparEmpresa(t.empresa),
       contrato: String(t.contrato ?? '').trim(),
       /** Preenchido em agregarDashboard cruzando `contrato` com a base do Comprasnet. */

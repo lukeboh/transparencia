@@ -231,6 +231,16 @@ export function TerceirizadosDashboard() {
           </p>
         )}
 
+        {t.competenciasDescartadas.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {t.competenciasDescartadas.length} competência
+            {t.competenciasDescartadas.length === 1 ? '' : 's'} descartada
+            {t.competenciasDescartadas.length === 1 ? '' : 's'} por falha de extração do PDF (colunas
+            mapeadas errado no OCR): {t.competenciasDescartadas.map((c) => c.rotulo).join(', ')}. Não
+            entram no cálculo de mês de início/fim.
+          </p>
+        )}
+
         <TerceirizadosContratosCard
           contratos={t.porContrato}
           onVerContrato={(c) =>

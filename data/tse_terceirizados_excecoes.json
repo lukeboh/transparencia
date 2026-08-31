@@ -1,0 +1,5 @@
+{
+  "_doc": "Correções manuais da leitura dos PDFs de terceirizados. 'descartar': valores da coluna Empregado que NÃO são pessoas (só cargo/ruído) e devem sumir. 'renomear': mapeia um Empregado bruto para o nome correto. Chaves comparadas sem acento, em maiúsculas, com espaços colapsados. A heurística de nomesTerceirizados.js já resolve a maioria dos casos; use este arquivo só para o resíduo. Editar e rodar 'npm run data'.",
+  "descartar": [],
+  "renomear": {}
+}

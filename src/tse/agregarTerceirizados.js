@@ -19,8 +19,14 @@
 // agregarUnidades.js (gabinetes de ministro caem todos no nó "MIN").
 import { normalizeNome } from './rankResponsaveis.js';
 import { normalizeUnidade } from './agregarUnidades.js';
+import { separarNomePosto, carregarExcecoesTerceirizados } from './nomesTerceirizados.js';
 
 const MAX_NIVEIS_LOTACAO = 3;
+// Competência com mais que isso de linhas sem nome recuperável é uma falha
+// estrutural de extração do PDF daquele mês (o parser mapeou as colunas
+// errado) — melhor descartá-la inteira do que injetar milhares de "pessoas"
+// fantasmas e saídas/entradas falsas. Ver README.
+const LIMIAR_DESCARTE_COMPETENCIA = 0.4;
 const ALIAS_SIGLA = { CCJE: 'ACCJE', CONJULEG: 'COJULEG' };
 const CONECTIVOS = new Set(['de', 'da', 'do', 'dos', 'das', 'e']);
 
@@ -53,6 +59,12 @@ function limparEmpresa(bruto) {
 
 /** "013/2022" → "13/2022" — mesma normalização usada no cruzamento com o Comprasnet. */
 const normContrato = (s) => String(s ?? '').trim().replace(/^0+(\d)/, '$1');
+
+const semAcentoUpper = (s) =>
+  String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+
+/** Teto de itens no registro de falhas — evita listão em cenários degradados. */
+const MAX_FALHAS = 4000;
 
 const GENERICOS_FORNECEDOR = new Set([
   'ltda', 'me', 'epp', 'eireli', 'sa', 's/a', 'servicos', 'serviços', 'comercio',
@@ -212,15 +224,63 @@ function agregarTerceirizados(entradaTerceirizados, arvoreUnidades = null, contr
   const chavesOrdenadas = semHistorico
     ? Object.keys(porCompetencia).sort()
     : competencias.map((c) => c.chave);
+
+  const excecoes = carregarExcecoesTerceirizados();
+  const chaveExc = (s) => semAcentoUpper(s).replace(/\s+/g, ' ').trim();
+
+  // Limpa "NOME + cargo" grudados e resgata nome do campo empresa (competências
+  // ruins de 2023). Devolve { nome, posto } limpos + `semNome` para as linhas
+  // que são só cargo.
+  function limparRegistro(r) {
+    const kRaw = chaveExc(r.empregado);
+    if (excecoes.descartar.has(kRaw)) return { descartar: true };
+    const renomear = excecoes.renomear.get(kRaw);
+    if (renomear) return { nome: renomear, posto: limparPosto(r.posto), semNome: false };
+    return separarNomePosto(r.empregado ?? r.nome ?? '', r.posto ?? '', r.empresa ?? '');
+  }
+
+  // 1ª passada: taxa de linhas sem nome por competência → descarta as
+  // estruturalmente quebradas.
+  const competenciasDescartadas = [];
+  const chavesUsadas = chavesOrdenadas.filter((chave) => {
+    const regs = porCompetencia[chave] ?? [];
+    if (regs.length === 0) return true; // competência real, só vazia
+    let semNome = 0;
+    for (const r of regs) {
+      const c = limparRegistro(r);
+      if (c.descartar || c.semNome) semNome += 1;
+    }
+    if (semNome / regs.length > LIMIAR_DESCARTE_COMPETENCIA) {
+      competenciasDescartadas.push(chave);
+      return false;
+    }
+    return true;
+  });
+  const competenciaAtualUsada = chavesUsadas[chavesUsadas.length - 1] ?? competenciaAtual;
+
+  const falhas = [];
   const pessoasMap = new Map();
-  for (const chave of chavesOrdenadas) {
+  for (const chave of chavesUsadas) {
     for (const r of porCompetencia[chave] ?? []) {
-      const nomeCru = r.empregado ?? r.nome ?? '';
-      const kPessoa = normalizeNome(nomeCru);
+      const limpo = limparRegistro(r);
+      if (limpo.descartar) continue;
+      if (limpo.semNome) {
+        if (falhas.length < MAX_FALHAS) {
+          falhas.push({
+            tipo: 'nome-nao-identificado',
+            nome: String(r.empregado ?? '').replace(/\s+/g, ' ').trim() || '(vazio)',
+            alocacao: String(r.alocacao ?? '').trim(),
+            contrato: String(r.contrato ?? '').trim(),
+            competenciaMaisRecente: chave,
+          });
+        }
+        continue;
+      }
+      const kPessoa = normalizeNome(limpo.nome);
       if (!kPessoa) continue;
       let p = pessoasMap.get(kPessoa);
       if (!p) {
-        p = { nome: tituloNome(nomeCru), competenciasPresente: [], ocorrencias: [] };
+        p = { nome: tituloNome(limpo.nome), competenciasPresente: [], ocorrencias: [] };
         pessoasMap.set(kPessoa, p);
       }
       if (p.competenciasPresente[p.competenciasPresente.length - 1] !== chave) {
@@ -230,19 +290,18 @@ function agregarTerceirizados(entradaTerceirizados, arvoreUnidades = null, contr
         chave,
         contrato: String(r.contrato ?? '').trim(),
         empresa: limparEmpresa(r.empresa),
-        posto: limparPosto(r.posto),
+        posto: limpo.posto || limparPosto(r.posto),
         alocacao: String(r.alocacao ?? '').trim(),
       });
     }
   }
 
-  const falhas = [];
   const pessoas = [];
   for (const p of pessoasMap.values()) {
     const ultima = p.ocorrencias[p.ocorrencias.length - 1];
     const presente = p.competenciasPresente;
     const mesInicio = semHistorico ? null : (presente[0] ?? null);
-    const aindaConsta = competenciaAtual != null && presente.includes(competenciaAtual);
+    const aindaConsta = competenciaAtualUsada != null && presente.includes(competenciaAtualUsada);
     const mesFim = semHistorico || aindaConsta ? null : (presente[presente.length - 1] ?? null);
 
     const unidadeId = resolver(ultima.alocacao);
@@ -325,15 +384,20 @@ function agregarTerceirizados(entradaTerceirizados, arvoreUnidades = null, contr
   );
 
   const ativos = pessoas.filter((p) => p.ativo).length;
+  const usadas = new Set(chavesUsadas);
+  const rotuloPorChave = new Map(competencias.map((c) => [c.chave, c.rotulo ?? c.chave]));
+  const descOrdenadas = [...competenciasDescartadas].sort();
   return {
-    competencias: competencias.map((c) => ({
-      chave: c.chave,
-      rotulo: c.rotulo ?? c.chave,
-      mes: c.mes ?? null,
-      ano: c.ano ?? null,
+    competencias: competencias
+      .filter((c) => usadas.has(c.chave))
+      .map((c) => ({ chave: c.chave, rotulo: c.rotulo ?? c.chave, mes: c.mes ?? null, ano: c.ano ?? null })),
+    competenciaAtual: competenciaAtualUsada,
+    historicoMeses: semHistorico ? 0 : chavesUsadas.length,
+    /** Competências ignoradas por falha estrutural de extração do PDF (colunas mapeadas errado). */
+    competenciasDescartadas: descOrdenadas.map((chave) => ({
+      chave,
+      rotulo: rotuloPorChave.get(chave) ?? chave,
     })),
-    competenciaAtual,
-    historicoMeses: competencias.length,
     totalPessoas: pessoas.length,
     ativos,
     encerrados: pessoas.length - ativos,
