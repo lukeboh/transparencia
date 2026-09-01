@@ -320,9 +320,11 @@ export function RankingTable({
     const termoLot = normalizar(filtroLotacao.trim());
     const filtradas = comPosicao.filter(({ linha }) => {
       if (termo && !normalizar(linha.nome).includes(termo)) return false;
-      if (termoLot) {
-        const { curto, completo } = lotacaoDe(linha.nome);
-        if (!normalizar(`${curto} ${completo}`).includes(termoLot)) return false;
+      // Casa só o texto EXIBIDO da lotação (siglas resolvidas, ou o nome plano
+      // quando não resolve) — não o nome completo, senão "STI" pegaria
+      // "logíSTIca", "inveSTImento" etc. no nome por extenso.
+      if (termoLot && !normalizar(lotacaoDe(linha.nome).curto).includes(termoLot)) {
+        return false;
       }
       return true;
     });
