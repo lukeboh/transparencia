@@ -51,12 +51,13 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
     função comissionada de hoje; desligado = casa também o histórico de FC/CJ
     das portarias).
   - Em **Por contratos**: "Somente contratos vigentes" virou o chip
-    **VIGENTE**; "Considerar substitutos" começa DESLIGADO; e o chip **COM
-    CONTRATO** (desligado por padrão) restringe aos fiscais/gestores,
-    reproduzindo a antiga `/fiscais`. Com ele desligado, os cortes de contrato
-    (papel/faixa/vigência) só moldam as colunas de valor — a lista continua
-    com todos os servidores, filtrada só por função; quem não casa com os
-    cortes aparece zerado.
+    **VIGENTE**; "Considerar substitutos" começa DESLIGADO.
+  - Na subseção **Por papel**, um chip sintético **NÃO FISCAL** (ligado por
+    padrão, mesmo termo `zeroFiscal` de `/funcoes`) mescla os servidores que
+    não são fiscais/gestores de nenhum contrato — filtrados só por função, que
+    é sobre a pessoa. Desligá-lo deixa só o ranking de fiscais, como a antiga
+    `/fiscais`; e desmarcar todos os papéis reais mantendo o NÃO FISCAL mostra
+    só os não-fiscais.
   - KPIs de valor (medianas, donut "Fiscais designados") passam a considerar
     só quem tem contrato, com rótulo "de N servidores".
 - ✅ Estrutura hierárquica de unidades do TSE (`/unidades`) — fonte: o
@@ -294,11 +295,15 @@ ordenação clicável nos cabeçalhos Servidor (alfabética), Contratos e Valor
 consolidado (1º clique ordena, 2º inverte, 3º volta à ordem do ranking); a
 coluna # sempre mostra a posição original no ranking por valor.
 
-O chip **COM CONTRATO** (desligado por padrão) restringe a lista aos
-fiscais/gestores, reproduzindo a antiga `/fiscais`; com ele ligado, o chip
-**VIGENTE** de "Por contratos" faz quem só tem contrato encerrado sumir da
-lista. Com **COM CONTRATO** desligado, esses cortes de contrato só zeram as
-colunas de valor da pessoa — ela continua na lista, filtrada só por função.
+Na subseção **Por papel** do filtro, além dos papéis reais há o chip sintético
+**NÃO FISCAL** (ligado por padrão): mescla os servidores que não são
+fiscais/gestores de contrato nenhum (`zeroFiscal`), filtrados só por função.
+Desligá-lo deixa só o ranking de fiscais, reproduzindo a antiga `/fiscais`;
+desmarcar todos os papéis reais mantendo o NÃO FISCAL mostra só os não-fiscais.
+Os chips **VIGENTE** de "Por contratos" e "Por função" começam ligados (regra do
+projeto) e, ligados, escondem quem só tem contrato encerrado / considera só a
+função de hoje — por isso a lista abre com menos que o total; **Limpar** traz
+todo mundo.
 
 ### Temas
 
@@ -736,10 +741,11 @@ superconjunto). Cada commit que inclua um scrape novo adiciona alguns MB ao
   (Agentes Públicos)") e agora lista **todos** os agentes públicos, não só os
   fiscais (`DashboardData.servidores`). O filtro "Por função" ganhou o chip
   **VIGENTE** (ligado = só a função de hoje; desligado = casa também o
-  histórico de FC/CJ das portarias) e "Por contratos" ganhou o chip **COM
-  CONTRATO** (recorta aos fiscais/gestores). **Falta ainda:** ao clicar num
-  servidor, o detalhamento deveria listar o histórico de FCs/CJs que ele já
-  ocupou, com a função atual marcada com um chip VIGENTE.
+  histórico de FC/CJ das portarias) e a subseção "Por papel" ganhou o chip
+  sintético **NÃO FISCAL** (recorta os `zeroFiscal`; desligado = só o ranking
+  de fiscais). **Falta ainda:** ao clicar num servidor, o detalhamento deveria
+  listar o histórico de FCs/CJs que ele já ocupou, com a função atual marcada
+  com um chip VIGENTE.
   3. ✅ Onde existir o botão/chip VIGENTE como filtro, ele começa ligado — ver
   "Regra: filtro Vigente sempre ligado por padrão" acima. Os dados históricos
   só aparecem se explicitamente solicitado (desligar o VIGENTE).

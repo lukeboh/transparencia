@@ -187,10 +187,10 @@ export function ServidoresDashboard() {
   // comissionada de hoje; desligado = também considera o histórico de FC/CJ.
   // Padrão ligado, mesma regra do Vigente de contratos.
   const [funcaoVigente, setFuncaoVigente] = useState(true);
-  // Chip "Com contrato" da seção "Por contratos": ligado = só fiscais/gestores
-  // (como a antiga /fiscais); desligado (padrão) = todos os agentes públicos,
-  // inclusive quem não atua em nenhum contrato.
-  const [soComContrato, setSoComContrato] = useState(false);
+  // Chip sintético "NÃO FISCAL" da seção "Por papel": ligado (padrão) inclui os
+  // servidores que não são fiscais/gestores de nenhum contrato; desligado
+  // deixa só o ranking de fiscais, como a antiga /fiscais.
+  const [incluirNaoFiscal, setIncluirNaoFiscal] = useState(true);
 
   // Uma linha por servidor, na grafia da relação de agentes públicos, com os
   // dados de contrato do ranking de responsáveis quando houver — ou zerada.
@@ -204,6 +204,11 @@ export function ServidoresDashboard() {
   );
   const fiscaisServidores = useMemo(
     () => linhasServidores.filter((l) => l.quantidadeContratos > 0),
+    [linhasServidores],
+  );
+  // "Não-Fiscal": nunca aparece como fiscal/gestor em contrato (`zeroFiscal`).
+  const naoFiscaisServidores = useMemo(
+    () => linhasServidores.filter((l) => l.quantidadeContratos === 0),
     [linhasServidores],
   );
 
@@ -246,7 +251,7 @@ export function ServidoresDashboard() {
       subs: bool.escrever(considerarSubstitutos, false),
       vig: bool.escrever(somenteVigentes, true),
       func_vig: bool.escrever(funcaoVigente, true),
-      com_contrato: bool.escrever(soComContrato, false),
+      nao_fiscal: bool.escrever(incluirNaoFiscal, true),
       semfunc: bool.escrever(incluirSemFuncao, true),
       // esquema antigo ("guardava os desmarcados"): limpa se aparecer num link
       func_off: null,
@@ -264,7 +269,7 @@ export function ServidoresDashboard() {
       setConsiderarSubstitutos(bool.ler(sp.get('subs'), false));
       setSomenteVigentes(bool.ler(sp.get('vig'), true));
       setFuncaoVigente(bool.ler(sp.get('func_vig'), true));
-      setSoComContrato(bool.ler(sp.get('com_contrato'), false));
+      setIncluirNaoFiscal(bool.ler(sp.get('nao_fiscal'), true));
       setIncluirSemFuncao(bool.ler(sp.get('semfunc'), true));
     },
   );
@@ -327,41 +332,40 @@ export function ServidoresDashboard() {
     incluirSemFuncao,
   ]);
 
-  // Estágio 2: acrescenta o filtro de faixa de valor sobre o estágio 1. Com o
-  // chip "Com contrato" LIGADO, para por aqui (só fiscais/gestores, como a
-  // antiga /fiscais). DESLIGADO (padrão), todo servidor que não sobreviveu ao
-  // pipeline de fiscal (contrato encerrado, papel/faixa fora do filtro, ou
-  // nunca fiscalizou nada) volta como linha zerada — sujeito só ao filtro de
-  // função, que é sobre a pessoa. Assim "Servidores" mostra mesmo todo mundo,
-  // e os cortes de contrato só moldam as colunas de valor.
+  // Estágio 2: acrescenta o filtro de faixa de valor sobre o estágio 1 (só
+  // fiscais/gestores, recortados por papel/faixa/vigência/função) e, quando o
+  // chip sintético "NÃO FISCAL" da seção "Por papel" está ligado (padrão),
+  // mescla os servidores que não são fiscais de nada — filtrados só por
+  // função, que é sobre a pessoa. Desligar "NÃO FISCAL" deixa só o ranking,
+  // como a antiga /fiscais; e dá para ver só os não-fiscais desmarcando todos
+  // os papéis reais.
   const rankingFiltrado = useMemo(() => {
-    if (papeisEfetivos.length === 0 || categoriasSelecionadas.length === 0) return [];
+    if (categoriasSelecionadas.length === 0) return [];
+    const semPapel = papeisEfetivos.length === 0;
     const todasFaixas = categoriasSelecionadas.length === CATEGORIAS_VALOR.length;
-    const fiscais = todasFaixas
-      ? rankingPorPapelVigencia
-      : filtrarRanking(
-          rankingPorPapelVigencia,
-          contratos,
-          categoriaIdPorIndice,
-          papeisEfetivos,
-          somenteVigentes,
-          categoriasSelecionadas,
-          chavesFuncaoPorNome,
-          null,
-          incluirSemFuncao,
-        );
-    if (soComContrato) return fiscais;
-    const nomesFiscais = new Set(fiscais.map((r) => r.nome));
-    const resto = linhasServidores
-      .filter((l) => !nomesFiscais.has(l.nome))
-      .map((l) => (l.quantidadeContratos > 0 ? linhaVaziaDe(l.nome) : l));
-    const restoFiltrado = filtrarSemContrato(
-      resto,
+    const fiscais = semPapel
+      ? []
+      : todasFaixas
+        ? rankingPorPapelVigencia
+        : filtrarRanking(
+            rankingPorPapelVigencia,
+            contratos,
+            categoriaIdPorIndice,
+            papeisEfetivos,
+            somenteVigentes,
+            categoriasSelecionadas,
+            chavesFuncaoPorNome,
+            null,
+            incluirSemFuncao,
+          );
+    if (!incluirNaoFiscal) return fiscais;
+    const naoFiscais = filtrarSemContrato(
+      naoFiscaisServidores,
       chavesFuncaoPorNome,
       funcoesIrrestritas ? null : funcoesSelecionadas,
       incluirSemFuncao,
     );
-    return [...fiscais, ...restoFiltrado];
+    return [...fiscais, ...naoFiscais];
   }, [
     rankingPorPapelVigencia,
     contratos,
@@ -371,8 +375,8 @@ export function ServidoresDashboard() {
     categoriasSelecionadas,
     chavesFuncaoPorNome,
     incluirSemFuncao,
-    soComContrato,
-    linhasServidores,
+    incluirNaoFiscal,
+    naoFiscaisServidores,
     funcoesIrrestritas,
     funcoesSelecionadas,
   ]);
@@ -554,19 +558,19 @@ export function ServidoresDashboard() {
           onIncluirSemFuncaoChange={setIncluirSemFuncao}
           funcaoVigente={funcaoVigente}
           onFuncaoVigenteChange={setFuncaoVigente}
-          soComContrato={soComContrato}
-          onSoComContratoChange={setSoComContrato}
+          incluirNaoFiscal={incluirNaoFiscal}
+          onIncluirNaoFiscalChange={setIncluirNaoFiscal}
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <FuncaoStatCard
             titulo="Fiscais designados"
             detalhe={
-              soComContrato
-                ? somenteVigentes
+              incluirNaoFiscal
+                ? `${numero(fiscaisFiltrados.length)} de ${numero(rankingFiltrado.length)} servidores no filtro`
+                : somenteVigentes
                   ? `${numero(fiscaisFiltrados.length)} com contrato vigente hoje`
                   : `${numero(fiscaisFiltrados.length)} no total · ${numero(emContratosVigentesCount)} em contratos vigentes hoje`
-                : `${numero(fiscaisFiltrados.length)} de ${numero(rankingFiltrado.length)} servidores no filtro`
             }
             icone={<Users className="h-4 w-4" aria-hidden />}
             contagens={donutFuncoesResponsaveis}
@@ -609,12 +613,13 @@ export function ServidoresDashboard() {
         servidor aparece como responsável nos papéis selecionados
         {considerarSubstitutos ? '' : ' (sem os substitutos)'}
         {somenteVigentes ? ' e vigente hoje' : ''} e dentro das faixas de valor
-        selecionadas, contando cada contrato uma única vez por pessoa. Com
-        &ldquo;Com contrato&rdquo; desligado, quem não casa com esses cortes de
-        contrato aparece zerado, filtrado só por &ldquo;Por função&rdquo; — o
-        cargo comissionado (FC/CJ <DicaTermo id="fcCj" alinhamento="esquerda" />),
-        atual ou, com o &ldquo;Vigente&rdquo; da seção desligado, também do
-        histórico de portarias. Faixas de valor:{' '}
+        selecionadas, contando cada contrato uma única vez por pessoa. O chip
+        &ldquo;NÃO FISCAL&rdquo; (na seção &ldquo;Por papel&rdquo;) inclui os
+        servidores que não são fiscais/gestores de nenhum contrato, filtrados só
+        por &ldquo;Por função&rdquo; — o cargo comissionado (FC/CJ{' '}
+        <DicaTermo id="fcCj" alinhamento="esquerda" />), atual ou, com o
+        &ldquo;Vigente&rdquo; da seção desligado, também do histórico de
+        portarias; desligue-o para ver só o ranking de fiscais. Faixas de valor:{' '}
         {CATEGORIAS_VALOR.map((c) => `${c.simbolo} ${c.nome}`).join(' · ')}.
         <AppVersion />
       </footer>
