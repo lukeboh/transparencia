@@ -58,6 +58,9 @@ function construirMandatos(movimentos) {
         exoneracaoData: null,
         exoneracaoPortaria: null,
         vigente: true,
+        // vira true quando a exoneração não foi lida de uma portaria e sim
+        // inferida da relação atual de agentes públicos (ver agregarFuncoes).
+        exoneracaoInferida: false,
       };
     } else if (aberto) {
       aberto.exoneracaoData = mv.dataEfetiva;
@@ -76,6 +79,7 @@ function construirMandatos(movimentos) {
         exoneracaoData: mv.dataEfetiva,
         exoneracaoPortaria: mv.portaria,
         vigente: false,
+        exoneracaoInferida: false,
       });
     }
   }
@@ -101,6 +105,14 @@ function agregarFuncoes(agentesPublicos, movimentosFuncoes, contratos) {
     movimentosPorPessoa.get(chave).movimentos.push(mv);
   }
 
+  // Índice da relação atual por nome normalizado — inclui quem está nela SEM
+  // função (fonte primária do "hoje": se não há função ali, o servidor não
+  // tem função comissionada agora, mesmo que falte a portaria de exoneração).
+  const apPorChave = new Map();
+  for (const ap of agentesPublicos) {
+    if (ap.nome) apPorChave.set(normalizeNome(ap.nome), ap);
+  }
+
   // 2) Universo primário: todo agente público com função hoje.
   const porChave = new Map();
   for (const ap of agentesPublicos) {
@@ -122,27 +134,32 @@ function agregarFuncoes(agentesPublicos, movimentosFuncoes, contratos) {
     });
   }
 
-  // 3) Enriquece com o histórico das portarias; quem só aparece nas
-  // portarias (não está mais na relação atual — provavelmente saiu do TSE)
-  // entra como um registro histórico à parte, sinalizado como tal.
+  // 3) Enriquece com o histórico das portarias. Quem não estava no passo 2
+  // (não tem função hoje) entra aqui como registro histórico — distinguindo
+  // dois casos: (a) consta na relação atual, mas sem função (fonte primária
+  // diz que hoje não tem nenhuma); (b) nem na relação atual está (saiu do TSE
+  // ou o nome divergiu entre as fontes).
   for (const [chave, info] of movimentosPorPessoa) {
     const mandatos = construirMandatos(info.movimentos);
     const existente = porChave.get(chave);
     if (existente) {
       existente.mandatos = mandatos;
     } else {
+      const ap = apPorChave.get(chave);
       porChave.set(chave, {
-        nome: info.nome,
-        matricula: null,
-        cargo: null,
-        lotacao: null,
+        nome: ap?.nome ?? info.nome,
+        matricula: ap?.matricula ?? null,
+        cargo: ap?.cargo ?? null,
+        lotacao: ap?.lotacao ?? null,
         funcaoAtual: null,
         atoProvimentoAtual: null,
-        naRelacaoAtual: false,
+        naRelacaoAtual: Boolean(ap),
         mandatos,
-        observacoes: [
-          'Não consta na relação atual de agentes públicos do TSE — pode ter deixado o órgão, se aposentado, ou o nome pode ter mudado entre as duas fontes.',
-        ],
+        observacoes: ap
+          ? []
+          : [
+              'Não consta na relação atual de agentes públicos do TSE — pode ter deixado o órgão, se aposentado, ou o nome pode ter mudado entre as duas fontes.',
+            ],
       });
     }
   }
@@ -163,6 +180,23 @@ function agregarFuncoes(agentesPublicos, movimentosFuncoes, contratos) {
         `Divergência entre fontes: a relação atual de agentes públicos indica ${s.funcaoAtual.tipo}-${s.funcaoAtual.nivel} ` +
           `(${s.funcaoAtual.cargoTitulo}), mas o histórico de portarias indica ${mandatoVigente.tipo}-${mandatoVigente.nivel} ` +
           `(${mandatoVigente.cargoTitulo}) como vigente.`,
+      );
+    } else if (!s.funcaoAtual && mandatoVigente && s.naRelacaoAtual) {
+      // O servidor consta na relação atual, porém SEM função. A fonte primária
+      // é a que vale para o "hoje": ele não tem mais essa função (não se
+      // acumula função comissionada). Fecha os mandatos que as portarias
+      // deixaram em aberto, marcando a exoneração como inferida (a portaria de
+      // saída não foi localizada, mas sabemos que houve).
+      for (const m of s.mandatos) {
+        if (m.vigente) {
+          m.vigente = false;
+          m.exoneracaoInferida = true;
+        }
+      }
+      s.observacoes.push(
+        `Consta na relação atual de agentes públicos sem função comissionada; ` +
+          `o mandato ${mandatoVigente.tipo}-${mandatoVigente.nivel} (${mandatoVigente.cargoTitulo}) que as ` +
+          `portarias deixaram em aberto é tratado como encerrado — exoneração não localizada, inferida da fonte primária.`,
       );
     } else if (!s.funcaoAtual && mandatoVigente) {
       s.observacoes.push(

@@ -67,7 +67,7 @@ function normalizar(texto: string) {
  */
 export function funcaoDestaque(servidor: ServidorFuncoes) {
   if (servidor.funcaoAtual) {
-    return { ...servidor.funcaoAtual, vigente: true };
+    return { ...servidor.funcaoAtual, vigente: true, exoneracaoInferida: false };
   }
   const ordenados = [...servidor.mandatos].sort((a, b) =>
     (b.nomeacaoData ?? '').localeCompare(a.nomeacaoData ?? ''),
@@ -83,13 +83,25 @@ export function FuncoesBadges({ servidor }: { servidor: ServidorFuncoes }) {
     <span className="flex flex-wrap items-center gap-1">
       <span
         className="rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-primary"
-        title={destaque.cargoTitulo}
+        title={
+          destaque.exoneracaoInferida
+            ? `${destaque.cargoTitulo} — encerrada: a relação atual mostra o servidor sem função (exoneração não localizada)`
+            : destaque.cargoTitulo
+        }
       >
         {destaque.tipo}-{destaque.nivel}
       </span>
       {destaque.vigente && (
         <span className="rounded-sm bg-secondary px-1 py-px text-[10px] uppercase tracking-wide text-secondary-foreground font-semibold">
           vigente
+        </span>
+      )}
+      {destaque.exoneracaoInferida && (
+        <span
+          className="rounded-sm bg-muted px-1 py-px text-[10px] uppercase tracking-wide text-muted-foreground font-semibold"
+          title="Sem função na relação atual — mandato encerrado sem portaria de exoneração localizada"
+        >
+          encerrada
         </span>
       )}
       {restantes > 0 && <span className="text-xs text-muted-foreground">+{restantes}</span>}

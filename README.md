@@ -649,6 +649,17 @@ registro do servidor — a página exibe um ícone de alerta ao lado do nome e o
 detalhe completo no histórico — em vez de decidir sozinho qual fonte está
 certa.
 
+Um caso a reconciliação **resolve** em vez de só sinalizar: o servidor
+**consta na relação atual, mas sem função**, e o histórico de portarias tem
+um mandato "em aberto" (exoneração não localizada). A relação atual é a fonte
+do "hoje" e não se acumula função comissionada, então esse mandato é dado
+como **encerrado**: `vigente` vira `false` e `exoneracaoInferida` vira `true`
+(a portaria de saída não foi achada, mas sabe-se que houve). O selo da função
+mostra "encerrada" em vez de "vigente" e o histórico registra "exoneração não
+localizada (inferida)". Quando o servidor **não** está na relação atual
+(saiu do órgão, ou o nome divergiu entre as fontes), não dá pra inferir — o
+mandato segue "em aberto" com a observação de sempre.
+
 Extração de cada portaria (texto integral, HTML estático): um ou mais
 "movimentos" — "Fica(m) dispensado(s)/exonerado(s)" ou o imperativo
 "Dispensar"/"Exonerar" (fim) e "Fica(m) designado(s)/nomeado(s)" ou

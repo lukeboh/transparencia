@@ -235,10 +235,12 @@ export interface FuncaoMandato extends FuncaoResumo {
   /** Data efetiva (ISO) da nomeação/designação, ou null quando a portaria de início não foi localizada. */
   nomeacaoData: string | null;
   nomeacaoPortaria: PortariaRef | null;
-  /** Data efetiva (ISO) da exoneração/dispensa, ou null quando o mandato segue vigente. */
+  /** Data efetiva (ISO) da exoneração/dispensa, ou null quando não há portaria de saída localizada. */
   exoneracaoData: string | null;
   exoneracaoPortaria: PortariaRef | null;
   vigente: boolean;
+  /** true quando o mandato foi dado como encerrado sem portaria de exoneração: a relação atual de agentes públicos mostra o servidor sem função (não se acumula função comissionada). */
+  exoneracaoInferida: boolean;
 }
 
 export interface AtoProvimento {

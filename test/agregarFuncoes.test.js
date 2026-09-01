@@ -177,10 +177,23 @@ test('agregarFuncoes: registra observação quando o nível vigente das duas fon
   assert.ok(s.observacoes.some((o) => o.includes('Divergência entre fontes')));
 });
 
-test('agregarFuncoes: registra observação quando o histórico indica vigente mas a fonte atual não mostra função', () => {
+test('agregarFuncoes: consta na relação atual SEM função => fecha o mandato em aberto da portaria (exoneração inferida)', () => {
   const movs = [movimento({ nome: 'Fulano de Tal', tipo: 'inicio', dataEfetiva: '2020-01-01' })];
-  const agentes = [agentePublico({ funcao: null })];
+  const agentes = [agentePublico({ funcao: null })]; // está na relação atual, mas sem função
   const { servidores } = agregarFuncoes(agentes, movs, []);
   const s = servidores.find((x) => x.nome === 'Fulano de Tal');
-  assert.ok(s.observacoes.some((o) => o.includes('a relação atual de agentes públicos não mostra função')));
+  assert.equal(s.naRelacaoAtual, true);
+  assert.equal(s.mandatos.length, 1);
+  assert.equal(s.mandatos[0].vigente, false);
+  assert.equal(s.mandatos[0].exoneracaoInferida, true);
+  assert.ok(s.observacoes.some((o) => o.includes('tratado como encerrado')));
+});
+
+test('agregarFuncoes: NÃO consta na relação atual => mantém o mandato da portaria em aberto (não dá pra inferir)', () => {
+  const movs = [movimento({ nome: 'Saiu Do Tse', tipo: 'inicio', dataEfetiva: '2020-01-01' })];
+  const { servidores } = agregarFuncoes([], movs, []); // ninguém na relação atual
+  const s = servidores.find((x) => x.nome === 'Saiu Do Tse');
+  assert.equal(s.naRelacaoAtual, false);
+  assert.equal(s.mandatos[0].vigente, true);
+  assert.equal(s.mandatos[0].exoneracaoInferida, false);
 });

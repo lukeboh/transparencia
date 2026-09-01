@@ -121,6 +121,14 @@ export function FuncoesHistoricoDialog({
                   sem exoneração localizada
                 </span>
               )}
+              {m.exoneracaoInferida && (
+                <span
+                  className="rounded-sm bg-muted px-1 py-px text-[10px] uppercase tracking-wide text-muted-foreground font-semibold"
+                  title="A relação atual de agentes públicos mostra o servidor sem função — o mandato foi dado como encerrado mesmo sem a portaria de exoneração (não se acumula função comissionada)."
+                >
+                  encerrada — exoneração não localizada
+                </span>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">{m.unidade}</p>
             <div className="grid grid-cols-2 gap-2 text-xs">
@@ -136,6 +144,8 @@ export function FuncoesHistoricoDialog({
                 <span className="text-muted-foreground">Exoneração: </span>
                 {m.vigente ? (
                   <span className="text-muted-foreground">—</span>
+                ) : m.exoneracaoInferida ? (
+                  <span className="text-muted-foreground">não localizada (inferida)</span>
                 ) : (
                   <LinkPortaria
                     data={m.exoneracaoData}
