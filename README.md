@@ -148,8 +148,9 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   "Outros"; clique → modal "Detalhes do Contrato"; atalho → tabela com
   Vigente ligado); **Contratos de cessão** = os 10 contratos de maior valor
   global + "Outros" (mesmo clique/atalho); **Já deixaram o TSE** = encerrados
-  × ainda no TSE, sobre o total (vigentes + não vigentes); atalho abre a
-  tabela recortada em "só encerrados"; **Falhas de cruzamento** = terceirizados
+  × ainda no TSE, sobre o total (vigentes + não vigentes); atalho liga o
+  toggle **Só encerrados** da tabela (que também fica disponível no cabeçalho
+  dela, ao lado do Vigente); **Falhas de cruzamento** = terceirizados
   afetados × sem falha, sobre o total; atalho rola até o "Registro de falhas"
   e o expande.
   KPI por contrato
@@ -186,7 +187,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   Compras.gov.br.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.34**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.35**.
 
 ## Dashboard web
 

@@ -5,6 +5,7 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
+  Check,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -307,20 +308,6 @@ export function TerceirizadosTabela({
             </CardDescription>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
-            {encerradosApenas && (
-              <button
-                type="button"
-                onClick={() => {
-                  onEncerradosApenasChange?.(false);
-                  setPagina(0);
-                }}
-                title="Remover o recorte e voltar ao filtro Vigente"
-                className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-primary-foreground"
-              >
-                Só encerrados
-                <X className="h-3 w-3" aria-hidden />
-              </button>
-            )}
             <VigenteToggle
               ligado={vigente && !encerradosApenas}
               onChange={(v) => {
@@ -330,6 +317,26 @@ export function TerceirizadosTabela({
               }}
               titulo="Vigente: só quem ainda consta na listagem mais recente. Desligue para incluir quem já saiu."
             />
+            {onEncerradosApenasChange && (
+              <button
+                type="button"
+                onClick={() => {
+                  onEncerradosApenasChange(!encerradosApenas);
+                  setPagina(0);
+                }}
+                aria-pressed={encerradosApenas}
+                title="Mostrar só quem já saiu do TSE (mês de fim preenchido)"
+                className={cn(
+                  'inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-ring',
+                  encerradosApenas
+                    ? 'bg-primary text-primary-foreground shadow-2xs'
+                    : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground',
+                )}
+              >
+                {encerradosApenas && <Check className="h-3 w-3 shrink-0" aria-hidden />}
+                Só encerrados
+              </button>
+            )}
             <BotaoExportar
               linhas={linhasVisiveis}
               colunas={colunasExport}
