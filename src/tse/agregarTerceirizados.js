@@ -240,7 +240,13 @@ function agregarTerceirizados(entradaTerceirizados, arvoreUnidades = null, contr
     if (excecoes.descartar.has(kRaw)) return { descartar: true };
     const renomear = excecoes.renomear.get(kRaw);
     if (renomear) return { nome: renomear, posto: limparPosto(r.posto), semNome: false };
-    return separarNomePosto(r.empregado ?? r.nome ?? '', r.posto ?? '', r.empresa ?? '');
+    const res = separarNomePosto(r.empregado ?? r.nome ?? '', r.posto ?? '', r.empresa ?? '');
+    if (!res.semNome) {
+      // Funde quase-homônimos (erro de OCR) num nome canônico.
+      const alvo = excecoes.renomearPessoa.get(chaveExc(res.nome));
+      if (alvo) return { ...res, nome: alvo };
+    }
+    return res;
   }
 
   // 1ª passada: taxa de linhas sem nome por competência → descarta as

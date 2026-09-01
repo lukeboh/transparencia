@@ -145,14 +145,15 @@ test('aceita o array cru legado (uma foto só, sem histórico)', () => {
 });
 
 test('possível duplicata: nome quase idêntico vira falha com sugestão da grafia mais comum', () => {
-  // "SANTOS" aparece 3×, "ANTOS" 1× → a sugestão para "... dos Antos" é "... dos Santos".
+  // Nomes sintéticos (fora do data/tse_terceirizados_excecoes.json). "BASTOS"
+  // aparece 3×, "BASTOX" 1× → a sugestão para "... Bastox" é "... Bastos".
   const r = agregarTerceirizados(
     entrada({
       '2025-05': [
-        reg({ empregado: 'DIEGO FELIPE SOARES DOS SANTOS' }),
-        reg({ empregado: 'MARIA JOSE DOS SANTOS' }),
-        reg({ empregado: 'JOAO PEREIRA DOS SANTOS' }),
-        reg({ empregado: 'DIEGO FELIPE SOARES DOS ANTOS' }),
+        reg({ empregado: 'ZEFERINO QUENDOLIM BASTOS' }),
+        reg({ empregado: 'MARIA JOANA BASTOS' }),
+        reg({ empregado: 'JOAO XAVIER BASTOS' }),
+        reg({ empregado: 'ZEFERINO QUENDOLIM BASTOX' }),
       ],
     }),
     arvore(),
@@ -160,8 +161,8 @@ test('possível duplicata: nome quase idêntico vira falha com sugestão da graf
   );
   const dup = r.falhas.find((f) => f.tipo === 'nome-possivel-duplicata');
   assert.ok(dup, 'deveria haver uma falha de duplicata');
-  assert.equal(dup.nome, 'Diego Felipe Soares dos Antos');
-  assert.equal(dup.nomeSugerido, 'Diego Felipe Soares dos Santos');
+  assert.equal(dup.nome, 'Zeferino Quendolim Bastox');
+  assert.equal(dup.nomeSugerido, 'Zeferino Quendolim Bastos');
 });
 
 test('nomes distintos (2+ tokens diferentes) NÃO viram duplicata', () => {

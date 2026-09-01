@@ -155,9 +155,11 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   vinculado ao Compras.gov.br, **sem nome** (linha do PDF que só trouxe o
   cargo) ou **possível duplicata**: outro terceirizado com nome quase idêntico
   (um "sobrenome" diferindo por 1–2 letras — "Souza"/"Sousa", "Santos"/"Antos")
-  — em geral a mesma pessoa contada duas vezes por erro de OCR; o registro traz
-  a sugestão da grafia mais comum na base, para virar `renomear` no arquivo de
-  exceções.
+  — em geral a mesma pessoa contada duas vezes por erro de OCR. A detecção
+  sugere a grafia mais comum na base; as sugestões viram `renomearPessoa` em
+  `data/tse_terceirizados_excecoes.json` (nome limpo → nome canônico), que o
+  agregador aplica antes de agrupar por pessoa — as 40 detectadas até aqui já
+  estão no arquivo (funde ~40 pares, −40 pessoas).
   Limpeza da leitura do PDF em `src/tse/nomesTerceirizados.js`: o OCR
   frequentemente gruda no fim do nome o cargo ("ABADIA CORREA CORTE Técnico
   em Secretariado…"), uma anotação de situação ("… FÉRIAS 27/11 A 26/12/23",
@@ -177,7 +179,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   Compras.gov.br.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.31**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.32**.
 
 ## Dashboard web
 

@@ -216,8 +216,9 @@ export function carregarExcecoesTerceirizados(raizOpcional) {
   const raiz = raizOpcional ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
   const arq = path.join(raiz, 'data/tse_terceirizados_excecoes.json');
   const chave = (s) => semAcento(String(s ?? '')).toUpperCase().replace(/\s+/g, ' ').trim();
+  const vazio = () => ({ descartar: new Set(), renomear: new Map(), renomearPessoa: new Map() });
   if (!existsSync(arq)) {
-    _cacheExcecoes = { descartar: new Set(), renomear: new Map() };
+    _cacheExcecoes = vazio();
     return _cacheExcecoes;
   }
   try {
@@ -225,9 +226,13 @@ export function carregarExcecoesTerceirizados(raizOpcional) {
     _cacheExcecoes = {
       descartar: new Set((j.descartar ?? []).map(chave)),
       renomear: new Map(Object.entries(j.renomear ?? {}).map(([k, v]) => [chave(k), String(v)])),
+      // Chave = nome JÁ limpo (normalizado); funde quase-homônimos por erro de OCR.
+      renomearPessoa: new Map(
+        Object.entries(j.renomearPessoa ?? {}).map(([k, v]) => [chave(k), String(v)]),
+      ),
     };
   } catch {
-    _cacheExcecoes = { descartar: new Set(), renomear: new Map() };
+    _cacheExcecoes = vazio();
   }
   return _cacheExcecoes;
 }
