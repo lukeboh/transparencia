@@ -297,8 +297,7 @@ traz o dashboard da primeira funcionalidade do projeto: a lista de **todos os
 agentes públicos do TSE** (`DashboardData.servidores`, ver acima), ordenada
 pelo maior valor consolidado sob responsabilidade; quem não é fiscal/gestor
 de nenhum contrato aparece zerado. Uma primeira faixa de KPIs de contrato
-(maior valor sob responsabilidade, mediana por responsável só sobre quem tem
-contrato, contratos e fiscais por faixa de valor) e uma segunda faixa com os
+("Fiscais designados", contratos e fiscais por faixa de valor) e uma segunda faixa com os
 **três donuts de distribuição por função comissionada herdados de `/funcoes`**
 (que está em vias de ser descontinuada): "Servidores com função", "Não-Fiscal"
 e "Servidores Fiscais", cada um sobre o recorte correspondente do filtro

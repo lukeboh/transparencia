@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Ban, Briefcase, Coins, HardHat, Laptop, Network, Percent, Scale, ShieldCheck, Users } from 'lucide-react';
-import { StatCard } from '@/components/dashboard/stat-card';
+import { ArrowLeft, ArrowUpRight, Ban, Briefcase, Coins, HardHat, Laptop, Network, Percent, ShieldCheck, Users } from 'lucide-react';
 import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
 import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
 import { ContagemStatCard } from '@/components/dashboard/contagem-stat-card';
@@ -18,7 +17,7 @@ import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
 import { bool, excluidos, incluidos } from '@/lib/url-filtros';
-import { brlCompacto, numero } from '@/lib/utils';
+import { numero } from '@/lib/utils';
 import { ehSubstituto } from '@/lib/perfis-fiscalizacao';
 import { CATEGORIAS_VALOR, categoriaDoValor, type CategoriaValorId } from '@/lib/categorias-valor';
 import { criarResolvedorLotacao } from '@/lib/lotacao-hierarquia';
@@ -423,9 +422,9 @@ export function ServidoresDashboard() {
     funcoesSelecionadas,
   ]);
 
-  // Só quem, no filtro atual, é fiscal/gestor de contrato — base das KPIs de
-  // valor (medianas e o donut de função "designada" não fazem sentido para
-  // quem não tem contrato).
+  // Só quem, no filtro atual, é fiscal/gestor de contrato — base das KPIs que
+  // não fazem sentido para quem não tem contrato (donut "Fiscais designados",
+  // "Fiscais por faixa de valor").
   const fiscaisFiltrados = useMemo(
     () => rankingFiltrado.filter((r) => r.quantidadeContratos > 0),
     [rankingFiltrado],
@@ -458,28 +457,6 @@ export function ServidoresDashboard() {
   const fiscaisPorFaixaValor = useMemo(
     () => contarServidoresPorFaixaValor(rankingPorPapelVigencia, (i) => categoriaIdPorIndice[i] as CategoriaValorId),
     [rankingPorPapelVigencia, categoriaIdPorIndice],
-  );
-
-  const calcMediana = (arr: number[]) => {
-    const s = [...arr].sort((a, b) => a - b);
-    const m = Math.floor(s.length / 2);
-    if (s.length === 0) return 0;
-    return s.length % 2 === 1 ? s[m] : (s[m - 1] + s[m]) / 2;
-  };
-
-  const medianaValor = useMemo(
-    () => calcMediana(fiscaisFiltrados.map((r) => r.valorConsolidado)),
-    [fiscaisFiltrados]
-  );
-
-  const medianaEmpenhado = useMemo(
-    () => calcMediana(fiscaisFiltrados.map((r) => r.valorEmpenhadoConsolidado)),
-    [fiscaisFiltrados]
-  );
-
-  const medianaPago = useMemo(
-    () => calcMediana(fiscaisFiltrados.map((r) => r.valorPagoConsolidado)),
-    [fiscaisFiltrados]
   );
 
   // Distribuição por função (FC/CJ) dos responsáveis visíveis no ranking
@@ -629,7 +606,7 @@ export function ServidoresDashboard() {
           onIncluirNaoFiscalChange={setIncluirNaoFiscal}
         />
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <FuncaoStatCard
             titulo="Fiscais designados"
             detalhe={
@@ -641,12 +618,6 @@ export function ServidoresDashboard() {
             }
             icone={<Users className="h-4 w-4" aria-hidden />}
             contagens={donutFuncoesResponsaveis}
-          />
-          <StatCard
-            titulo="Mediana por responsável"
-            valor={brlCompacto(medianaValor)}
-            detalhe={`Emp: ${brlCompacto(medianaEmpenhado)} · Pg: ${brlCompacto(medianaPago)}`}
-            icone={<Scale className="h-4 w-4" aria-hidden />}
           />
           <ContagemStatCard
             titulo="Contratos por faixa de valor"
