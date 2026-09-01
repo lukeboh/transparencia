@@ -313,13 +313,15 @@ nunca teve nenhuma. `FuncoesBadges` ganhou o modo `todas` para isso (o modo
 compacto — destaque + "+N" — segue em `/funcoes` e `/teletrabalho`). A coluna
 **Lotação** traz as 3 unidades mais específicas da hierarquia oficial (ex.:
 `SETOT / CSELE / STI`), resolvidas pelo mesmo `criarResolvedorLotacao` de
-`/funcoes` a partir do nome plano da relação de agentes públicos. A tabela tem
-filtro incremental **por servidor** e **por lotação** (campo de texto com
-`datalist` das lotações presentes, sem distinção de acentos/caixa) e
+`/funcoes` a partir do nome plano da relação de agentes públicos. A coluna
+**Teletrabalho** mostra o total de dias em regime de teletrabalho
+(`teletrabalho.ranking[teletrabalhoIndex].diasConsolidados`), "—" sem registro.
+A tabela tem filtro incremental **por servidor** e **por lotação** (campo de
+texto com `datalist` das lotações presentes, sem distinção de acentos/caixa) e
 ordenação clicável nos cabeçalhos Servidor (alfabética), **Funções** (pela
-função vigente — quem não tem vai ao fim), **Lotação**, Contratos e Valor
-consolidado (1º clique ordena, 2º inverte, 3º volta à ordem do ranking); a
-coluna # sempre mostra a posição original no ranking por valor.
+função vigente — quem não tem vai ao fim), **Lotação**, **Teletrabalho**,
+Contratos e Valor consolidado (1º clique ordena, 2º inverte, 3º volta à ordem
+do ranking); a coluna # sempre mostra a posição original no ranking por valor.
 
 Na subseção **Por papel** do filtro, além dos papéis reais há o chip sintético
 **NÃO FISCAL** (ligado por padrão): mescla os servidores que não são

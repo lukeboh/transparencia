@@ -49,7 +49,16 @@ import type {
   ServidorFuncoes,
 } from '@/lib/dashboard-data';
 
-const CAMPOS_ORD_RANKING = new Set(['nome', 'funcoes', 'lotacao', 'contratos', 'valor', 'empenhado', 'pago']);
+const CAMPOS_ORD_RANKING = new Set([
+  'nome',
+  'funcoes',
+  'lotacao',
+  'teletrabalho',
+  'contratos',
+  'valor',
+  'empenhado',
+  'pago',
+]);
 
 const LINHAS_POR_PAGINA = 25;
 const MAX_PAPEIS_VISIVEIS = 2;
@@ -105,7 +114,15 @@ function CampoFiltro({
   );
 }
 
-type CampoOrdenavel = 'nome' | 'funcoes' | 'lotacao' | 'contratos' | 'valor' | 'empenhado' | 'pago';
+type CampoOrdenavel =
+  | 'nome'
+  | 'funcoes'
+  | 'lotacao'
+  | 'teletrabalho'
+  | 'contratos'
+  | 'valor'
+  | 'empenhado'
+  | 'pago';
 type DirecaoOrdenacao = 'asc' | 'desc';
 
 interface Ordenacao {
@@ -117,6 +134,7 @@ const DIRECAO_INICIAL: Record<CampoOrdenavel, DirecaoOrdenacao> = {
   nome: 'asc',
   funcoes: 'asc',
   lotacao: 'asc',
+  teletrabalho: 'desc',
   contratos: 'desc',
   valor: 'desc',
   empenhado: 'desc',
@@ -326,6 +344,12 @@ export function RankingTable({
           if (!la || !lb) return la ? -1 : lb ? 1 : 0; // sem lotação resolvida sempre ao fim
           return fator * la.localeCompare(lb, 'pt-BR');
         }
+        case 'teletrabalho':
+          return (
+            fator *
+            ((teletrabalhoPorNome.get(a.linha.nome)?.diasConsolidados ?? 0) -
+              (teletrabalhoPorNome.get(b.linha.nome)?.diasConsolidados ?? 0))
+          );
         case 'contratos':
           return fator * (a.linha.quantidadeContratos - b.linha.quantidadeContratos);
         case 'valor':
@@ -336,7 +360,7 @@ export function RankingTable({
           return fator * ((a.linha.valorPagoConsolidado || 0) - (b.linha.valorPagoConsolidado || 0));
       }
     });
-  }, [ranking, busca, filtroLotacao, lotacaoPorNome, funcoesPorNome, ordenacao]);
+  }, [ranking, busca, filtroLotacao, lotacaoPorNome, funcoesPorNome, teletrabalhoPorNome, ordenacao]);
 
   const totalPaginas = Math.max(1, Math.ceil(linhasVisiveis.length / LINHAS_POR_PAGINA));
   const paginaAtual = Math.min(pagina, totalPaginas - 1);
@@ -359,6 +383,10 @@ export function RankingTable({
       { cabecalho: 'Lotação', valor: ({ linha }) => lotacaoDe(linha.nome).curto },
       { cabecalho: 'Lotação (nome completo)', valor: ({ linha }) => lotacaoDe(linha.nome).completo },
       {
+        cabecalho: 'Dias em teletrabalho',
+        valor: ({ linha }) => teletrabalhoPorNome.get(linha.nome)?.diasConsolidados ?? 0,
+      },
+      {
         cabecalho: 'Faixas de valor',
         valor: ({ linha }) =>
           categoriasDeContratos(linha.contratos, contratos)
@@ -370,7 +398,7 @@ export function RankingTable({
       { cabecalho: 'Empenhado (R$)', valor: ({ linha }) => linha.valorEmpenhadoConsolidado || 0 },
       { cabecalho: 'Pago (R$)', valor: ({ linha }) => linha.valorPagoConsolidado || 0 },
     ],
-    [contratos, funcoesPorNome, lotacaoPorNome],
+    [contratos, funcoesPorNome, lotacaoPorNome, teletrabalhoPorNome],
   );
 
   function ordenarPor(campo: CampoOrdenavel) {
@@ -485,6 +513,22 @@ export function RankingTable({
                   </InfoDica>
                 </span>
               </TableHead>
+              <TableHead className="text-right">
+                <span className="inline-flex items-center gap-1">
+                  <CabecalhoOrdenavel
+                    rotulo="Teletrabalho"
+                    campo="teletrabalho"
+                    ordenacao={ordenacao}
+                    onOrdenar={ordenarPor}
+                  />
+                  <InfoDica titulo="O que a coluna Teletrabalho mostra?" alinhamento="direita">
+                    Total de dias em regime de teletrabalho, somando todos os períodos
+                    registrados (sem merge de sobreposição). Detalhe dos períodos em{' '}
+                    <strong>Detalhes do Servidor</strong>. &ldquo;—&rdquo; quando não há
+                    registro.
+                  </InfoDica>
+                </span>
+              </TableHead>
               <TableHead>Faixas</TableHead>
               <TableHead className="text-right">
                 <CabecalhoOrdenavel
@@ -523,7 +567,7 @@ export function RankingTable({
           <TableBody>
             {linhas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={11} className="py-8 text-center text-muted-foreground">
                   Nenhum servidor encontrado para{' '}
                   &ldquo;{[busca.trim(), filtroLotacao.trim()].filter(Boolean).join('” · “')}&rdquo;
                 </TableCell>
@@ -562,6 +606,12 @@ export function RankingTable({
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       );
+                    })()}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {(() => {
+                      const dias = teletrabalhoPorNome.get(linha.nome)?.diasConsolidados ?? 0;
+                      return dias > 0 ? numero(dias) : <span className="text-muted-foreground">—</span>;
                     })()}
                   </TableCell>
                   <TableCell>
