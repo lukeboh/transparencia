@@ -25,6 +25,16 @@ const ROTULO: Record<TerceirizadoFalha['tipo'], string> = {
   'nome-nao-identificado': 'Nome não identificado',
 };
 
+const DESCRICAO: Record<TerceirizadoFalha['tipo'], string> = {
+  'lotacao-nao-identificada':
+    'A sigla da coluna "Alocação" do PDF não bateu com nenhuma unidade da estrutura do TSE — grafia diferente, sigla nova ou ruído de OCR. O terceirizado conta no total, mas não é posicionado numa unidade.',
+  'sem-alocacao': 'A coluna "Alocação" do PDF veio em branco nesta linha, então não há como identificar a unidade de lotação.',
+  'contrato-nao-vinculado':
+    'O número do contrato citado no PDF (ex.: "31/2023") não foi encontrado na base de contratos do Compras.gov.br do TSE. Pode ser um contrato antigo fora da base raspada, um erro de digitação/OCR no número, ou uma modalidade não coberta. Sem o vínculo, o modal "Detalhes do Contrato" não mostra fornecedor, objeto nem valores.',
+  'nome-nao-identificado':
+    'A linha do PDF trouxe só o cargo ou uma anotação (férias, "admitido"…), sem um nome de pessoa reconhecível — em geral porque o OCR trocou as colunas. Essa linha não vira um terceirizado na tabela.',
+};
+
 export function TerceirizadosFalhasCard({
   falhas,
   competencias,
@@ -94,7 +104,8 @@ export function TerceirizadosFalhasCard({
             porTipo.map(([tipo, qtd]) => (
               <span
                 key={tipo}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs"
+                title={DESCRICAO[tipo]}
+                className="inline-flex cursor-help items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs"
               >
                 {ROTULO[tipo]}
                 <span className="font-semibold tabular-nums">{numero(qtd)}</span>
@@ -122,7 +133,10 @@ export function TerceirizadosFalhasCard({
                     <TableRow key={`${f.nome}-${f.tipo}-${i}`}>
                       <TableCell className="font-medium">{f.nome}</TableCell>
                       <TableCell>
-                        <span className="rounded-sm bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                        <span
+                          title={DESCRICAO[f.tipo]}
+                          className="cursor-help rounded-sm bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400"
+                        >
                           {ROTULO[f.tipo]}
                         </span>
                       </TableCell>

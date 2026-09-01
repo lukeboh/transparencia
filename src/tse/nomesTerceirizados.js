@@ -46,22 +46,27 @@ export function canonicalContrato(bruto) {
 const POSTO_INICIO = new Set([
   'AUXILIAR', 'ASSISTENTE', 'ANALISTA', 'ANALISE', 'TECNICO', 'TECNICA',
   'ENGENHEIRO', 'ENGENHEIRA', 'ENGENHARIA', 'DESENVOLVEDOR', 'DESENVOLVEDORA',
-  'ARQUITETO', 'ARQUITETA', 'ARQUITETURA', 'ESPECIALISTA', 'SUPORTE',
-  'ADMINISTRACAO', 'ADMINISTRADOR', 'ADMINISTRADORA', 'ADMINISTRATIVO',
+  'DESENVOLVIMENTO', 'ARQUITETO', 'ARQUITETA', 'ARQUITETURA', 'ESPECIALISTA',
+  'SUPORTE', 'ADMINISTRACAO', 'ADMINISTRADOR', 'ADMINISTRADORA', 'ADMINISTRATIVO',
   'SECRETARIO', 'SECRETARIA', 'MOTORISTA', 'VIGILANTE', 'BOMBEIRO', 'COPEIRO',
   'COPEIRA', 'GARCOM', 'GARCONETE', 'RECEPCIONISTA', 'PLANEJAMENTO', 'CONDUCAO',
-  'GESTAO', 'CONSULTOR', 'CONSULTORA', 'PROGRAMADOR', 'PROGRAMADORA', 'GERENTE',
-  'OPERADOR', 'OPERADORA', 'PEDREIRO', 'ELETRICISTA', 'ENCARREGADO',
-  'ENCARREGADA', 'SUPERVISOR', 'SUPERVISORA', 'TELEFONISTA', 'JARDINEIRO',
-  'PORTEIRO', 'SERVENTE', 'LIMPEZA', 'HIGIENIZACAO', 'SEGURANCA', 'BRIGADISTA',
-  'ALMOXARIFE', 'CONTINUO', 'MENSAGEIRO', 'COORDENADOR', 'COORDENADORA',
-  'TECNOLOGO', 'CIENTISTA', 'PROJETISTA', 'DESIGNER', 'DEVOPS', 'INFRAESTRUTURA',
-  'MANUTENCAO', 'MARCENEIRO', 'CARPINTEIRO', 'PINTOR', 'SOLDADOR', 'MECANICO',
-  'NUTRICIONISTA', 'ENFERMEIRO', 'ENFERMEIRA', 'FISIOTERAPEUTA', 'PSICOLOGO',
-  'PSICOLOGA', 'ESTAGIARIO', 'ESTAGIARIA', 'APRENDIZ', 'FOTOGRAFO', 'CINEGRAFISTA',
-  'EDITOR', 'REDATOR', 'REVISOR', 'BIBLIOTECARIO', 'ARQUIVISTA', 'CONTADOR',
-  'TRADUTOR', 'INTERPRETE', 'LOCUTOR', 'COZINHEIRO', 'COZINHEIRA', 'AJUDANTE',
-  'ATENDENTE', 'FACILITADOR', 'INSTRUTOR', 'MONITOR', 'ELETROTECNICO',
+  'GESTAO', 'GERENCIAMENTO', 'CONSULTOR', 'CONSULTORA', 'CONSULTORIA',
+  'PROGRAMADOR', 'PROGRAMADORA', 'GERENTE', 'OPERADOR', 'OPERADORA', 'OPERACAO',
+  'PEDREIRO', 'ELETRICISTA', 'ENCARREGADO', 'ENCARREGADA', 'SUPERVISOR',
+  'SUPERVISORA', 'TELEFONISTA', 'JARDINEIRO', 'PORTEIRO', 'SERVENTE', 'LIMPEZA',
+  'HIGIENIZACAO', 'SEGURANCA', 'BRIGADISTA', 'ALMOXARIFE', 'CONTINUO',
+  'MENSAGEIRO', 'COORDENADOR', 'COORDENADORA', 'COORDENACAO', 'TECNOLOGO',
+  'CIENTISTA', 'PROJETISTA', 'DESIGNER', 'DEVOPS', 'INFRAESTRUTURA', 'MANUTENCAO',
+  'MARCENEIRO', 'CARPINTEIRO', 'PINTOR', 'SOLDADOR', 'MECANICO', 'NUTRICIONISTA',
+  'ENFERMEIRO', 'ENFERMEIRA', 'FISIOTERAPEUTA', 'PSICOLOGO', 'PSICOLOGA',
+  'ESTAGIARIO', 'ESTAGIARIA', 'APRENDIZ', 'FOTOGRAFO', 'CINEGRAFISTA', 'EDITOR',
+  'REDATOR', 'REVISOR', 'BIBLIOTECARIO', 'ARQUIVISTA', 'CONTADOR', 'TRADUTOR',
+  'INTERPRETE', 'LOCUTOR', 'COZINHEIRO', 'COZINHEIRA', 'AJUDANTE', 'ATENDENTE',
+  'ATENDIMENTO', 'FACILITADOR', 'INSTRUTOR', 'MONITOR', 'MONITORAMENTO',
+  'ELETROTECNICO', 'IMPLANTACAO', 'IMPLEMENTACAO', 'SUSTENTACAO', 'INTEGRACAO',
+  'MODELAGEM', 'DOCUMENTACAO', 'TREINAMENTO', 'CONFIGURACAO', 'GOVERNANCA',
+  'AUDITORIA', 'DIGITALIZACAO', 'DIGITADOR', 'DIGITADORA', 'HELPDESK', 'SERVICE',
+  'TESTES', 'QUALIDADE', 'DIAGRAMADOR', 'DIAGRAMACAO', 'ILUSTRADOR', 'PROJETO',
 ]);
 
 // Conectivos que fazem parte do nome / do cargo mas não contam como "palavra".
@@ -71,7 +76,13 @@ const SUFIXO_NOME = new Set(['JUNIOR', 'FILHO', 'NETO', 'SOBRINHO', 'JR']);
 
 // Marcadores de nível / CBO / carga horária: onde aparecem, o cargo já começou.
 const MARCADOR_CARGO =
-  /\s[-–]\s*(CBO|N[ÍI]VEL|S[ÊE]NIOR|SEMIOR|PLENO|J[ÚU]NIOR|MASTER|TRAINEE|TRAINNE|ESPECIALIZA)\b|\bCBO\b|\b\d{3,4}-\d{2}\b|\s[-–]\s*\d+\s*[Hh]\b|\(\s*(QUALITY|SCRUM|BIG DATA|PL|SR|JR|N[ÍI]VEL)/i;
+  /\s[-–]\s*(CBO|N[ÍI]VEL|S[ÊE]NIOR|SEMIOR|PLENO|J[ÚU]NIOR|MASTER|TRAINEE|TRAINNE|ESPECIALIZA)\b|\bCBO\b|\b\d{3,4}-\d{2}\b|\s[-–]\s*\d+\s*[Hh]\b|\d\s*[º°]\s*n[íi]vel|\(\s*(QUALITY|SCRUM|BIG DATA|PL|SR|JR|N[ÍI]VEL)/i;
+
+// Anotações de situação / observação que às vezes vêm coladas ao nome no PDF
+// ("... FÉRIAS 27/11 A 26/12/23", "... (admitido)") — não são nem nome nem
+// cargo. Onde começam, o nome já acabou.
+const MARCADOR_ANOTACAO =
+  /\(|\b(F[ÉE]RIAS|AFASTAD[OA]|LICEN[ÇC]A|ATESTADO|ADMITID[OA]|DESLIGAD[OA]|DEMITID[OA]|SUSPENS[OA]|RESCIS[ÃA]O|RESCINDID[OA]|SUBSTITUI[ÇC][ÃA]O|SUBSTITUT[OA]|PENDENTE|VAGO|VAGA|NOVO|NOVA|CONTRATAD[OA])\b|\s\d{1,2}\s*\/\s*\d{1,2}(\s*\/\s*\d{2,4})?\b/i;
 
 const soLetrasNome = /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’.-]*$/;
 
@@ -83,6 +94,12 @@ function indiceInicioCargo(tokens) {
     if (POSTO_INICIO.has(t)) return i;
   }
   return -1;
+}
+
+/** Char index de `bruto` → índice de token (nº de palavras antes dele). */
+function tokenNoChar(bruto, charIndex) {
+  const ate = bruto.slice(0, charIndex).trim();
+  return ate ? ate.split(' ').length : 0;
 }
 
 const CNPJ_RX = /\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2,3}/;
@@ -99,7 +116,10 @@ const CNPJ_RX = /\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2,3}/;
  *   quando já vinha preenchido, senão o rabo cortado do empregado.
  */
 export function separarNomePosto(empregadoBruto, postoBruto = '', empresaBruta = '') {
-  const bruto = String(empregadoBruto ?? '').replace(/\s+/g, ' ').trim();
+  const bruto = String(empregadoBruto ?? '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([.'’])/g, '$1') // "R .DO" → "R.DO" (espaço solto antes de ponto/apóstrofo)
+    .trim();
   const postoOriginal = String(postoBruto ?? '').replace(/\s+/g, ' ').trim();
   if (!bruto) {
     const resgate = resgatarNomeDaEmpresa(empresaBruta, postoOriginal);
@@ -108,21 +128,19 @@ export function separarNomePosto(empregadoBruto, postoBruto = '', empresaBruta =
 
   const tokens = bruto.split(' ');
 
-  // 1) Corte pelo léxico de início de cargo.
-  let corte = indiceInicioCargo(tokens);
-
-  // 2) Se não achou, tenta pelo marcador de nível/CBO/carga-horária.
-  if (corte < 0) {
-    const m = MARCADOR_CARGO.exec(bruto);
-    if (m) {
-      const ate = bruto.slice(0, m.index).trim();
-      corte = ate ? ate.split(' ').length : 0;
-    }
+  // Onde o nome acaba = o MENOR índice de token entre: começo de cargo (léxico),
+  // marcador de nível/CBO/carga-horária, e anotação de situação (férias, datas,
+  // "(admitido)"…).
+  const candidatos = [indiceInicioCargo(tokens)];
+  for (const rx of [MARCADOR_CARGO, MARCADOR_ANOTACAO]) {
+    const m = rx.exec(bruto);
+    if (m) candidatos.push(tokenNoChar(bruto, m.index));
   }
+  const corte = Math.min(...candidatos.filter((i) => i >= 0), Infinity);
 
   let nomeTokens;
   let tail;
-  if (corte >= 0) {
+  if (Number.isFinite(corte)) {
     nomeTokens = tokens.slice(0, corte);
     tail = tokens.slice(corte).join(' ').trim();
   } else {
@@ -148,9 +166,12 @@ export function separarNomePosto(empregadoBruto, postoBruto = '', empresaBruta =
   }
 
   const nome = nomeTokens.join(' ');
-  // Posto: mantém o que veio na coluna se for descritivo; senão usa o rabo.
+  // Posto: mantém o que veio na coluna se for descritivo; senão usa o rabo —
+  // mas não se o rabo for anotação de situação/data ("FÉRIAS 27/11…", "(admitido)").
+  const tailEhAnotacao = /^[(]|^(F[ÉE]RIAS|AFASTAD|LICEN|ATESTADO|ADMITID|DESLIGAD|DEMITID|SUSPENS|RESCIS|SUBSTITU|PENDENTE|VAGO|VAGA|NOVO|NOVA|CONTRATAD)|^\d{1,2}\s*\//i.test(tail);
+  const tailPosto = tailEhAnotacao ? '' : tail;
   const postoOriginalEhRuido = !postoOriginal || /^[\d\s.,;:/–-]+$/.test(postoOriginal);
-  const posto = postoOriginalEhRuido && tail ? tail : postoOriginal;
+  const posto = postoOriginalEhRuido && tailPosto ? tailPosto : postoOriginal;
   return { nome, posto, semNome: false };
 }
 

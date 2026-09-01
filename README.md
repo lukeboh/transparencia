@@ -154,11 +154,15 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   identificada, sem alocação no PDF, com contrato não vinculado ao
   Compras.gov.br ou **sem nome** (linha do PDF que só trouxe o cargo).
   Limpeza da leitura do PDF em `src/tse/nomesTerceirizados.js`: o OCR
-  frequentemente gruda o cargo no fim do nome ("ABADIA CORREA CORTE Técnico
-  em Secretariado…") ou joga o nome para dentro do campo empresa — a
-  heurística desgruda/resgata; competências em que isso quebra >40% das
-  linhas (2023-04 e 2023-08) são **descartadas inteiras** do cálculo de
-  mês de início/fim; o resíduo pode ser corrigido à mão em
+  frequentemente gruda no fim do nome o cargo ("ABADIA CORREA CORTE Técnico
+  em Secretariado…"), uma anotação de situação ("… FÉRIAS 27/11 A 26/12/23",
+  "… (admitido)") ou joga o nome para dentro do campo empresa — a heurística
+  corta no menor índice entre um léxico de ~120 primeiras-palavras de cargo,
+  marcadores de nível/CBO/carga-horária e marcadores de anotação, e resgata
+  o nome do campo empresa quando some. Competências em que isso quebra >40%
+  das linhas (2023-04 e 2023-08) são **descartadas inteiras** do cálculo de
+  mês de início/fim. O que sobra (erro de OCR na própria grafia do nome,
+  ex.: "Pereia" por "Pereira") é corrigível à mão em
   `data/tse_terceirizados_excecoes.json` (`descartar` / `renomear`). O modal
   **Detalhes do Contrato**
   (`web/components/dashboard/detalhes-contrato-dialog.tsx`) é o padrão novo
@@ -168,7 +172,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   Compras.gov.br.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.29**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.30**.
 
 ## Dashboard web
 

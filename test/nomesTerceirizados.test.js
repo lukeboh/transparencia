@@ -37,6 +37,27 @@ test('cargo grudado no nome (coluna posto vazia): corta pelo léxico', () => {
   }
 });
 
+test('desgruda cargo/anotação de palavras que faltavam no léxico', () => {
+  const casos = [
+    ['Robson Antonio Rodrigues Desenvolvimento de Ecossistema Para Software Embarcado', 'Robson Antonio Rodrigues'],
+    ['Leandro de Jesus Nogueira Gerenciamento de Riscos', 'Leandro de Jesus Nogueira'],
+    ['ALESSANDRO SILVA COSTA SERVICE DESK 1º NÍVEL', 'ALESSANDRO SILVA COSTA'],
+    ['ADAILTON PEREIRA TORRES FERIAS 27/11 A 26/12/23', 'ADAILTON PEREIRA TORRES'],
+    ['Erick Elias Pereia de Carvalho (admitido)', 'Erick Elias Pereia de Carvalho'],
+    ['CARLOS AUGUSTO R .DO NASCIMENTO Garçom - 44 h - CBO 5134-05', 'CARLOS AUGUSTO R.DO NASCIMENTO'],
+  ];
+  for (const [entrada, esperado] of casos) {
+    const r = separarNomePosto(entrada, '');
+    assert.equal(r.semNome, false, entrada);
+    assert.equal(r.nome, esperado, entrada);
+  }
+});
+
+test('anotação de situação/data não vira posto', () => {
+  const r = separarNomePosto('ADAILTON PEREIRA TORRES FERIAS 27/11 A 26/12/23', '');
+  assert.equal(r.posto, '');
+});
+
 test('linha que é só cargo (sem nome) → semNome', () => {
   for (const s of [
     'Análise de Business Intelligence',
