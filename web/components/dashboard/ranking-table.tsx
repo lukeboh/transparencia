@@ -31,8 +31,9 @@ import {
 } from '@/components/ui/table';
 import { type ContratoAuditavel } from '@/components/dashboard/contratos-dialog';
 import { ServidorDetalheDialog } from '@/components/dashboard/servidor-detalhe-dialog';
-import { FuncoesBadges, funcaoDestaque } from '@/components/dashboard/funcoes-table';
+import { FuncoesBadges, funcoesTexto } from '@/components/dashboard/funcoes-table';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
+import { InfoDica } from '@/components/ui/info-dica';
 import { brlCompleto, cn, nomeProprio, numero } from '@/lib/utils';
 import { categoriasDeContratos, descricaoFaixa } from '@/lib/categorias-valor';
 import { rotuloPerfil } from '@/lib/perfis-fiscalizacao';
@@ -253,11 +254,10 @@ export function RankingTable({
       { cabecalho: 'Servidor', valor: ({ linha }) => nomeProprio(linha.nome) },
       { cabecalho: 'Papéis', valor: ({ linha }) => linha.papeis.join(', ') },
       {
-        cabecalho: 'Função',
+        cabecalho: 'Funções',
         valor: ({ linha }) => {
           const s = funcoesPorNome.get(linha.nome);
-          const d = s ? funcaoDestaque(s) : null;
-          return d ? `${d.tipo}-${d.nivel}${d.vigente ? ' (vigente)' : ''}` : '';
+          return s ? funcoesTexto(s) : '';
         },
       },
       {
@@ -362,7 +362,16 @@ export function RankingTable({
                 />
               </TableHead>
               <TableHead>Papéis</TableHead>
-              <TableHead>Função</TableHead>
+              <TableHead>
+                <span className="inline-flex items-center gap-1">
+                  Funções
+                  <InfoDica titulo="O que a coluna Funções mostra?" alinhamento="esquerda">
+                    Todas as funções comissionadas (FC/CJ) que o servidor já ocupou. A
+                    vigente hoje aparece <strong>destacada</strong>; as anteriores ficam em
+                    tom apagado.
+                  </InfoDica>
+                </span>
+              </TableHead>
               <TableHead>Faixas</TableHead>
               <TableHead className="text-right">
                 <CabecalhoOrdenavel
@@ -423,7 +432,7 @@ export function RankingTable({
                     {(() => {
                       const servidor = funcoesPorNome.get(linha.nome);
                       return servidor ? (
-                        <FuncoesBadges servidor={servidor} />
+                        <FuncoesBadges servidor={servidor} todas />
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       );

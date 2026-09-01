@@ -302,9 +302,12 @@ e mediana por responsável (calculada só sobre quem tem contrato), e um card
 componente de `/funcoes`) com a distribuição por função comissionada (FC/CJ,
 mais "Sem função") de quem está no ranking com contrato. Tabela paginada, 25
 por página (papéis como badges; valor de cada contrato contado uma única vez
-por pessoa). A coluna Função mostra, com o mesmo badge usado em `/funcoes`, a
-função comissionada que o servidor tem hoje ou já teve — de
-`funcoes.servidores` via `funcoesIndex`, "—" quando nunca teve nenhuma. A
+por pessoa). A coluna **Funções** (com dica (i) no cabeçalho) lista **todos**
+os níveis FC/CJ que o servidor já ocupou — de `funcoes.servidores` via
+`funcoesIndex` —, a vigente hoje destacada (borda + cor primária) e as
+anteriores apagadas; "—" quando nunca teve nenhuma. `FuncoesBadges` ganhou o
+modo `todas` para isso (o modo compacto — destaque + "+N" — segue em
+`/funcoes` e `/teletrabalho`). A
 tabela tem filtro incremental por servidor (sem distinção de acentos/caixa) e
 ordenação clicável nos cabeçalhos Servidor (alfabética), Contratos e Valor
 consolidado (1º clique ordena, 2º inverte, 3º volta à ordem do ranking); a
