@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Ban, Briefcase, Coins, HardHat, Laptop, Network, Percent, ShieldCheck, Users } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Ban, Briefcase, Coins, HardHat, Laptop, Network, Percent, Users } from 'lucide-react';
 import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
 import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
 import { ContagemStatCard } from '@/components/dashboard/contagem-stat-card';
@@ -430,14 +430,15 @@ export function ServidoresDashboard() {
     [rankingFiltrado],
   );
 
-  // KPI: contratos por faixa de valor — universo completo de contratos,
-  // respeitando "Somente contratos vigentes" (mesmo corte usado no resto da
-  // página), mas independente do filtro de papéis (que é sobre pessoas, não
-  // sobre o contrato em si).
-  const contratosParaFaixaValor = useMemo(
-    () => (somenteVigentes ? contratos.filter((c) => c.vigente) : contratos),
-    [contratos, somenteVigentes],
-  );
+  // KPI: contratos por faixa de valor — reflete os filtros de contrato da tela
+  // (VIGENTE e "Por valor"); os filtros de papel/função são sobre pessoas, não
+  // sobre o contrato em si, então não se aplicam aqui.
+  const contratosParaFaixaValor = useMemo(() => {
+    const setFaixas = new Set(categoriasSelecionadas);
+    return contratos.filter(
+      (c) => (!somenteVigentes || c.vigente) && setFaixas.has(categoriaDoValor(c.valorGlobal).id),
+    );
+  }, [contratos, somenteVigentes, categoriasSelecionadas]);
 
   const fatiasContratosPorFaixa = useMemo(() => {
     const contagem = new Map(CATEGORIAS_VALOR.map((c) => [c.id, 0]));
@@ -453,10 +454,11 @@ export function ServidoresDashboard() {
   }, [contratosParaFaixaValor]);
 
   // KPI: fiscais por faixa de valor dos contratos que fiscalizam — sobre o
-  // estágio 1 (papéis + vigência), ver comentário acima.
+  // recorte final (papéis + função + vigência + faixa), contando cada pessoa
+  // uma vez por faixa em que tem ao menos um contrato que sobreviveu ao filtro.
   const fiscaisPorFaixaValor = useMemo(
-    () => contarServidoresPorFaixaValor(rankingPorPapelVigencia, (i) => categoriaIdPorIndice[i] as CategoriaValorId),
-    [rankingPorPapelVigencia, categoriaIdPorIndice],
+    () => contarServidoresPorFaixaValor(fiscaisFiltrados, (i) => categoriaIdPorIndice[i] as CategoriaValorId),
+    [fiscaisFiltrados, categoriaIdPorIndice],
   );
 
   // Distribuição por função (FC/CJ) dos responsáveis visíveis no ranking
@@ -621,11 +623,7 @@ export function ServidoresDashboard() {
           />
           <ContagemStatCard
             titulo="Contratos por faixa de valor"
-            detalhe={
-              somenteVigentes
-                ? `${numero(contratosParaFaixaValor.length)} contratos vigentes hoje`
-                : `${numero(contratosParaFaixaValor.length)} contratos no total`
-            }
+            detalhe={`${numero(contratosParaFaixaValor.length)} contrato${contratosParaFaixaValor.length === 1 ? '' : 's'} no filtro${somenteVigentes ? ' (vigentes hoje)' : ''}`}
             icone={<Coins className="h-4 w-4" aria-hidden />}
             fatias={fatiasContratosPorFaixa}
             unidadeSingular="contrato"
@@ -633,16 +631,16 @@ export function ServidoresDashboard() {
           />
           <CategoriaValorServidoresCard
             titulo="Fiscais por faixa de valor"
-            detalhe={`de ${numero(rankingPorPapelVigencia.length)} fiscais/gestores no filtro (papel, função e vigência) · uma pessoa pode contar em mais de uma faixa`}
+            detalhe={`de ${numero(fiscaisFiltrados.length)} fiscais/gestores no filtro · uma pessoa pode contar em mais de uma faixa`}
             icone={<Coins className="h-4 w-4" aria-hidden />}
             contagens={fiscaisPorFaixaValor}
-            totalBase={rankingPorPapelVigencia.length}
+            totalBase={fiscaisFiltrados.length}
           />
         </div>
 
         {/* Distribuição por função comissionada (FC/CJ + "Sem função"), herdada
-            de /funcoes — três recortes do que está no filtro. */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            de /funcoes — dois recortes do que está no filtro. */}
+        <div className="grid gap-4 sm:grid-cols-2">
           <FuncaoStatCard
             titulo="Servidores com função"
             detalhe={`${numero(servidoresComFuncao.length)} com função comissionada vigente hoje`}
@@ -654,12 +652,6 @@ export function ServidoresDashboard() {
             detalhe={`${numero(servidoresNaoFiscal.length)} · nunca aparecem como fiscal/gestor de contrato`}
             icone={<Ban className="h-4 w-4" aria-hidden />}
             contagens={donutNaoFiscal}
-          />
-          <FuncaoStatCard
-            titulo="Servidores Fiscais"
-            detalhe={`${numero(fiscaisFiltrados.length)} · com ao menos um contrato de fiscalização/gestão`}
-            icone={<ShieldCheck className="h-4 w-4" aria-hidden />}
-            contagens={donutFuncoesResponsaveis}
           />
         </div>
 

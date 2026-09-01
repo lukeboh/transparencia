@@ -49,7 +49,7 @@ import type {
   ServidorFuncoes,
 } from '@/lib/dashboard-data';
 
-const CAMPOS_ORD_RANKING = new Set(['nome', 'contratos', 'valor', 'empenhado', 'pago']);
+const CAMPOS_ORD_RANKING = new Set(['nome', 'funcoes', 'lotacao', 'contratos', 'valor', 'empenhado', 'pago']);
 
 const LINHAS_POR_PAGINA = 25;
 const MAX_PAPEIS_VISIVEIS = 2;
@@ -105,7 +105,7 @@ function CampoFiltro({
   );
 }
 
-type CampoOrdenavel = 'nome' | 'contratos' | 'valor' | 'empenhado' | 'pago';
+type CampoOrdenavel = 'nome' | 'funcoes' | 'lotacao' | 'contratos' | 'valor' | 'empenhado' | 'pago';
 type DirecaoOrdenacao = 'asc' | 'desc';
 
 interface Ordenacao {
@@ -115,11 +115,20 @@ interface Ordenacao {
 
 const DIRECAO_INICIAL: Record<CampoOrdenavel, DirecaoOrdenacao> = {
   nome: 'asc',
+  funcoes: 'asc',
+  lotacao: 'asc',
   contratos: 'desc',
   valor: 'desc',
   empenhado: 'desc',
   pago: 'desc',
 };
+
+/** Chave de ordenação por função vigente: "CJ04" / "FC03"; vazio = sem função
+ *  vigente na relação atual (vai para o fim, independente da direção). */
+function chaveFuncaoVigenteOrd(s: ServidorFuncoes | undefined): string {
+  if (!s?.funcaoAtual) return '';
+  return `${s.funcaoAtual.tipo}${String(s.funcaoAtual.nivel).padStart(2, '0')}`;
+}
 
 /** Busca sem acento e sem caixa: "jose" encontra "José". */
 function normalizar(texto: string) {
@@ -305,6 +314,18 @@ export function RankingTable({
       switch (ordenacao.campo) {
         case 'nome':
           return fator * a.linha.nome.localeCompare(b.linha.nome, 'pt-BR');
+        case 'funcoes': {
+          const ka = chaveFuncaoVigenteOrd(funcoesPorNome.get(a.linha.nome));
+          const kb = chaveFuncaoVigenteOrd(funcoesPorNome.get(b.linha.nome));
+          if (!ka || !kb) return ka ? -1 : kb ? 1 : 0; // sem função vigente sempre ao fim
+          return fator * ka.localeCompare(kb, 'pt-BR');
+        }
+        case 'lotacao': {
+          const la = lotacaoDe(a.linha.nome).curto;
+          const lb = lotacaoDe(b.linha.nome).curto;
+          if (!la || !lb) return la ? -1 : lb ? 1 : 0; // sem lotação resolvida sempre ao fim
+          return fator * la.localeCompare(lb, 'pt-BR');
+        }
         case 'contratos':
           return fator * (a.linha.quantidadeContratos - b.linha.quantidadeContratos);
         case 'valor':
@@ -315,7 +336,7 @@ export function RankingTable({
           return fator * ((a.linha.valorPagoConsolidado || 0) - (b.linha.valorPagoConsolidado || 0));
       }
     });
-  }, [ranking, busca, filtroLotacao, lotacaoPorNome, ordenacao]);
+  }, [ranking, busca, filtroLotacao, lotacaoPorNome, funcoesPorNome, ordenacao]);
 
   const totalPaginas = Math.max(1, Math.ceil(linhasVisiveis.length / LINHAS_POR_PAGINA));
   const paginaAtual = Math.min(pagina, totalPaginas - 1);
@@ -434,17 +455,28 @@ export function RankingTable({
               <TableHead>Papéis</TableHead>
               <TableHead>
                 <span className="inline-flex items-center gap-1">
-                  Funções
+                  <CabecalhoOrdenavel
+                    rotulo="Funções"
+                    campo="funcoes"
+                    ordenacao={ordenacao}
+                    onOrdenar={ordenarPor}
+                  />
                   <InfoDica titulo="O que a coluna Funções mostra?" alinhamento="esquerda">
                     Todas as funções comissionadas (FC/CJ) que o servidor já ocupou. A
                     vigente hoje aparece <strong>destacada</strong>; as anteriores ficam em
-                    tom apagado.
+                    tom apagado. A ordenação é pela função <strong>vigente</strong> (quem não
+                    tem vai para o fim).
                   </InfoDica>
                 </span>
               </TableHead>
               <TableHead>
                 <span className="inline-flex items-center gap-1">
-                  Lotação
+                  <CabecalhoOrdenavel
+                    rotulo="Lotação"
+                    campo="lotacao"
+                    ordenacao={ordenacao}
+                    onOrdenar={ordenarPor}
+                  />
                   <InfoDica titulo="O que a coluna Lotação mostra?" alinhamento="esquerda">
                     A lotação atual do servidor (relação de agentes públicos), como as 3
                     unidades mais específicas da hierarquia oficial de{' '}
