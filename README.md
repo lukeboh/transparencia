@@ -33,6 +33,17 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   e ele nunca retornou dado nenhum, então não é usado aqui.
 - ✅ A antiga página `/responsaveis` foi renomeada para `/fiscais` (rota e
   label) — nome interno de dados (`DashboardData.responsaveis`) não mudou.
+- ✅ `/fiscais` renomeada para `/servidores` — título **Servidores (Agentes
+  Públicos)** — porque a página não olha só para fiscais/gestores, mas para o
+  agente público por trás deles (`web/app/servidores/`,
+  `ServidoresDashboard`, `FiltroServidores`, `CategoriaValorServidoresCard`;
+  nome interno de dados `DashboardData.responsaveis` segue igual). No card de
+  **Filtro** a seção **Por função** subiu para primeiro; o checkbox "Incluir
+  quem não tem função vigente" virou dois chips: **SEM FUNÇÃO** (mesmo efeito
+  de antes) e **VIGENTE** (ligado por padrão = recorta só pela função
+  comissionada de hoje; desligado = casa também o histórico de FC/CJ das
+  portarias). Em **Por contratos**, "Somente contratos vigentes" virou o chip
+  **VIGENTE** e "Considerar substitutos" passou a começar DESLIGADO.
 - ✅ Estrutura hierárquica de unidades do TSE (`/unidades`) — fonte: o
   endpoint JSON por trás do organograma oficial
   ([agrupamento por unidade](https://transparencia.tse.jus.br/transparenciaDadosServidores/smvc/relatorios/lotacao-geral/sem-assinatura/agrupamento-por-unidade),
@@ -250,7 +261,7 @@ categoria (top 5 + "Outros"; hover sincronizado entre fatia e legenda).
 Tema claro/escuro com toggle; paleta de gráficos validada para daltonismo
 (CVD) nos dois modos, com "Outros" em cinza de de-ênfase.
 
-A rota `/fiscais` (linkada no header e no card "Fiscais designados")
+A rota `/servidores` (linkada no header e no card "Fiscais designados")
 traz o dashboard da primeira funcionalidade do projeto: cards com maior valor
 sob responsabilidade e mediana por responsável, e um card "Fiscais
 designados" que, em vez de só um número, é um donut (mesmo componente de
@@ -347,7 +358,8 @@ Consequências para quem implementa:
   ação explícita de "quero o universo inteiro") — isso não contradiz a regra,
   que é só sobre o **estado inicial**.
 
-Páginas com filtro Vigente hoje: `/fiscais`, `/funcoes`, `/teletrabalho` e
+Páginas com filtro Vigente hoje: `/servidores` (dois: o chip **VIGENTE** de
+"Por contratos" e o de "Por função"), `/funcoes`, `/teletrabalho` e
 `/terceirizados` (um para a tabela de terceirizados e outro para a de
 contratos de cessão).
 
@@ -704,15 +716,16 @@ superconjunto). Cada commit que inclua um scrape novo adiciona alguns MB ao
   - **Melhorias menores e pontuais.**
   1. Cada modal deve ter um nome para ficar fácil fazer referência e 
   reutilização entre todas as funcionalidades.
-  2. Renomear funcionalidade funções para servidores, pois o objetivo não
-  é mostrar apenas os servidores que são fiscais, mas qualquer um. E ao 
-  clicar num servidor, o detalhamento não deve apenas mostrar os contratos 
-  que aquele servidor é, de alguma forma, fiscal. Deve mostrar tambem o 
-  histórico de FCs e CJs que aquele servidor já ocupou. A função em que está
-   atualmente deve ter o chip VIGENTE.
-  3. Onde existir o botão VIGENTE como filtro, ele deve estar ligado. Isso
-  quer dizer que esse é o padrão para qualquer funcionalidade. Os dados 
-  históricos só serão exibidos se for explicitamente solicitado.
+  2. ✅ Rota `/fiscais` renomeada para `/servidores` (título "Servidores
+  (Agentes Públicos)"), porque o objetivo não é mostrar apenas os servidores
+  que são fiscais, mas qualquer um. O filtro "Por função" ganhou o chip
+  **VIGENTE** (ligado = só a função de hoje; desligado = casa também o
+  histórico de FC/CJ das portarias). **Falta ainda:** ao clicar num servidor,
+  o detalhamento deveria listar o histórico de FCs/CJs que ele já ocupou, com
+  a função atual marcada com um chip VIGENTE.
+  3. ✅ Onde existir o botão/chip VIGENTE como filtro, ele começa ligado — ver
+  "Regra: filtro Vigente sempre ligado por padrão" acima. Os dados históricos
+  só aparecem se explicitamente solicitado (desligar o VIGENTE).
 - **Bug conhecido: cache incremental do servidor pode reter nomes quebrados
   de versões antigas do parser, indefinidamente.** `scrapeFuncoes()` só
   busca portarias que ainda não estão em `cacheMovimentos` — uma portaria já

@@ -54,7 +54,7 @@ interface ModalContrato {
 }
 
 const NAV = [
-  { href: '/fiscais', label: 'Fiscais', Icone: Users },
+  { href: '/servidores', label: 'Servidores', Icone: Users },
   { href: '/funcoes', label: 'Funções', Icone: Briefcase },
   { href: '/teletrabalho', label: 'Teletrabalho', Icone: Laptop },
   { href: '/unidades', label: 'Unidades', Icone: Network },

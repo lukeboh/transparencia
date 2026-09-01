@@ -7,8 +7,8 @@ import { StatCard } from '@/components/dashboard/stat-card';
 import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
 import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
 import { ContagemStatCard } from '@/components/dashboard/contagem-stat-card';
-import { CategoriaValorFiscaisCard, contarFiscaisPorFaixaValor } from '@/components/dashboard/categoria-valor-fiscais-card';
-import { FiltroFiscais } from '@/components/dashboard/filtro-fiscais';
+import { CategoriaValorServidoresCard, contarServidoresPorFaixaValor } from '@/components/dashboard/categoria-valor-servidores-card';
+import { FiltroServidores } from '@/components/dashboard/filtro-servidores';
 import { RankingTable } from '@/components/dashboard/ranking-table';
 import { DadosStatus } from '@/components/dashboard/dados-status';
 import { DicaTermo } from '@/components/ui/dica-termo';
@@ -33,7 +33,7 @@ function ordenarFuncao(a: string, b: string): number {
   return Number(na) - Number(nb);
 }
 
-/** Extrai a lógica de filtro+recálculo de rankingFiltrado, reaproveitada nos dois estágios (papéis/vigência e faixa de valor) — ver fiscais-dashboard.tsx. */
+/** Extrai a lógica de filtro+recálculo de rankingFiltrado, reaproveitada nos dois estágios (papéis/vigência e faixa de valor) — ver servidores-dashboard.tsx. */
 function filtrarRanking(
   ranking: LinhaRanking[],
   contratos: ContratoResumo[],
@@ -41,7 +41,7 @@ function filtrarRanking(
   papeisSelecionados: string[],
   somenteVigentes: boolean,
   categoriasSelecionadas: CategoriaValorId[] | null,
-  funcaoChavePorNome: Map<string, string | null>,
+  chavesFuncaoPorNome: Map<string, Set<string>>,
   funcoesSelecionadas: string[] | null,
   incluirSemFuncao: boolean,
 ): LinhaRanking[] {
@@ -52,8 +52,15 @@ function filtrarRanking(
 
   for (const servidor of ranking) {
     if (setFuncoes) {
-      const chave = funcaoChavePorNome.get(servidor.nome) ?? null;
-      if (chave === null ? !incluirSemFuncao : !setFuncoes.has(chave)) continue;
+      // `chavesFuncaoPorNome` já reflete a escolha do chip "Vigente" da seção
+      // "Por função": só a função atual quando ligado, atual + histórico de
+      // portarias quando desligado. Conjunto vazio => "sem função".
+      const chaves = chavesFuncaoPorNome.get(servidor.nome);
+      if (!chaves || chaves.size === 0) {
+        if (!incluirSemFuncao) continue;
+      } else if (![...chaves].some((k) => setFuncoes.has(k))) {
+        continue;
+      }
     }
 
     const contratosFiltrados = servidor.contratos.filter((c) => {
@@ -96,7 +103,7 @@ function filtrarRanking(
   return resultado.sort((a, b) => b.valorConsolidado - a.valorConsolidado);
 }
 
-export function FiscaisDashboard() {
+export function ServidoresDashboard() {
   const estado = useDadosDashboard();
   const { responsaveis, funcoes, contratos, fonte } = estado.dados;
 
@@ -121,26 +128,22 @@ export function FiscaisDashboard() {
     return Array.from(set).sort();
   }, [responsaveis.ranking]);
 
-  // Níveis de função comissionada vigente entre os fiscais/gestores do ranking.
+  // Níveis de função comissionada (FC/CJ) que aparecem entre os servidores do
+  // ranking — atuais e também os já ocupados no histórico de portarias, para
+  // que os mesmos chips sirvam com o "Vigente" da seção ligado ou desligado.
   const todasFuncoes = useMemo(() => {
     const set = new Set<string>();
     for (const s of funcoesPorNome.values()) {
       if (s.funcaoAtual) set.add(`${s.funcaoAtual.tipo}-${s.funcaoAtual.nivel}`);
+      for (const m of s.mandatos) set.add(`${m.tipo}-${m.nivel}`);
     }
     return Array.from(set).sort(ordenarFuncao);
   }, [funcoesPorNome]);
 
-  // Função vigente de cada responsável do ranking, por nome — null quando não há.
-  const funcaoChavePorNome = useMemo(() => {
-    const m = new Map<string, string | null>();
-    for (const [nome, s] of funcoesPorNome) {
-      m.set(nome, s.funcaoAtual ? `${s.funcaoAtual.tipo}-${s.funcaoAtual.nivel}` : null);
-    }
-    return m;
-  }, [funcoesPorNome]);
-
   const [papeisSelecionados, setPapeisSelecionados] = useState<string[]>([]);
-  const [considerarSubstitutos, setConsiderarSubstitutos] = useState(true);
+  // "Considerar substitutos" começa DESLIGADO — só os titulares na conta até
+  // que o usuário peça os substitutos.
+  const [considerarSubstitutos, setConsiderarSubstitutos] = useState(false);
   // Regra do projeto: filtro Vigente começa LIGADO (ver README, "Regra: filtro
   // Vigente sempre ligado por padrão"); "Limpar" ainda o desliga (ver tudo).
   const [somenteVigentes, setSomenteVigentes] = useState(true);
@@ -149,6 +152,27 @@ export function FiscaisDashboard() {
   );
   const [funcoesSelecionadas, setFuncoesSelecionadas] = useState<string[]>([]);
   const [incluirSemFuncao, setIncluirSemFuncao] = useState(true);
+  // Chip "Vigente" da seção "Por função": ligado = recorta só pela função
+  // comissionada de hoje; desligado = também considera o histórico de FC/CJ.
+  // Padrão ligado, mesma regra do Vigente de contratos.
+  const [funcaoVigente, setFuncaoVigente] = useState(true);
+
+  // Chaves de função de cada servidor do ranking, por nome. Com `funcaoVigente`
+  // ligado (padrão) é só a função comissionada de hoje; desligado, acrescenta
+  // todo FC/CJ já ocupado no histórico de portarias. Conjunto vazio = "sem
+  // função" no recorte atual.
+  const chavesFuncaoPorNome = useMemo(() => {
+    const m = new Map<string, Set<string>>();
+    for (const [nome, s] of funcoesPorNome) {
+      const chaves = new Set<string>();
+      if (s.funcaoAtual) chaves.add(`${s.funcaoAtual.tipo}-${s.funcaoAtual.nivel}`);
+      if (!funcaoVigente) {
+        for (const mand of s.mandatos) chaves.add(`${mand.tipo}-${mand.nivel}`);
+      }
+      m.set(nome, chaves);
+    }
+    return m;
+  }, [funcoesPorNome, funcaoVigente]);
 
   useEffect(() => {
     if (todosPapeis.length > 0 && papeisSelecionados.length === 0) {
@@ -169,8 +193,9 @@ export function FiscaisDashboard() {
       papeis: incluidos.escrever(todosPapeis, papeisSelecionados),
       func: incluidos.escrever(todasFuncoes, funcoesSelecionadas),
       faixas_off: excluidos.escrever(IDS_FAIXA_VALOR, categoriasSelecionadas),
-      subs: bool.escrever(considerarSubstitutos, true),
+      subs: bool.escrever(considerarSubstitutos, false),
       vig: bool.escrever(somenteVigentes, true),
+      func_vig: bool.escrever(funcaoVigente, true),
       semfunc: bool.escrever(incluirSemFuncao, true),
       // esquema antigo ("guardava os desmarcados"): limpa se aparecer num link
       func_off: null,
@@ -185,8 +210,9 @@ export function FiscaisDashboard() {
       if (xo !== null) {
         setCategoriasSelecionadas(excluidos.ler(IDS_FAIXA_VALOR, xo) as CategoriaValorId[]);
       }
-      setConsiderarSubstitutos(bool.ler(sp.get('subs'), true));
+      setConsiderarSubstitutos(bool.ler(sp.get('subs'), false));
       setSomenteVigentes(bool.ler(sp.get('vig'), true));
+      setFuncaoVigente(bool.ler(sp.get('func_vig'), true));
       setIncluirSemFuncao(bool.ler(sp.get('semfunc'), true));
     },
   );
@@ -231,7 +257,7 @@ export function FiscaisDashboard() {
       papeisEfetivos,
       somenteVigentes,
       null,
-      funcaoChavePorNome,
+      chavesFuncaoPorNome,
       funcoesIrrestritas ? null : funcoesSelecionadas,
       incluirSemFuncao,
     );
@@ -243,7 +269,7 @@ export function FiscaisDashboard() {
     todosPapeisEfetivos,
     considerarSubstitutos,
     somenteVigentes,
-    funcaoChavePorNome,
+    chavesFuncaoPorNome,
     funcoesSelecionadas,
     funcoesIrrestritas,
     incluirSemFuncao,
@@ -263,7 +289,7 @@ export function FiscaisDashboard() {
       papeisEfetivos,
       somenteVigentes,
       categoriasSelecionadas,
-      funcaoChavePorNome,
+      chavesFuncaoPorNome,
       null,
       incluirSemFuncao,
     );
@@ -274,7 +300,7 @@ export function FiscaisDashboard() {
     papeisEfetivos,
     somenteVigentes,
     categoriasSelecionadas,
-    funcaoChavePorNome,
+    chavesFuncaoPorNome,
     incluirSemFuncao,
   ]);
 
@@ -303,7 +329,7 @@ export function FiscaisDashboard() {
   // KPI: fiscais por faixa de valor dos contratos que fiscalizam — sobre o
   // estágio 1 (papéis + vigência), ver comentário acima.
   const fiscaisPorFaixaValor = useMemo(
-    () => contarFiscaisPorFaixaValor(rankingPorPapelVigencia, (i) => categoriaIdPorIndice[i] as CategoriaValorId),
+    () => contarServidoresPorFaixaValor(rankingPorPapelVigencia, (i) => categoriaIdPorIndice[i] as CategoriaValorId),
     [rankingPorPapelVigencia, categoriaIdPorIndice],
   );
 
@@ -366,9 +392,9 @@ export function FiscaisDashboard() {
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
             Contratos do TSE
           </Link>
-          <h1 className="text-2xl font-semibold tracking-tight">Fiscais</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Servidores (Agentes Públicos)</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Servidores fiscais e gestores{' '}
+            Agentes públicos do TSE que atuam como fiscais e gestores{' '}
             <DicaTermo id="fiscalGestor" alinhamento="esquerda" /> pelos maiores valores
             consolidados <DicaTermo id="valorConsolidado" alinhamento="esquerda" /> de
             contratos ·{' '}
@@ -430,7 +456,7 @@ export function FiscaisDashboard() {
       </header>
 
       <div className="space-y-4">
-        <FiltroFiscais
+        <FiltroServidores
           todosPapeis={todosPapeis}
           papeisSelecionados={papeisSelecionados}
           onPapeisChange={setPapeisSelecionados}
@@ -445,6 +471,8 @@ export function FiscaisDashboard() {
           onFuncoesChange={setFuncoesSelecionadas}
           incluirSemFuncao={incluirSemFuncao}
           onIncluirSemFuncaoChange={setIncluirSemFuncao}
+          funcaoVigente={funcaoVigente}
+          onFuncaoVigenteChange={setFuncaoVigente}
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -476,7 +504,7 @@ export function FiscaisDashboard() {
             unidadeSingular="contrato"
             unidadePlural="contratos"
           />
-          <CategoriaValorFiscaisCard
+          <CategoriaValorServidoresCard
             titulo="Fiscais por faixa de valor"
             detalhe={`de ${numero(rankingPorPapelVigencia.length)} fiscais/gestores no filtro (papel, função e vigência) · uma pessoa pode contar em mais de uma faixa`}
             icone={<Coins className="h-4 w-4" aria-hidden />}

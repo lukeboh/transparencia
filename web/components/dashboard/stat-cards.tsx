@@ -56,8 +56,8 @@ export function StatCards({
       </button>
 
       <Link
-        href="/fiscais"
-        aria-label="Ver dashboard de fiscais"
+        href="/servidores"
+        aria-label="Ver dashboard de servidores (agentes públicos)"
         className="rounded-lg outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring"
       >
         <StatCard

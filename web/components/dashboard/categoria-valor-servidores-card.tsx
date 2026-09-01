@@ -14,7 +14,7 @@ export interface ContagemPorCategoriaValor {
  * de valores diferentes), então a soma das barras pode passar do total de
  * fiscais — por isso barras (% de `totalBase` cada) em vez de donut.
  */
-export function CategoriaValorFiscaisCard({
+export function CategoriaValorServidoresCard({
   titulo,
   detalhe,
   icone,
@@ -60,7 +60,7 @@ export function CategoriaValorFiscaisCard({
 }
 
 /** Conta, por faixa de valor, quantos responsáveis do ranking têm ao menos um contrato naquela faixa (contagem não-exclusiva, ver acima). */
-export function contarFiscaisPorFaixaValor(
+export function contarServidoresPorFaixaValor(
   ranking: { contratos: { i: number }[] }[],
   categoriaIdPorIndiceContrato: (i: number) => CategoriaValorId,
 ): ContagemPorCategoriaValor[] {

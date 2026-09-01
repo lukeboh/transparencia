@@ -53,11 +53,11 @@ export function IndicadoresDashboard() {
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-2">
           <Link
-            href="/fiscais"
+            href="/servidores"
             className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             <Users className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Fiscais</span>
+            <span className="sr-only sm:not-sr-only">Servidores</span>
             <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
           </Link>
           <Link

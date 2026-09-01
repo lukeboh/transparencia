@@ -57,7 +57,7 @@ export function rotuloPerfil(papel: string): string {
   return ehSubstituto(papel) ? `${base} ${SUBSTITUTO_MARCA}` : base;
 }
 
-// ── Taxonomia hierárquica dos papéis, para o filtro de /fiscais ──────────────
+// ── Taxonomia hierárquica dos papéis, para o filtro de /servidores ───────────
 // Cada grupo reúne papéis "titulares" afins; o substituto de cada titular (quando
 // a fonte tem a variante) fica pareado com ele, não solto na lista.
 

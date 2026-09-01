@@ -183,7 +183,7 @@ export function RankingTable({
 }: {
   ranking: LinhaRanking[];
   contratos: ContratoResumo[];
-  /** Servidor (com função atual + histórico) por nome — mesma string de `linha.nome`, ver fiscais-dashboard.tsx. */
+  /** Servidor (com função atual + histórico) por nome — mesma string de `linha.nome`, ver servidores-dashboard.tsx. */
   funcoesPorNome: Map<string, ServidorFuncoes>;
 }) {
   const [pagina, setPagina] = useState(0);
@@ -336,8 +336,8 @@ export function RankingTable({
           <BotaoExportar
             linhas={linhasVisiveis}
             colunas={colunasExport}
-            nomeArquivo="fiscais"
-            nomeAba="Fiscais"
+            nomeArquivo="servidores"
+            nomeAba="Servidores"
           />
         </div>
 

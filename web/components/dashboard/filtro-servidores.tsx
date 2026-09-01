@@ -16,7 +16,7 @@ import {
   nomeCurtoPerfil,
 } from '@/lib/perfis-fiscalizacao';
 
-export interface FiltroFiscaisProps {
+export interface FiltroServidoresProps {
   todosPapeis: string[];
   papeisSelecionados: string[];
   onPapeisChange: (v: string[]) => void;
@@ -32,6 +32,10 @@ export interface FiltroFiscaisProps {
   onFuncoesChange: (v: string[]) => void;
   incluirSemFuncao: boolean;
   onIncluirSemFuncaoChange: (v: boolean) => void;
+  /** Chip "Vigente" da seção "Por função": ligado = só a função de hoje;
+   *  desligado = também o histórico de FC/CJ do servidor. */
+  funcaoVigente: boolean;
+  onFuncaoVigenteChange: (v: boolean) => void;
   className?: string;
 }
 
@@ -165,7 +169,7 @@ function TodosNenhum({ onTodos, onNenhum }: { onTodos: () => void; onNenhum: () 
 }
 
 // ── corpo do filtro (compartilhado entre card desktop e drawer mobile) ───────
-function CorpoFiltro(props: FiltroFiscaisProps) {
+function CorpoFiltro(props: FiltroServidoresProps) {
   const {
     todosPapeis,
     papeisSelecionados,
@@ -181,6 +185,8 @@ function CorpoFiltro(props: FiltroFiscaisProps) {
     onFuncoesChange,
     incluirSemFuncao,
     onIncluirSemFuncaoChange,
+    funcaoVigente,
+    onFuncaoVigenteChange,
   } = props;
 
   const grupos = agruparPapeis(todosPapeis);
@@ -189,13 +195,73 @@ function CorpoFiltro(props: FiltroFiscaisProps) {
 
   return (
     <div className="space-y-3">
+      {/* ── Por função (o primeiro a ser visto) ────────────────────────── */}
+      <Secao
+        titulo="Por função"
+        acao={
+          <TodosNenhum
+            onTodos={() => onFuncoesChange([...todasFuncoes])}
+            onNenhum={() => onFuncoesChange([])}
+          />
+        }
+      >
+        <div className="flex flex-wrap items-center gap-1">
+          {todasFuncoes.map((f) => (
+            <Chip
+              key={f}
+              ativo={funcoesSelecionadas.includes(f)}
+              onClick={() => onFuncoesChange(toggle(funcoesSelecionadas, f))}
+              title={`Função comissionada ${f}`}
+            >
+              {f}
+            </Chip>
+          ))}
+          <Chip
+            ativo={incluirSemFuncao}
+            onClick={() => onIncluirSemFuncaoChange(!incluirSemFuncao)}
+            title={
+              incluirSemFuncao
+                ? 'Incluindo quem não tem função comissionada no recorte atual — clique para ocultar'
+                : 'Ocultando quem não tem função comissionada — clique para incluir'
+            }
+          >
+            SEM FUNÇÃO
+          </Chip>
+          <span className="mx-1 h-4 w-px shrink-0 bg-border" aria-hidden />
+          <Chip
+            ativo={funcaoVigente}
+            onClick={() => onFuncaoVigenteChange(!funcaoVigente)}
+            title={
+              funcaoVigente
+                ? 'Recorta só pela função comissionada vigente hoje — clique para considerar também o histórico de FC/CJ'
+                : 'Considerando também o histórico de FC/CJ já ocupados — clique para olhar só a situação atual'
+            }
+          >
+            VIGENTE
+          </Chip>
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          {funcaoVigente
+            ? 'Recorte pela função comissionada vigente hoje.'
+            : 'Inclui o histórico de funções (FC/CJ) já ocupadas por cada servidor.'}
+        </p>
+      </Secao>
+
       {/* ── Por contratos ──────────────────────────────────────────────── */}
       <div>
         <Secao titulo="Por contratos">
-          <div className="mb-3 flex flex-wrap gap-x-5 gap-y-1.5">
-            <Checkbox marcado={somenteVigentes} onChange={onSomenteVigentesChange}>
-              Somente contratos vigentes
-            </Checkbox>
+          <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-1.5">
+            <Chip
+              ativo={somenteVigentes}
+              onClick={() => onSomenteVigentesChange(!somenteVigentes)}
+              title={
+                somenteVigentes
+                  ? 'Só contratos vigentes hoje — clique para incluir os encerrados'
+                  : 'Incluindo contratos encerrados — clique para ver só os vigentes'
+              }
+            >
+              VIGENTE
+            </Chip>
             <Checkbox
               marcado={considerarSubstitutos}
               onChange={onConsiderarSubstitutosChange}
@@ -312,39 +378,12 @@ function CorpoFiltro(props: FiltroFiscaisProps) {
           </div>
         </Secao>
       </div>
-
-      {/* ── Por função ─────────────────────────────────────────────────── */}
-      <Secao
-        titulo="Por função"
-        acao={
-          <TodosNenhum
-            onTodos={() => onFuncoesChange([...todasFuncoes])}
-            onNenhum={() => onFuncoesChange([])}
-          />
-        }
-      >
-        <div className="mb-2 flex flex-wrap gap-1">
-          {todasFuncoes.map((f) => (
-            <Chip
-              key={f}
-              ativo={funcoesSelecionadas.includes(f)}
-              onClick={() => onFuncoesChange(toggle(funcoesSelecionadas, f))}
-              title={`Função comissionada ${f}`}
-            >
-              {f}
-            </Chip>
-          ))}
-        </div>
-        <Checkbox marcado={incluirSemFuncao} onChange={onIncluirSemFuncaoChange}>
-          Incluir quem não tem função vigente
-        </Checkbox>
-      </Secao>
     </div>
   );
 }
 
 // ── quantos filtros estão "estreitando" o resultado ─────────────────────────
-function contarAtivos(p: FiltroFiscaisProps): number {
+function contarAtivos(p: FiltroServidoresProps): number {
   const papeisConsiderados = p.considerarSubstitutos
     ? p.todosPapeis
     : p.todosPapeis.filter((x) => !ehSubstituto(x));
@@ -353,6 +392,7 @@ function contarAtivos(p: FiltroFiscaisProps): number {
   );
   let n = 0;
   if (p.somenteVigentes) n++;
+  if (p.funcaoVigente) n++;
   if (!p.considerarSubstitutos) n++;
   if (selConsiderados.length < papeisConsiderados.length) n++;
   if (p.categoriasSelecionadas.length < CATEGORIAS_VALOR.length) n++;
@@ -361,17 +401,18 @@ function contarAtivos(p: FiltroFiscaisProps): number {
   return n;
 }
 
-function limparTudo(p: FiltroFiscaisProps) {
+function limparTudo(p: FiltroServidoresProps) {
   p.onPapeisChange([...p.todosPapeis]);
   p.onConsiderarSubstitutosChange(true);
   p.onSomenteVigentesChange(false);
+  p.onFuncaoVigenteChange(false);
   p.onCategoriasChange(CATEGORIAS_VALOR.map((c) => c.id));
   p.onFuncoesChange([...p.todasFuncoes]);
   p.onIncluirSemFuncaoChange(true);
 }
 
 // ── componente exposto ──────────────────────────────────────────────────────
-export function FiltroFiscais(props: FiltroFiscaisProps) {
+export function FiltroServidores(props: FiltroServidoresProps) {
   const [aberto, setAberto] = useState(true); // card desktop expandido
   const [drawer, setDrawer] = useState(false); // sheet mobile
 
