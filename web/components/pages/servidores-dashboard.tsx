@@ -430,15 +430,17 @@ export function ServidoresDashboard() {
     [rankingFiltrado],
   );
 
-  // KPI: contratos por faixa de valor — reflete os filtros de contrato da tela
-  // (VIGENTE e "Por valor"); os filtros de papel/função são sobre pessoas, não
-  // sobre o contrato em si, então não se aplicam aqui.
+  // KPI: contratos por faixa de valor — os contratos DISTINTOS que estão sob
+  // responsabilidade dos servidores no recorte atual (cada `.contratos` já vem
+  // filtrado por papel + vigência + faixa em `filtrarRanking`), então reflete
+  // todos os filtros da tela; contado uma única vez por contrato.
   const contratosParaFaixaValor = useMemo(() => {
-    const setFaixas = new Set(categoriasSelecionadas);
-    return contratos.filter(
-      (c) => (!somenteVigentes || c.vigente) && setFaixas.has(categoriaDoValor(c.valorGlobal).id),
-    );
-  }, [contratos, somenteVigentes, categoriasSelecionadas]);
+    const indices = new Set<number>();
+    for (const r of fiscaisFiltrados) {
+      for (const c of r.contratos) indices.add(c.i);
+    }
+    return [...indices].map((i) => contratos[i]).filter(Boolean);
+  }, [fiscaisFiltrados, contratos]);
 
   const fatiasContratosPorFaixa = useMemo(() => {
     const contagem = new Map(CATEGORIAS_VALOR.map((c) => [c.id, 0]));
@@ -623,7 +625,7 @@ export function ServidoresDashboard() {
           />
           <ContagemStatCard
             titulo="Contratos por faixa de valor"
-            detalhe={`${numero(contratosParaFaixaValor.length)} contrato${contratosParaFaixaValor.length === 1 ? '' : 's'} no filtro${somenteVigentes ? ' (vigentes hoje)' : ''}`}
+            detalhe={`${numero(contratosParaFaixaValor.length)} contrato${contratosParaFaixaValor.length === 1 ? '' : 's'} sob responsabilidade no filtro`}
             icone={<Coins className="h-4 w-4" aria-hidden />}
             fatias={fatiasContratosPorFaixa}
             unidadeSingular="contrato"

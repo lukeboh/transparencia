@@ -300,9 +300,10 @@ de nenhum contrato aparece zerado. Uma primeira faixa de KPIs de contrato
 ("Fiscais designados", contratos e fiscais por faixa de valor) e uma segunda
 faixa com **dois donuts de distribuição por função comissionada herdados de
 `/funcoes`** (que está em vias de ser descontinuada): "Servidores com função" e
-"Não-Fiscal". **Todos os KPIs reagem aos filtros da tela** — os de contrato
-(faixa/vigência) e os de pessoa (papel/função/vigência), cada um pelo corte que
-faz sentido para a métrica. Tabela paginada, 25 por página (papéis como badges;
+"Não-Fiscal". **Todos os KPIs reagem a todos os filtros da tela** — inclusive
+"Contratos por faixa de valor", que conta os contratos DISTINTOS sob
+responsabilidade dos servidores no recorte atual (não mais o universo de
+contratos). Tabela paginada, 25 por página (papéis como badges;
 valor de cada contrato contado uma única vez por pessoa). O card se chama
 **"Servidores (Agentes Públicos)"**. A coluna
 **Funções** (com dica (i) no cabeçalho) lista **todos** os níveis FC/CJ que o
