@@ -406,9 +406,16 @@ export interface ContratoTerceirizados {
 }
 
 export interface TerceirizadoFalha {
-  /** 'lotacao-nao-identificada' = "Alocação" não casou com a árvore; 'sem-alocacao' = coluna vazia no PDF; 'contrato-nao-vinculado' = número não achado no Comprasnet; 'nome-nao-identificado' = a linha do PDF trouxe só o cargo, sem nome. */
-  tipo: 'lotacao-nao-identificada' | 'sem-alocacao' | 'contrato-nao-vinculado' | 'nome-nao-identificado';
+  /** 'lotacao-nao-identificada' = "Alocação" não casou com a árvore; 'sem-alocacao' = coluna vazia no PDF; 'contrato-nao-vinculado' = número não achado no Comprasnet; 'nome-nao-identificado' = a linha do PDF trouxe só o cargo, sem nome; 'nome-possivel-duplicata' = existe outro terceirizado de nome quase idêntico (provável erro de grafia/OCR). */
+  tipo:
+    | 'lotacao-nao-identificada'
+    | 'sem-alocacao'
+    | 'contrato-nao-vinculado'
+    | 'nome-nao-identificado'
+    | 'nome-possivel-duplicata';
   nome: string;
+  /** Nome correto sugerido (só em 'nome-possivel-duplicata'): o do terceirizado quase homônimo que aparece em mais competências. */
+  nomeSugerido?: string;
   alocacao: string;
   contrato: string;
   competenciaMaisRecente: string;

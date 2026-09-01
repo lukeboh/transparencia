@@ -343,6 +343,15 @@ function agregarTerceirizados(entradaTerceirizados, arvoreUnidades = null, contr
     }
   }
   pessoas.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
+  // --- Possíveis duplicatas por erro de grafia/OCR no nome ---
+  // Duas pessoas cujo nome normalizado difere em UM token, por 1-2 letras
+  // ("Otoni Ferreira Rocha" × "Otoni Ferrreira Rocha", "Sousa" × "Souza"…):
+  // quase sempre a mesma pessoa. Vira falha com sugestão do nome mais provável
+  // (o que aparece em mais competências). Bucketiza por prefixo do 1º token +
+  // nº de tokens p/ não ser O(n²) de verdade.
+  for (const f of detectarDuplicatas(pessoas, competenciaAtualUsada)) falhas.push(f);
+
   falhas.sort((a, b) => a.tipo.localeCompare(b.tipo) || a.nome.localeCompare(b.nome, 'pt-BR'));
 
   // --- KPI por contrato de cessão ---
@@ -427,6 +436,108 @@ function criarFalha(tipo, nome, ocorrencia) {
     contrato: ocorrencia.contrato,
     competenciaMaisRecente: ocorrencia.chave,
   };
+}
+
+/** Distância de edição (Levenshtein) entre duas strings. */
+function levenshtein(a, b) {
+  const m = a.length;
+  const n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  let cur = new Array(n + 1);
+  for (let i = 1; i <= m; i++) {
+    cur[0] = i;
+    for (let j = 1; j <= n; j++) {
+      cur[j] = Math.min(
+        prev[j] + 1,
+        cur[j - 1] + 1,
+        prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+    }
+    [prev, cur] = [cur, prev];
+  }
+  return prev[n];
+}
+
+const normNomeDup = (s) =>
+  String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+
+/** Pares de pessoas com nome quase idêntico (1 token divergindo em ≤2 letras). */
+function detectarDuplicatas(pessoas, competenciaAtual) {
+  // Frequência global de cada token de nome — a grafia mais comum ("SANTOS")
+  // vence a rara ("ANTOS") na hora de decidir qual é o nome "certo".
+  const freqToken = new Map();
+  for (const p of pessoas) {
+    for (const tok of normNomeDup(p.nome).split(' ')) {
+      freqToken.set(tok, (freqToken.get(tok) ?? 0) + 1);
+    }
+  }
+
+  const bucket = new Map();
+  pessoas.forEach((p, i) => {
+    const n = normNomeDup(p.nome);
+    const toks = n.split(' ');
+    if (toks.length < 2 || n.length < 12) return;
+    const k = `${toks[0].slice(0, 4)}|${toks.length}`;
+    const lista = bucket.get(k) ?? [];
+    lista.push(i);
+    bucket.set(k, lista);
+  });
+
+  const falhas = [];
+  const jaSuspeito = new Set();
+  for (const idxs of bucket.values()) {
+    for (let a = 0; a < idxs.length; a++) {
+      for (let b = a + 1; b < idxs.length; b++) {
+        const pa = pessoas[idxs[a]];
+        const pb = pessoas[idxs[b]];
+        const na = normNomeDup(pa.nome);
+        const nb = normNomeDup(pb.nome);
+        if (na === nb || Math.abs(na.length - nb.length) > 2) continue;
+        const ta = na.split(' ');
+        const tb = nb.split(' ');
+        let difTok = 0;
+        let totDist = 0;
+        let kDif = -1;
+        for (let k = 0; k < ta.length; k++) {
+          const d = levenshtein(ta[k], tb[k]);
+          totDist += d;
+          if (d > 0) {
+            difTok += 1;
+            kDif = k;
+          }
+          if (d > 2) { difTok = 99; break; }
+        }
+        if (difTok !== 1 || totDist > 2) continue;
+        // Canônico: a grafia mais comum do token que difere; empate → quem
+        // aparece em mais competências; depois o que segue ativo; depois alfabético.
+        const fa = freqToken.get(ta[kDif]) ?? 0;
+        const fb = freqToken.get(tb[kDif]) ?? 0;
+        const aCanonico =
+          fa !== fb
+            ? fa > fb
+            : pa.competencias !== pb.competencias
+              ? pa.competencias > pb.competencias
+              : pa.ativo !== pb.ativo
+                ? pa.ativo
+                : pa.nome.localeCompare(pb.nome, 'pt-BR') < 0;
+        const suspeito = aCanonico ? pb : pa;
+        const canonico = aCanonico ? pa : pb;
+        if (jaSuspeito.has(suspeito.nome)) continue;
+        jaSuspeito.add(suspeito.nome);
+        falhas.push({
+          tipo: 'nome-possivel-duplicata',
+          nome: suspeito.nome,
+          nomeSugerido: canonico.nome,
+          alocacao: suspeito.lotacaoAlocacao,
+          contrato: suspeito.contrato,
+          competenciaMaisRecente: suspeito.mesFim ?? competenciaAtual ?? suspeito.mesInicio ?? '',
+        });
+      }
+    }
+  }
+  return falhas;
 }
 
 export { agregarTerceirizados };

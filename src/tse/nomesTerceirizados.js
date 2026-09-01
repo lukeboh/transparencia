@@ -67,6 +67,9 @@ const POSTO_INICIO = new Set([
   'MODELAGEM', 'DOCUMENTACAO', 'TREINAMENTO', 'CONFIGURACAO', 'GOVERNANCA',
   'AUDITORIA', 'DIGITALIZACAO', 'DIGITADOR', 'DIGITADORA', 'HELPDESK', 'SERVICE',
   'TESTES', 'QUALIDADE', 'DIAGRAMADOR', 'DIAGRAMACAO', 'ILUSTRADOR', 'PROJETO',
+  'SERRALHEIRO', 'DIRETOR', 'DIRETORA', 'DRETOR', 'REPORTER', 'CINEGRAFISTA',
+  'ENCANADOR', 'CHAVEIRO', 'FRENTISTA', 'LAVADOR', 'BORRACHEIRO', 'FUNILEIRO',
+  'ESTOFADOR', 'TORNEIRO', 'CALDEIREIRO', 'VIDRACEIRO', 'GESSEIRO', 'CHEFE',
 ]);
 
 // Conectivos que fazem parte do nome / do cargo mas não contam como "palavra".
@@ -82,16 +85,19 @@ const MARCADOR_CARGO =
 // ("... FÉRIAS 27/11 A 26/12/23", "... (admitido)") — não são nem nome nem
 // cargo. Onde começam, o nome já acabou.
 const MARCADOR_ANOTACAO =
-  /\(|\b(F[ÉE]RIAS|AFASTAD[OA]|LICEN[ÇC]A|ATESTADO|ADMITID[OA]|DESLIGAD[OA]|DEMITID[OA]|SUSPENS[OA]|RESCIS[ÃA]O|RESCINDID[OA]|SUBSTITUI[ÇC][ÃA]O|SUBSTITUT[OA]|PENDENTE|VAGO|VAGA|NOVO|NOVA|CONTRATAD[OA])\b|\s\d{1,2}\s*\/\s*\d{1,2}(\s*\/\s*\d{2,4})?\b/i;
+  /\(|\b(F[ÉE]RIAS|AFASTAD[OA]|LICEN[ÇC]A|ATESTADO|ADMITID[OA]|DESLIGAD[OA]|DEMITID[OA]|SUSPENS[OA]|RESCIS[ÃA]O|RESCINDID[OA]|SUBSTITUI[ÇC][ÃA]O|SUBSTITUT[OA]|PENDENTE|VAGO|VAGA|NOVO|NOVA|CONTRATAD[OA]|MUDOU|ALTERAD[OA]|TROCOU)\b|\bpassou\s+(a|para)\b|\s\d{1,2}\s*\/\s*\d{1,2}(\s*\/\s*\d{2,4})?\b/i;
 
 const soLetrasNome = /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'’.-]*$/;
 
-/** Tokeniza e diz onde (índice de token) o cargo começa, ou -1. */
+/** Tokeniza e diz onde (índice de token) o cargo começa, ou -1. Também olha
+ *  os pedaços separados por "/" ("SERRALHEIRO/SOLDADOR"). */
 function indiceInicioCargo(tokens) {
   for (let i = 0; i < tokens.length; i++) {
-    const t = norm(tokens[i]);
-    if (!t) continue;
-    if (POSTO_INICIO.has(t)) return i;
+    const bruto = tokens[i];
+    if (!bruto) continue;
+    for (const parte of bruto.split('/')) {
+      if (POSTO_INICIO.has(norm(parte))) return i;
+    }
   }
   return -1;
 }
@@ -148,8 +154,13 @@ export function separarNomePosto(empregadoBruto, postoBruto = '', empresaBruta =
     tail = '';
   }
 
-  // Remove conectivo pendurado no fim do nome ("... DE") e valida tokens.
-  while (nomeTokens.length && CONECTIVOS.has(norm(nomeTokens[nomeTokens.length - 1]))) {
+  // Remove do fim do nome conectivo pendurado ("... DE") ou token só de
+  // pontuação ("... -") antes de validar.
+  while (
+    nomeTokens.length &&
+    (CONECTIVOS.has(norm(nomeTokens[nomeTokens.length - 1])) ||
+      /^[^A-Za-zÀ-ÿ]+$/.test(nomeTokens[nomeTokens.length - 1]))
+  ) {
     tail = `${nomeTokens.pop()} ${tail}`.trim();
   }
   const palavrasNome = nomeTokens.filter(
@@ -169,7 +180,7 @@ export function separarNomePosto(empregadoBruto, postoBruto = '', empresaBruta =
   // Posto: mantém o que veio na coluna se for descritivo; senão usa o rabo —
   // mas não se o rabo for anotação de situação/data ("FÉRIAS 27/11…", "(admitido)").
   const tailEhAnotacao = /^[(]|^(F[ÉE]RIAS|AFASTAD|LICEN|ATESTADO|ADMITID|DESLIGAD|DEMITID|SUSPENS|RESCIS|SUBSTITU|PENDENTE|VAGO|VAGA|NOVO|NOVA|CONTRATAD)|^\d{1,2}\s*\//i.test(tail);
-  const tailPosto = tailEhAnotacao ? '' : tail;
+  const tailPosto = tailEhAnotacao ? '' : tail.replace(/^[-–\s]+/, '');
   const postoOriginalEhRuido = !postoOriginal || /^[\d\s.,;:/–-]+$/.test(postoOriginal);
   const posto = postoOriginalEhRuido && tailPosto ? tailPosto : postoOriginal;
   return { nome, posto, semNome: false };

@@ -23,6 +23,7 @@ const ROTULO: Record<TerceirizadoFalha['tipo'], string> = {
   'sem-alocacao': 'Sem alocação no PDF',
   'contrato-nao-vinculado': 'Contrato não vinculado',
   'nome-nao-identificado': 'Nome não identificado',
+  'nome-possivel-duplicata': 'Possível duplicata de nome',
 };
 
 const DESCRICAO: Record<TerceirizadoFalha['tipo'], string> = {
@@ -33,6 +34,8 @@ const DESCRICAO: Record<TerceirizadoFalha['tipo'], string> = {
     'O número do contrato citado no PDF (ex.: "31/2023") não foi encontrado na base de contratos do Compras.gov.br do TSE. Pode ser um contrato antigo fora da base raspada, um erro de digitação/OCR no número, ou uma modalidade não coberta. Sem o vínculo, o modal "Detalhes do Contrato" não mostra fornecedor, objeto nem valores.',
   'nome-nao-identificado':
     'A linha do PDF trouxe só o cargo ou uma anotação (férias, "admitido"…), sem um nome de pessoa reconhecível — em geral porque o OCR trocou as colunas. Essa linha não vira um terceirizado na tabela.',
+  'nome-possivel-duplicata':
+    'Existe outro terceirizado com nome quase idêntico (um "sobrenome" diferindo por 1–2 letras — "Souza"/"Sousa", "Santos"/"Antos"): quase sempre a mesma pessoa contada duas vezes por erro de digitação/OCR. A sugestão é a grafia mais comum na base. Confira e, se procede, registre em data/tse_terceirizados_excecoes.json (renomear).',
 };
 
 export function TerceirizadosFalhasCard({
@@ -56,6 +59,7 @@ export function TerceirizadosFalhasCard({
       { cabecalho: 'Nome', valor: (f) => f.nome },
       { cabecalho: 'Alocação (PDF)', valor: (f) => f.alocacao },
       { cabecalho: 'Contrato', valor: (f) => f.contrato },
+      { cabecalho: 'Nome sugerido', valor: (f) => f.nomeSugerido ?? '' },
       { cabecalho: 'Competência mais recente', valor: (f) => mesAnoCurto(f.competenciaMaisRecente) },
       { cabecalho: 'PDF de origem', valor: (f) => pdfPorCompetencia.get(f.competenciaMaisRecente) ?? '' },
     ],
@@ -131,7 +135,14 @@ export function TerceirizadosFalhasCard({
                   const pdf = pdfPorCompetencia.get(f.competenciaMaisRecente);
                   return (
                     <TableRow key={`${f.nome}-${f.tipo}-${i}`}>
-                      <TableCell className="font-medium">{f.nome}</TableCell>
+                      <TableCell className="font-medium">
+                        {f.nome}
+                        {f.nomeSugerido && (
+                          <span className="mt-0.5 block text-xs font-normal text-primary">
+                            → {f.nomeSugerido}
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <span
                           title={DESCRICAO[f.tipo]}

@@ -144,6 +144,40 @@ test('aceita o array cru legado (uma foto só, sem histórico)', () => {
   assert.equal(r.pessoas[0].mesFim, null);
 });
 
+test('possível duplicata: nome quase idêntico vira falha com sugestão da grafia mais comum', () => {
+  // "SANTOS" aparece 3×, "ANTOS" 1× → a sugestão para "... dos Antos" é "... dos Santos".
+  const r = agregarTerceirizados(
+    entrada({
+      '2025-05': [
+        reg({ empregado: 'DIEGO FELIPE SOARES DOS SANTOS' }),
+        reg({ empregado: 'MARIA JOSE DOS SANTOS' }),
+        reg({ empregado: 'JOAO PEREIRA DOS SANTOS' }),
+        reg({ empregado: 'DIEGO FELIPE SOARES DOS ANTOS' }),
+      ],
+    }),
+    arvore(),
+    contratos,
+  );
+  const dup = r.falhas.find((f) => f.tipo === 'nome-possivel-duplicata');
+  assert.ok(dup, 'deveria haver uma falha de duplicata');
+  assert.equal(dup.nome, 'Diego Felipe Soares dos Antos');
+  assert.equal(dup.nomeSugerido, 'Diego Felipe Soares dos Santos');
+});
+
+test('nomes distintos (2+ tokens diferentes) NÃO viram duplicata', () => {
+  const r = agregarTerceirizados(
+    entrada({
+      '2025-05': [
+        reg({ empregado: 'CARLOS ALBERTO DA SILVA MENDES' }),
+        reg({ empregado: 'CARLOS ROBERTO DA COSTA MENDES' }),
+      ],
+    }),
+    arvore(),
+    contratos,
+  );
+  assert.equal(r.falhas.filter((f) => f.tipo === 'nome-possivel-duplicata').length, 0);
+});
+
 test('nomes em caixa de título e ordem alfabética', () => {
   const r = agregarTerceirizados(
     entrada({ '2025-05': [reg({ empregado: 'ZÉLIA NUNES DE SÁ' }), reg({ empregado: 'ana paula souza' })] }),
