@@ -11,8 +11,10 @@ import {
   ChevronsLeft,
   ChevronsRight,
   MoveHorizontal,
+  Network,
   Search,
   X,
+  type LucideIcon,
 } from 'lucide-react';
 import {
   Card,
@@ -51,6 +53,57 @@ const CAMPOS_ORD_RANKING = new Set(['nome', 'contratos', 'valor', 'empenhado', '
 
 const LINHAS_POR_PAGINA = 25;
 const MAX_PAPEIS_VISIVEIS = 2;
+const LISTA_LOTACOES_ID = 'ranking-lotacoes';
+
+/** Campo de busca com botão de limpar e `datalist` opcional (padrão da tabela). */
+function CampoFiltro({
+  valor,
+  aoMudar,
+  placeholder,
+  rotulo,
+  icone: Icone,
+  listId,
+}: {
+  valor: string;
+  aoMudar: (valor: string) => void;
+  placeholder: string;
+  rotulo: string;
+  icone: LucideIcon;
+  listId?: string;
+}) {
+  return (
+    <div className="relative max-w-sm flex-1 min-w-[220px]">
+      <Icone
+        className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+        aria-hidden
+      />
+      <input
+        type="search"
+        value={valor}
+        list={listId}
+        onChange={(e) => aoMudar(e.target.value)}
+        placeholder={placeholder}
+        aria-label={rotulo}
+        className={cn(
+          'h-9 w-full rounded-md border border-border bg-card pl-8 pr-8 text-sm text-foreground',
+          'placeholder:text-muted-foreground outline-none transition-colors',
+          'focus-visible:ring-2 focus-visible:ring-ring',
+          '[&::-webkit-search-cancel-button]:hidden',
+        )}
+      />
+      {valor && (
+        <button
+          type="button"
+          onClick={() => aoMudar('')}
+          aria-label={`Limpar ${rotulo.toLowerCase()}`}
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+        >
+          <X className="h-3.5 w-3.5" aria-hidden />
+        </button>
+      )}
+    </div>
+  );
+}
 
 type CampoOrdenavel = 'nome' | 'contratos' | 'valor' | 'empenhado' | 'pago';
 type DirecaoOrdenacao = 'asc' | 'desc';
@@ -185,6 +238,7 @@ export function RankingTable({
   contratos,
   funcoesPorNome,
   teletrabalhoPorNome,
+  lotacaoPorNome,
 }: {
   ranking: LinhaRanking[];
   contratos: ContratoResumo[];
@@ -192,21 +246,27 @@ export function RankingTable({
   funcoesPorNome: Map<string, ServidorFuncoes>;
   /** Consolidado de teletrabalho por nome — mesma string de `linha.nome`. */
   teletrabalhoPorNome: Map<string, LinhaTeletrabalho>;
+  /** Lotação atual por nome — `curto` = até 3 siglas da hierarquia, `completo` = nome plano. */
+  lotacaoPorNome: Map<string, { curto: string; completo: string }>;
 }) {
   const [pagina, setPagina] = useState(0);
   const [busca, setBusca] = useState('');
+  const [filtroLotacao, setFiltroLotacao] = useState('');
   const [ordenacao, setOrdenacao] = useState<Ordenacao | null>(null);
   const [selecionado, setSelecionado] = useState<LinhaRanking | null>(null);
 
   useSincronizarUrl(
     {
       q: busca || undefined,
+      lot: filtroLotacao || undefined,
       ord: ordem.escrever(ordenacao?.campo, ordenacao?.direcao),
       pg: inteiro.escrever(pagina, 0),
     },
     (sp) => {
       const q = sp.get('q');
       if (q) setBusca(q);
+      const l = sp.get('lot');
+      if (l) setFiltroLotacao(l);
       const o = ordem.ler(sp.get('ord'));
       if (o && CAMPOS_ORD_RANKING.has(o.campo)) {
         setOrdenacao({ campo: o.campo as CampoOrdenavel, direcao: o.direcao });
@@ -216,14 +276,29 @@ export function RankingTable({
     },
   );
 
+  const lotacaoDe = (nome: string) => lotacaoPorNome.get(nome) ?? { curto: '', completo: '' };
+  const opcoesLotacao = useMemo(
+    () =>
+      Array.from(new Set([...lotacaoPorNome.values()].map((v) => v.curto).filter(Boolean))).sort(
+        (a, b) => a.localeCompare(b, 'pt-BR'),
+      ),
+    [lotacaoPorNome],
+  );
+
   // A posição (#) é sempre a do ranking original por valor consolidado,
   // para que filtro e reordenação não escondam o rank real de ninguém.
   const linhasVisiveis = useMemo(() => {
     const comPosicao = ranking.map((linha, i) => ({ linha, posicao: i + 1 }));
     const termo = normalizar(busca.trim());
-    const filtradas = termo
-      ? comPosicao.filter(({ linha }) => normalizar(linha.nome).includes(termo))
-      : comPosicao;
+    const termoLot = normalizar(filtroLotacao.trim());
+    const filtradas = comPosicao.filter(({ linha }) => {
+      if (termo && !normalizar(linha.nome).includes(termo)) return false;
+      if (termoLot) {
+        const { curto, completo } = lotacaoDe(linha.nome);
+        if (!normalizar(`${curto} ${completo}`).includes(termoLot)) return false;
+      }
+      return true;
+    });
     if (!ordenacao) return filtradas;
     const fator = ordenacao.direcao === 'asc' ? 1 : -1;
     return [...filtradas].sort((a, b) => {
@@ -240,7 +315,7 @@ export function RankingTable({
           return fator * ((a.linha.valorPagoConsolidado || 0) - (b.linha.valorPagoConsolidado || 0));
       }
     });
-  }, [ranking, busca, ordenacao]);
+  }, [ranking, busca, filtroLotacao, lotacaoPorNome, ordenacao]);
 
   const totalPaginas = Math.max(1, Math.ceil(linhasVisiveis.length / LINHAS_POR_PAGINA));
   const paginaAtual = Math.min(pagina, totalPaginas - 1);
@@ -260,6 +335,8 @@ export function RankingTable({
           return s ? funcoesTexto(s) : '';
         },
       },
+      { cabecalho: 'Lotação', valor: ({ linha }) => lotacaoDe(linha.nome).curto },
+      { cabecalho: 'Lotação (nome completo)', valor: ({ linha }) => lotacaoDe(linha.nome).completo },
       {
         cabecalho: 'Faixas de valor',
         valor: ({ linha }) =>
@@ -272,7 +349,7 @@ export function RankingTable({
       { cabecalho: 'Empenhado (R$)', valor: ({ linha }) => linha.valorEmpenhadoConsolidado || 0 },
       { cabecalho: 'Pago (R$)', valor: ({ linha }) => linha.valorPagoConsolidado || 0 },
     ],
-    [contratos, funcoesPorNome],
+    [contratos, funcoesPorNome, lotacaoPorNome],
   );
 
   function ordenarPor(campo: CampoOrdenavel) {
@@ -290,62 +367,55 @@ export function RankingTable({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base font-semibold">Ranking completo</CardTitle>
+        <CardTitle className="text-base font-semibold">Servidores (Agentes Públicos)</CardTitle>
         <CardDescription>
           Todos os {numero(ranking.length)} servidores no filtro, com valores Globais, Empenhados (Emp.) e Pagos
           (Pg) — o valor de um contrato conta uma única vez por pessoa; quem não é fiscal/gestor de nenhum
-          contrato aparece zerado. A coluna Função mostra a função comissionada (FC/CJ)
-          que o servidor tem hoje ou já teve (ver detalhe completo em{' '}
+          contrato aparece zerado. A coluna <strong>Funções</strong> lista os níveis FC/CJ que o servidor já
+          ocupou (a vigente destacada; ver detalhe em{' '}
           <Link href="/funcoes" className="underline decoration-border underline-offset-4 hover:text-foreground">
             /funcoes
           </Link>
-          ). A coluna Faixas mostra os símbolos das faixas de valor (ver filtro acima) presentes entre os
-          contratos do servidor. Clique numa linha para abrir <strong>Detalhes do Servidor</strong> —
-          histórico de funções, consolidado de teletrabalho e histórico de contratos.
+          ); a <strong>Lotação</strong> traz as 3 unidades mais específicas da hierarquia oficial. A coluna
+          Faixas mostra os símbolos das faixas de valor presentes entre os contratos do servidor. Clique numa
+          linha para abrir <strong>Detalhes do Servidor</strong> — histórico de funções, consolidado de
+          teletrabalho e histórico de contratos.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="relative max-w-sm flex-1 min-w-[220px]">
-            <Search
-              className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden
-            />
-            <input
-              type="search"
-              value={busca}
-              onChange={(e) => {
-                setBusca(e.target.value);
-                setPagina(0);
-              }}
-              placeholder="Filtrar por servidor…"
-              aria-label="Filtrar por servidor"
-              className={cn(
-                'h-9 w-full rounded-md border border-border bg-card pl-8 pr-8 text-sm text-foreground',
-                'placeholder:text-muted-foreground outline-none transition-colors',
-                'focus-visible:ring-2 focus-visible:ring-ring',
-                '[&::-webkit-search-cancel-button]:hidden',
-              )}
-            />
-            {busca && (
-              <button
-                type="button"
-                onClick={() => {
-                  setBusca('');
-                  setPagina(0);
-                }}
-                aria-label="Limpar filtro"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-              >
-                <X className="h-3.5 w-3.5" aria-hidden />
-              </button>
-            )}
-          </div>
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <CampoFiltro
+            valor={busca}
+            aoMudar={(v) => {
+              setBusca(v);
+              setPagina(0);
+            }}
+            placeholder="Filtrar por servidor…"
+            rotulo="Filtrar por servidor"
+            icone={Search}
+          />
+          <CampoFiltro
+            valor={filtroLotacao}
+            aoMudar={(v) => {
+              setFiltroLotacao(v);
+              setPagina(0);
+            }}
+            placeholder="Filtrar por lotação…"
+            rotulo="Filtrar por lotação"
+            icone={Network}
+            listId={LISTA_LOTACOES_ID}
+          />
+          <datalist id={LISTA_LOTACOES_ID}>
+            {opcoesLotacao.map((opcao) => (
+              <option key={opcao} value={opcao} />
+            ))}
+          </datalist>
           <BotaoExportar
             linhas={linhasVisiveis}
             colunas={colunasExport}
             nomeArquivo="servidores"
             nomeAba="Servidores"
+            className="sm:ml-auto"
           />
         </div>
 
@@ -369,6 +439,17 @@ export function RankingTable({
                     Todas as funções comissionadas (FC/CJ) que o servidor já ocupou. A
                     vigente hoje aparece <strong>destacada</strong>; as anteriores ficam em
                     tom apagado.
+                  </InfoDica>
+                </span>
+              </TableHead>
+              <TableHead>
+                <span className="inline-flex items-center gap-1">
+                  Lotação
+                  <InfoDica titulo="O que a coluna Lotação mostra?" alinhamento="esquerda">
+                    A lotação atual do servidor (relação de agentes públicos), como as 3
+                    unidades mais específicas da hierarquia oficial de{' '}
+                    <strong>/unidades</strong> — ex.: <em>SETOT | CSELE | STI</em>. Sem
+                    resolução confiável, mostra o nome plano da fonte.
                   </InfoDica>
                 </span>
               </TableHead>
@@ -410,8 +491,9 @@ export function RankingTable({
           <TableBody>
             {linhas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
-                  Nenhum servidor encontrado para &ldquo;{busca}&rdquo;
+                <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
+                  Nenhum servidor encontrado para{' '}
+                  &ldquo;{[busca.trim(), filtroLotacao.trim()].filter(Boolean).join('” · “')}&rdquo;
                 </TableCell>
               </TableRow>
             ) : (
@@ -433,6 +515,18 @@ export function RankingTable({
                       const servidor = funcoesPorNome.get(linha.nome);
                       return servidor ? (
                         <FuncoesBadges servidor={servidor} todas />
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      );
+                    })()}
+                  </TableCell>
+                  <TableCell>
+                    {(() => {
+                      const { curto, completo } = lotacaoDe(linha.nome);
+                      return curto ? (
+                        <span className="text-xs text-muted-foreground" title={completo || undefined}>
+                          {curto}
+                        </span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       );
@@ -468,7 +562,7 @@ export function RankingTable({
             {linhasVisiveis.length === 0
               ? `0 de ${numero(ranking.length)}`
               : `Exibindo ${numero(inicio + 1)}–${numero(inicio + linhas.length)} de ${numero(linhasVisiveis.length)}`}
-            {busca.trim() && linhasVisiveis.length !== ranking.length && (
+            {(busca.trim() || filtroLotacao.trim()) && linhasVisiveis.length !== ranking.length && (
               <> (filtrados de {numero(ranking.length)})</>
             )}
           </p>

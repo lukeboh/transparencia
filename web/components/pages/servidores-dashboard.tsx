@@ -21,6 +21,7 @@ import { bool, excluidos, incluidos } from '@/lib/url-filtros';
 import { brlCompacto, numero } from '@/lib/utils';
 import { ehSubstituto } from '@/lib/perfis-fiscalizacao';
 import { CATEGORIAS_VALOR, categoriaDoValor, type CategoriaValorId } from '@/lib/categorias-valor';
+import { criarResolvedorLotacao } from '@/lib/lotacao-hierarquia';
 import type {
   ContratoResumo,
   LinhaRanking,
@@ -141,7 +142,7 @@ function filtrarSemContrato(
 
 export function ServidoresDashboard() {
   const estado = useDadosDashboard();
-  const { responsaveis, funcoes, contratos, fonte, servidores, teletrabalho } = estado.dados;
+  const { responsaveis, funcoes, contratos, fonte, servidores, teletrabalho, unidades } = estado.dados;
 
   // Um registro de função (atual + histórico de portarias) por servidor,
   // chaveado pelo nome exato usado nas linhas da tabela (ver `linhasServidores`
@@ -167,6 +168,21 @@ export function ServidoresDashboard() {
     }
     return map;
   }, [servidores.lista, teletrabalho.ranking]);
+
+  // Lotação atual por servidor: as 3 unidades mais específicas da hierarquia
+  // oficial (ex.: "SETOT | CSELE | STI"), resolvidas do nome plano da relação
+  // de agentes públicos contra a árvore de /unidades; `completo` = nome plano
+  // (fallback e title).
+  const lotacaoPorNome = useMemo(() => {
+    const resolver = criarResolvedorLotacao(unidades.arvore);
+    const map = new Map<string, { curto: string; completo: string }>();
+    for (const s of servidores.lista) {
+      const completo = s.lotacao ?? '';
+      const siglas = resolver(s.lotacao);
+      map.set(s.nome, { curto: siglas.length > 0 ? siglas.join(' | ') : completo, completo });
+    }
+    return map;
+  }, [servidores.lista, unidades.arvore]);
 
   const todosPapeis = useMemo(() => {
     const set = new Set<string>();
@@ -633,6 +649,7 @@ export function ServidoresDashboard() {
           contratos={contratos}
           funcoesPorNome={funcoesPorNome}
           teletrabalhoPorNome={teletrabalhoPorNome}
+          lotacaoPorNome={lotacaoPorNome}
         />
       </div>
 
