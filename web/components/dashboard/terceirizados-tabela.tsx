@@ -164,7 +164,8 @@ export function TerceirizadosTabela({
   /** Controlado pela página (para o KPI "Terceirizados ativos" poder ligá-lo ao rolar até aqui). */
   vigente: boolean;
   onVigenteChange: (v: boolean) => void;
-  onVerContrato: (pessoa: TerceirizadoPessoa) => void;
+  /** Abre o modal "Detalhes do Contrato" de um número de contrato específico. */
+  onVerContrato: (numeroContrato: string) => void;
 }) {
   const [pagina, setPagina] = useState(0);
   const [busca, setBusca] = useState('');
@@ -251,7 +252,8 @@ export function TerceirizadosTabela({
       { cabecalho: 'Nome', valor: (p) => p.nome },
       { cabecalho: 'Lotação', valor: (p) => lotacaoTexto(p) },
       { cabecalho: 'Lotação (Alocação do PDF)', valor: (p) => p.lotacaoAlocacao },
-      { cabecalho: 'Contrato', valor: (p) => p.contrato },
+      { cabecalho: 'Contrato atual', valor: (p) => p.contrato },
+      { cabecalho: 'Contratos (histórico)', valor: (p) => p.contratosHistorico.join(' → ') },
       { cabecalho: 'Contrato vinculado', valor: (p) => p.contratoId != null },
       { cabecalho: 'Empresa', valor: (p) => p.empresa },
       { cabecalho: 'Posto/função', valor: (p) => p.posto },
@@ -280,8 +282,10 @@ export function TerceirizadosTabela({
           <div className="min-w-0">
             <CardTitle className="text-base font-semibold">Terceirizados</CardTitle>
             <CardDescription>
-              Um profissional por linha, com a unidade de lotação (até 3 níveis), o contrato de cessão
-              de mão de obra e o intervalo em que consta nos PDFs mensais do TSE.
+              Um profissional por linha, com a unidade de lotação (até 3 níveis), o(s) contrato(s) de
+              cessão de mão de obra por que passou (o atual em destaque) e o intervalo em que consta
+              nos PDFs mensais do TSE. O mês de início/fim cobre toda a permanência no TSE,
+              independentemente de troca de contrato.
             </CardDescription>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -357,7 +361,7 @@ export function TerceirizadosTabela({
                   <TableHead>
                     <CabecalhoOrdenavel rotulo="Lotação" campo="lotacao" ordenacao={ordenacao} onOrdenar={ordenarPor} />
                   </TableHead>
-                  <TableHead>Contrato</TableHead>
+                  <TableHead>Contratos</TableHead>
                   <TableHead>
                     <CabecalhoOrdenavel rotulo="Início" campo="inicio" ordenacao={ordenacao} onOrdenar={ordenarPor} />
                   </TableHead>
@@ -392,14 +396,36 @@ export function TerceirizadosTabela({
                         )}
                       </TableCell>
                       <TableCell>
-                        <button
-                          type="button"
-                          onClick={() => onVerContrato(p)}
-                          className="text-xs font-medium text-primary hover:underline"
-                          title="Ver detalhes do contrato"
-                        >
-                          {p.contrato || '—'}
-                        </button>
+                        {p.contratosHistorico.length === 0 ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : (
+                          <span className="inline-flex flex-wrap items-center gap-x-1 text-xs tabular-nums">
+                            {p.contratosHistorico.map((num, idx) => (
+                              <span key={num} className="inline-flex items-center gap-x-1">
+                                {idx > 0 && (
+                                  <span className="text-muted-foreground/50" aria-hidden>
+                                    →
+                                  </span>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => onVerContrato(num)}
+                                  className={cn(
+                                    'font-medium hover:underline',
+                                    num === p.contrato ? 'text-primary' : 'text-muted-foreground',
+                                  )}
+                                  title={
+                                    num === p.contrato
+                                      ? 'Contrato atual — ver detalhes'
+                                      : 'Contrato anterior — ver detalhes'
+                                  }
+                                >
+                                  {num}
+                                </button>
+                              </span>
+                            ))}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="text-xs tabular-nums text-muted-foreground">
                         {p.mesInicio ? mesAnoCurto(p.mesInicio) : '—'}

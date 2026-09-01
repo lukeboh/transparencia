@@ -36,7 +36,6 @@ import {
   urlTerceirizados,
   type ContratoResumo,
   type ContratoTerceirizados,
-  type TerceirizadoPessoa,
 } from '@/lib/dashboard-data';
 
 // Rosca "Terceirizados ativos": os N contratos de cessão mais volumosos, o
@@ -83,11 +82,10 @@ export function TerceirizadosDashboard() {
     () => new Map(contratos.map((c) => [c.id, c])),
     [contratos],
   );
-  const qtdePorContrato = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const c of t.porContrato) m.set(c.contrato, c.total);
-    return m;
-  }, [t.porContrato]);
+  const porContratoMap = useMemo(
+    () => new Map(t.porContrato.map((c) => [c.contrato, c])),
+    [t.porContrato],
+  );
 
   // Rosca do KPI "Terceirizados ativos": ativos agrupados por contrato de
   // cessão, os 10 mais volumosos + "Outros". Cada fatia leva o objeto do
@@ -144,15 +142,6 @@ export function TerceirizadosDashboard() {
     document.getElementById('contratos-cessao')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  function abrirContratoDePessoa(p: TerceirizadoPessoa) {
-    setModal({
-      numero: p.contrato,
-      contrato: p.contratoId ? contratoPorId.get(p.contratoId) ?? null : null,
-      empresa: p.empresa,
-      qtde: qtdePorContrato.get(p.contrato) ?? 0,
-    });
-  }
-
   function abrirModalContrato(c: ContratoTerceirizados) {
     setModal({
       numero: c.contrato,
@@ -160,6 +149,13 @@ export function TerceirizadosDashboard() {
       empresa: c.empresa || c.fornecedor || '',
       qtde: c.total,
     });
+  }
+
+  /** Abre o modal de um número de contrato (usado pela trilha de contratos na tabela). */
+  function abrirContratoPorNumero(numero: string) {
+    const c = porContratoMap.get(numero);
+    if (c) abrirModalContrato(c);
+    else setModal({ numero, contrato: null, empresa: '', qtde: 0 });
   }
 
   const rotuloCompetencia = mesAnoLongo(t.competenciaAtual);
@@ -350,7 +346,7 @@ export function TerceirizadosDashboard() {
           pessoas={t.pessoas}
           vigente={vigenteTerc}
           onVigenteChange={setVigenteTerc}
-          onVerContrato={abrirContratoDePessoa}
+          onVerContrato={abrirContratoPorNumero}
         />
 
         <TerceirizadosFalhasCard falhas={t.falhas} competencias={t.competencias} />

@@ -128,10 +128,13 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   `data/tse_terceirizados.json`). `src/tse/agregarTerceirizados.js` monta uma
   linha por pessoa com: lotação (até 3 siglas, da unidade mais específica para
   a mais alta, cruzando a coluna "Alocação" com a árvore de `/unidades`),
-  contrato de cessão (link para o modal **Detalhes do Contrato**), **mês de
-  início** (primeira competência em que o nome aparece) e **mês de fim** (só
-  quando a pessoa deixa de constar na competência mais recente — saída
-  definitiva; em branco = ainda contratado). Tabela de terceirizados com
+  **todos os contratos de cessão por que passou** (`contratosHistorico`,
+  cronológico — metade das pessoas migrou de um contrato para outro quando o
+  serviço foi re-licitado; a coluna mostra a trilha `A → B`, com o atual em
+  destaque, e cada um abre o modal **Detalhes do Contrato**), **mês de
+  início** (primeira competência em que o nome aparece, em qualquer contrato)
+  e **mês de fim** (só quando a pessoa deixa de constar na competência mais
+  recente — saída definitiva; em branco = ainda contratado). Tabela de terceirizados com
   filtros por nome e por lotação e toggle **Vigente** (padrão ligado — ver
   "Regra: filtro Vigente sempre ligado por padrão", na seção Dashboard web);
   tabela de **contratos de cessão** com filtro textual por empresa, toggle
@@ -165,7 +168,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   Compras.gov.br.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.27**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.28**.
 
 ## Dashboard web
 
