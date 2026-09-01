@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Briefcase, Coins, HardHat, Laptop, Network, Percent, Scale, Users } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Ban, Briefcase, Coins, HardHat, Laptop, Network, Percent, Scale, ShieldCheck, Users } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
 import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
@@ -494,6 +494,31 @@ export function ServidoresDashboard() {
     [fiscaisFiltrados, funcoesPorNome],
   );
 
+  // KPIs herdados de /funcoes (em vias de ser descontinuada): distribuição por
+  // função (FC/CJ + "Sem função") de três recortes do que está no filtro.
+  const servidoresComFuncao = useMemo(
+    () => rankingFiltrado.filter((r) => funcoesPorNome.get(r.nome)?.funcaoAtual != null),
+    [rankingFiltrado, funcoesPorNome],
+  );
+  const servidoresNaoFiscal = useMemo(
+    () => rankingFiltrado.filter((r) => r.quantidadeContratos === 0),
+    [rankingFiltrado],
+  );
+  const donutComFuncao = useMemo(
+    () =>
+      contarPorFuncaoAtual(
+        servidoresComFuncao.map((r) => ({ funcaoAtual: funcoesPorNome.get(r.nome)?.funcaoAtual ?? null })),
+      ),
+    [servidoresComFuncao, funcoesPorNome],
+  );
+  const donutNaoFiscal = useMemo(
+    () =>
+      contarPorFuncaoAtual(
+        servidoresNaoFiscal.map((r) => ({ funcaoAtual: funcoesPorNome.get(r.nome)?.funcaoAtual ?? null })),
+      ),
+    [servidoresNaoFiscal, funcoesPorNome],
+  );
+
   const emContratosVigentesCount = useMemo(() => {
     const vigentesSet = new Set<number>();
     for (let i = 0; i < contratos.length; i++) {
@@ -641,6 +666,29 @@ export function ServidoresDashboard() {
             icone={<Coins className="h-4 w-4" aria-hidden />}
             contagens={fiscaisPorFaixaValor}
             totalBase={rankingPorPapelVigencia.length}
+          />
+        </div>
+
+        {/* Distribuição por função comissionada (FC/CJ + "Sem função"), herdada
+            de /funcoes — três recortes do que está no filtro. */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <FuncaoStatCard
+            titulo="Servidores com função"
+            detalhe={`${numero(servidoresComFuncao.length)} com função comissionada vigente hoje`}
+            icone={<Briefcase className="h-4 w-4" aria-hidden />}
+            contagens={donutComFuncao}
+          />
+          <FuncaoStatCard
+            titulo="Não-Fiscal"
+            detalhe={`${numero(servidoresNaoFiscal.length)} · nunca aparecem como fiscal/gestor de contrato`}
+            icone={<Ban className="h-4 w-4" aria-hidden />}
+            contagens={donutNaoFiscal}
+          />
+          <FuncaoStatCard
+            titulo="Servidores Fiscais"
+            detalhe={`${numero(fiscaisFiltrados.length)} · com ao menos um contrato de fiscalização/gestão`}
+            icone={<ShieldCheck className="h-4 w-4" aria-hidden />}
+            contagens={donutFuncoesResponsaveis}
           />
         </div>
 

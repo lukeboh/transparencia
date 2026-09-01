@@ -296,13 +296,14 @@ A rota `/servidores` (linkada no header e no card "Fiscais designados")
 traz o dashboard da primeira funcionalidade do projeto: a lista de **todos os
 agentes públicos do TSE** (`DashboardData.servidores`, ver acima), ordenada
 pelo maior valor consolidado sob responsabilidade; quem não é fiscal/gestor
-de nenhum contrato aparece zerado. Cards com maior valor sob responsabilidade
-e mediana por responsável (calculada só sobre quem tem contrato), e um card
-"Fiscais designados" que, em vez de só um número, é um donut (mesmo
-componente de `/funcoes`) com a distribuição por função comissionada (FC/CJ,
-mais "Sem função") de quem está no ranking com contrato. Tabela paginada, 25
-por página (papéis como badges; valor de cada contrato contado uma única vez
-por pessoa). O card se chama **"Servidores (Agentes Públicos)"**. A coluna
+de nenhum contrato aparece zerado. Uma primeira faixa de KPIs de contrato
+(maior valor sob responsabilidade, mediana por responsável só sobre quem tem
+contrato, contratos e fiscais por faixa de valor) e uma segunda faixa com os
+**três donuts de distribuição por função comissionada herdados de `/funcoes`**
+(que está em vias de ser descontinuada): "Servidores com função", "Não-Fiscal"
+e "Servidores Fiscais", cada um sobre o recorte correspondente do filtro
+atual. Tabela paginada, 25 por página (papéis como badges; valor de cada
+contrato contado uma única vez por pessoa). O card se chama **"Servidores (Agentes Públicos)"**. A coluna
 **Funções** (com dica (i) no cabeçalho) lista **todos** os níveis FC/CJ que o
 servidor já ocupou — de `funcoes.servidores` via `funcoesIndex` —, a vigente
 hoje destacada (borda + cor primária) e as anteriores apagadas; "—" quando
