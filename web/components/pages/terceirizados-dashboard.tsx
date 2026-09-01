@@ -264,8 +264,9 @@ export function TerceirizadosDashboard() {
       </header>
 
       <div className="space-y-4">
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
           <KpiRoscaCard
+            className="sm:col-span-2 lg:col-span-2"
             titulo="Terceirizados ativos"
             icone={<HardHat className="h-4 w-4" aria-hidden />}
             fatias={fatiasAtivosPorContrato}
@@ -285,6 +286,7 @@ export function TerceirizadosDashboard() {
           />
 
           <KpiRoscaCard
+            className="sm:col-span-2 lg:col-span-2"
             titulo="Contratos de cessão"
             icone={<FileText className="h-4 w-4" aria-hidden />}
             fatias={fatiasValorPorContrato}
@@ -303,6 +305,8 @@ export function TerceirizadosDashboard() {
           />
 
           <KpiRoscaCard
+            className="lg:col-span-1"
+            compacto
             titulo={
               <span className="inline-flex items-center gap-1">
                 Já deixaram o TSE <DicaTermo id="terceirizadoMesFim" />
@@ -316,13 +320,15 @@ export function TerceirizadosDashboard() {
             nota={
               semHistoricoUtil
                 ? 'requer +1 mês de histórico'
-                : `${numero(t.encerrados)} · ${percentual(t.encerrados, t.totalPessoas)}% do total de terceirizados`
+                : `${percentual(t.encerrados, t.totalPessoas)}% do total de terceirizados`
             }
             acaoRotulo="Ver encerrados na tabela"
             onAcao={irParaEncerrados}
           />
 
           <KpiRoscaCard
+            className="lg:col-span-1"
+            compacto
             titulo={
               <span className="inline-flex items-center gap-1">
                 Falhas de cruzamento <DicaTermo id="terceirizadoFalhas" />

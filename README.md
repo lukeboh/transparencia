@@ -140,9 +140,10 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   tabela de **contratos de cessão** com filtro textual por empresa, toggle
   **Vigente** (contratos com terceirizado ativo hoje) e ordenação da coluna
   Contrato quebrando "NN/AAAA" por ano→número ou número→ano (× asc/desc).
-  Ambas as tabelas colapsáveis. Os **4 KPIs do topo são roscas**
-  (`KpiRoscaCard` sobre `ContagemDonut`), cada uma com uma nota e um atalho
-  para o detalhe correspondente, e fatias/legenda clicáveis:
+  Ambas as tabelas colapsáveis. Os **4 KPIs do topo são roscas** numa linha só
+  (os 2 primeiros largos, os 2 últimos compactos — `KpiRoscaCard` sobre
+  `ContagemDonut`), cada uma com uma nota e um atalho para o detalhe
+  correspondente, e fatias/legenda clicáveis:
   **Terceirizados ativos** = ativos por contrato de cessão (10 maiores +
   "Outros"; clique → modal "Detalhes do Contrato"; atalho → tabela com
   Vigente ligado); **Contratos de cessão** = os 10 contratos de maior valor
@@ -185,7 +186,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   Compras.gov.br.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.33**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.34**.
 
 ## Dashboard web
 

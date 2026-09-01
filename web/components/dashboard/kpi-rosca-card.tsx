@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { ArrowDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ContagemDonut, type FatiaContagem } from '@/components/dashboard/contagem-donut';
-import { numero } from '@/lib/utils';
+import { cn, numero } from '@/lib/utils';
 
 interface KpiRoscaCardProps {
   titulo: ReactNode;
@@ -23,6 +23,9 @@ interface KpiRoscaCardProps {
   /** Mostrado quando não há fatias com quantidade > 0. */
   fallbackValor?: string;
   fallbackNota?: ReactNode;
+  /** Rosca menor — para KPIs simples (2 fatias) que ocupam menos colunas. */
+  compacto?: boolean;
+  className?: string;
 }
 
 /**
@@ -43,12 +46,14 @@ export function KpiRoscaCard({
   onAcao,
   fallbackValor,
   fallbackNota,
+  compacto = false,
+  className,
 }: KpiRoscaCardProps) {
   const total = fatias.reduce((s, f) => s + f.quantidade, 0);
   const temDados = fatias.length > 0 && total > 0;
 
   return (
-    <Card className="transition-colors duration-200">
+    <Card className={cn('transition-colors duration-200', className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-muted-foreground">{titulo}</CardTitle>
         <span className="text-muted-foreground">{icone}</span>
@@ -57,6 +62,7 @@ export function KpiRoscaCard({
         {temDados ? (
           <ContagemDonut
             fatias={fatias}
+            tamanho={compacto ? 116 : 168}
             formatar={formatar}
             unidadeSingular={unidadeSingular}
             unidadePlural={unidadePlural}
