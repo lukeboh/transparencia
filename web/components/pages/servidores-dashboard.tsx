@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpRight, Briefcase, Coins, HardHat, Laptop, Network, Percent, Scale, Users } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/stat-card';
@@ -229,14 +229,23 @@ export function ServidoresDashboard() {
     return m;
   }, [funcoesPorNome, funcaoVigente]);
 
+  // Auto-seleciona tudo só na transição "a lista carregou pela primeira vez" —
+  // não a cada mudança de referência (ex.: refresh dos dados em runtime), senão
+  // um "nenhum" escolhido de propósito seria reposto para "tudo".
+  const papeisUniverso = useRef(0);
   useEffect(() => {
-    if (todosPapeis.length > 0 && papeisSelecionados.length === 0) {
+    const antes = papeisUniverso.current;
+    papeisUniverso.current = todosPapeis.length;
+    if (antes === 0 && todosPapeis.length > 0 && papeisSelecionados.length === 0) {
       setPapeisSelecionados(todosPapeis);
     }
   }, [todosPapeis]);
 
+  const funcoesUniverso = useRef(0);
   useEffect(() => {
-    if (todasFuncoes.length > 0 && funcoesSelecionadas.length === 0) {
+    const antes = funcoesUniverso.current;
+    funcoesUniverso.current = todasFuncoes.length;
+    if (antes === 0 && todasFuncoes.length > 0 && funcoesSelecionadas.length === 0) {
       setFuncoesSelecionadas(todasFuncoes);
     }
   }, [todasFuncoes]);

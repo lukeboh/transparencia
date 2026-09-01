@@ -43,24 +43,31 @@ export const csv = {
     v === null ? null : v.split(',').filter(Boolean),
 };
 
+/** Sentinela para "nenhum selecionado" — um estado real e compartilhável,
+ *  distinto de "tudo" (que é o padrão e sai da URL). Não colide com nenhum
+ *  valor de papel/nível/id usado hoje. */
+const NENHUM = '-';
+
 /**
  * Multi-seleção "padrão = tudo marcado" cujo UNIVERSO pode mudar em runtime
  * (ex.: níveis de função / papéis derivados dos dados, que o scraper atualiza).
- * Guarda a lista de SELECIONADOS, e só quando é um subconjunto próprio e
- * não-vazio: "tudo" e "nada" (que essas telas tratam como "tudo") não vão para
- * a URL. Assim o link não muda de significado se o universo ganhar/perder um
- * item entre o momento de copiar e o de abrir.
+ * Guarda a lista de SELECIONADOS só quando é um subconjunto próprio: "tudo" não
+ * vai para a URL (é o padrão) e "nenhum" vira o sentinela `-`. Assim o link não
+ * muda de significado se o universo ganhar/perder um item entre copiar e abrir,
+ * mas o estado "desmarquei tudo" continua compartilhável.
  */
 export const incluidos = {
   escrever: (universo: readonly string[], selecionados: readonly string[]): string | undefined => {
     const uni = new Set(universo);
     const dentro = selecionados.filter((x) => uni.has(x));
-    if (dentro.length === 0 || dentro.length >= universo.length) return undefined;
+    if (dentro.length === 0) return NENHUM;
+    if (dentro.length >= universo.length) return undefined;
     return dentro.join(',');
   },
-  /** csv de selecionados; ausente ou vazio/ inválido => o universo inteiro. */
+  /** csv de selecionados; `-` => nenhum; ausente/ inválido => o universo inteiro. */
   ler: (universo: readonly string[], v: string | null): string[] => {
     if (v === null) return [...universo];
+    if (v === NENHUM) return [];
     const uni = new Set(universo);
     const sel = v.split(',').filter((x) => uni.has(x));
     return sel.length > 0 ? sel : [...universo];

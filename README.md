@@ -60,6 +60,14 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
     só os não-fiscais.
   - KPIs de valor (medianas, donut "Fiscais designados") passam a considerar
     só quem tem contrato, com rótulo "de N servidores".
+  - O codec `incluidos` de `web/lib/url-filtros.ts` ganhou o sentinela `-`
+    para "nenhum selecionado": em `/servidores`, "por função" ou "por papel"
+    vazios são um recorte real (só quem não tem função / só os não-fiscais),
+    então precisam ir para o link — antes o `escrever` devolvia `undefined`
+    (igual a "tudo") e o estado se perdia ao compartilhar. Os `useEffect` de
+    auto-seleção da página só disparam na transição "lista carregou pela 1ª
+    vez", para não repor um "nenhum" deliberado quando os dados atualizam em
+    runtime.
 - ✅ Estrutura hierárquica de unidades do TSE (`/unidades`) — fonte: o
   endpoint JSON por trás do organograma oficial
   ([agrupamento por unidade](https://transparencia.tse.jus.br/transparenciaDadosServidores/smvc/relatorios/lotacao-geral/sem-assinatura/agrupamento-por-unidade),
