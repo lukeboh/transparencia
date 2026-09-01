@@ -155,12 +155,15 @@ function CabecalhoOrdenavel({
 
 export function TerceirizadosTabela({
   pessoas,
+  empresaPorContrato,
   vigente,
   onVigenteChange,
   onVerContrato,
 }: {
   /** Lista completa — o filtro Vigente (padrão ligado) recorta os ativos. */
   pessoas: TerceirizadoPessoa[];
+  /** Número do contrato → nome da empresa contratada, para a coluna "Contratos". */
+  empresaPorContrato: Map<string, string>;
   /** Controlado pela página (para o KPI "Terceirizados ativos" poder ligá-lo ao rolar até aqui). */
   vigente: boolean;
   onVigenteChange: (v: boolean) => void;
@@ -253,16 +256,25 @@ export function TerceirizadosTabela({
       { cabecalho: 'Lotação', valor: (p) => lotacaoTexto(p) },
       { cabecalho: 'Lotação (Alocação do PDF)', valor: (p) => p.lotacaoAlocacao },
       { cabecalho: 'Contrato atual', valor: (p) => p.contrato },
-      { cabecalho: 'Contratos (histórico)', valor: (p) => p.contratosHistorico.join(' → ') },
+      {
+        cabecalho: 'Contratos (histórico)',
+        valor: (p) =>
+          p.contratosHistorico
+            .map((n) => {
+              const emp = empresaPorContrato.get(n);
+              return emp ? `${n} (${emp})` : n;
+            })
+            .join(' → '),
+      },
       { cabecalho: 'Contrato vinculado', valor: (p) => p.contratoId != null },
-      { cabecalho: 'Empresa', valor: (p) => p.empresa },
+      { cabecalho: 'Empresa (contrato atual)', valor: (p) => p.empresa },
       { cabecalho: 'Posto/função', valor: (p) => p.posto },
       { cabecalho: 'Mês de início', valor: (p) => (p.mesInicio ? mesAnoCurto(p.mesInicio) : '') },
       { cabecalho: 'Mês de fim', valor: (p) => (p.mesFim ? mesAnoCurto(p.mesFim) : '') },
       { cabecalho: 'Situação', valor: (p) => (p.ativo ? 'Ativo' : 'Encerrado') },
       { cabecalho: 'Competências', valor: (p) => p.competencias },
     ],
-    [],
+    [empresaPorContrato],
   );
 
   function ordenarPor(campo: CampoOrdenavel) {
@@ -399,32 +411,39 @@ export function TerceirizadosTabela({
                         {p.contratosHistorico.length === 0 ? (
                           <span className="text-muted-foreground">—</span>
                         ) : (
-                          <span className="inline-flex flex-wrap items-center gap-x-1 text-xs tabular-nums">
-                            {p.contratosHistorico.map((num, idx) => (
-                              <span key={num} className="inline-flex items-center gap-x-1">
-                                {idx > 0 && (
-                                  <span className="text-muted-foreground/50" aria-hidden>
-                                    →
-                                  </span>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() => onVerContrato(num)}
-                                  className={cn(
-                                    'font-medium hover:underline',
-                                    num === p.contrato ? 'text-primary' : 'text-muted-foreground',
+                          <ul className="space-y-0.5">
+                            {p.contratosHistorico.map((num) => {
+                              const emp = empresaPorContrato.get(num) ?? '';
+                              const atual = num === p.contrato;
+                              return (
+                                <li key={num} className="flex flex-wrap items-baseline gap-x-1.5 text-xs">
+                                  <button
+                                    type="button"
+                                    onClick={() => onVerContrato(num)}
+                                    className={cn(
+                                      'font-medium tabular-nums hover:underline',
+                                      atual ? 'text-primary' : 'text-muted-foreground',
+                                    )}
+                                    title={
+                                      atual
+                                        ? 'Contrato atual — ver detalhes'
+                                        : 'Contrato anterior — ver detalhes'
+                                    }
+                                  >
+                                    {num}
+                                  </button>
+                                  {emp && (
+                                    <span
+                                      className="max-w-[15rem] truncate text-muted-foreground/80"
+                                      title={emp}
+                                    >
+                                      {emp}
+                                    </span>
                                   )}
-                                  title={
-                                    num === p.contrato
-                                      ? 'Contrato atual — ver detalhes'
-                                      : 'Contrato anterior — ver detalhes'
-                                  }
-                                >
-                                  {num}
-                                </button>
-                              </span>
-                            ))}
-                          </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
                         )}
                       </TableCell>
                       <TableCell className="text-xs tabular-nums text-muted-foreground">

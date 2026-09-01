@@ -130,7 +130,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   a mais alta, cruzando a coluna "Alocação" com a árvore de `/unidades`),
   **todos os contratos de cessão por que passou** (`contratosHistorico`,
   cronológico — metade das pessoas migrou de um contrato para outro quando o
-  serviço foi re-licitado; a coluna mostra a trilha `A → B`, com o atual em
+  serviço foi re-licitado; a coluna lista cada contrato com o nome da empresa contratada, o atual em
   destaque, e cada um abre o modal **Detalhes do Contrato**), **mês de
   início** (primeira competência em que o nome aparece, em qualquer contrato)
   e **mês de fim** (só quando a pessoa deixa de constar na competência mais
@@ -168,7 +168,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   Compras.gov.br.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.28**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.29**.
 
 ## Dashboard web
 

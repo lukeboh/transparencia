@@ -86,6 +86,10 @@ export function TerceirizadosDashboard() {
     () => new Map(t.porContrato.map((c) => [c.contrato, c])),
     [t.porContrato],
   );
+  const empresaPorContrato = useMemo(
+    () => new Map(t.porContrato.map((c) => [c.contrato, nomeEmpresa(c)])),
+    [t.porContrato],
+  );
 
   // Rosca do KPI "Terceirizados ativos": ativos agrupados por contrato de
   // cessão, os 10 mais volumosos + "Outros". Cada fatia leva o objeto do
@@ -344,6 +348,7 @@ export function TerceirizadosDashboard() {
 
         <TerceirizadosTabela
           pessoas={t.pessoas}
+          empresaPorContrato={empresaPorContrato}
           vigente={vigenteTerc}
           onVigenteChange={setVigenteTerc}
           onVerContrato={abrirContratoPorNumero}
