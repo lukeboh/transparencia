@@ -158,6 +158,8 @@ export function TerceirizadosTabela({
   empresaPorContrato,
   vigente,
   onVigenteChange,
+  encerradosApenas = false,
+  onEncerradosApenasChange,
   onVerContrato,
 }: {
   /** Lista completa — o filtro Vigente (padrão ligado) recorta os ativos. */
@@ -167,6 +169,9 @@ export function TerceirizadosTabela({
   /** Controlado pela página (para o KPI "Terceirizados ativos" poder ligá-lo ao rolar até aqui). */
   vigente: boolean;
   onVigenteChange: (v: boolean) => void;
+  /** Recorte "só quem já saiu" — acionado pelo KPI "Já deixaram o TSE"; ignora o Vigente. */
+  encerradosApenas?: boolean;
+  onEncerradosApenasChange?: (v: boolean) => void;
   /** Abre o modal "Detalhes do Contrato" de um número de contrato específico. */
   onVerContrato: (numeroContrato: string) => void;
 }) {
@@ -198,11 +203,12 @@ export function TerceirizadosTabela({
     },
   );
 
-  // 1º recorte: Vigente (só quem ainda consta na competência mais recente).
-  const base = useMemo(
-    () => (vigente ? pessoas.filter((p) => p.ativo) : pessoas),
-    [pessoas, vigente],
-  );
+  // 1º recorte: "só encerrados" (vindo do KPI) tem prioridade; senão Vigente
+  // (só quem ainda consta na competência mais recente); senão todos.
+  const base = useMemo(() => {
+    if (encerradosApenas) return pessoas.filter((p) => !p.ativo);
+    return vigente ? pessoas.filter((p) => p.ativo) : pessoas;
+  }, [pessoas, vigente, encerradosApenas]);
 
   const opcoesLotacao = useMemo(
     () =>
@@ -301,9 +307,24 @@ export function TerceirizadosTabela({
             </CardDescription>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {encerradosApenas && (
+              <button
+                type="button"
+                onClick={() => {
+                  onEncerradosApenasChange?.(false);
+                  setPagina(0);
+                }}
+                title="Remover o recorte e voltar ao filtro Vigente"
+                className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-primary-foreground"
+              >
+                Só encerrados
+                <X className="h-3 w-3" aria-hidden />
+              </button>
+            )}
             <VigenteToggle
-              ligado={vigente}
+              ligado={vigente && !encerradosApenas}
               onChange={(v) => {
+                onEncerradosApenasChange?.(false);
                 onVigenteChange(v);
                 setPagina(0);
               }}
@@ -322,8 +343,15 @@ export function TerceirizadosTabela({
       <CardContent>
         {colapsado ? (
           <p className="text-sm text-muted-foreground">
-            {numero(base.length)} {vigente ? 'terceirizados vigentes' : 'terceirizados no total'}
-            {vigente && base.length !== pessoas.length && <> · {numero(pessoas.length)} no histórico</>}
+            {numero(base.length)}{' '}
+            {encerradosApenas
+              ? 'terceirizados que já saíram'
+              : vigente
+                ? 'terceirizados vigentes'
+                : 'terceirizados no total'}
+            {(vigente || encerradosApenas) && base.length !== pessoas.length && (
+              <> · {numero(pessoas.length)} no histórico</>
+            )}
             {' — '}
             <button
               type="button"
@@ -476,7 +504,7 @@ export function TerceirizadosTabela({
                 {temBusca && linhasVisiveis.length !== base.length && (
                   <> (filtrados de {numero(base.length)})</>
                 )}
-                {vigente && base.length !== pessoas.length && (
+                {(vigente || encerradosApenas) && base.length !== pessoas.length && (
                   <> · {numero(pessoas.length)} no histórico</>
                 )}
               </p>

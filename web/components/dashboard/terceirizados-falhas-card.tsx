@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ColapsarBotao } from '@/components/dashboard/card-controles';
@@ -41,12 +41,19 @@ const DESCRICAO: Record<TerceirizadoFalha['tipo'], string> = {
 export function TerceirizadosFalhasCard({
   falhas,
   competencias,
+  abrirSinal = 0,
 }: {
   falhas: TerceirizadoFalha[];
   /** Para linkar cada falha ao PDF mensal de origem. */
   competencias: CompetenciaTerceirizados[];
+  /** Quando muda (> 0), o card se auto-expande — usado pelo KPI "Falhas de cruzamento". */
+  abrirSinal?: number;
 }) {
   const [aberto, setAberto] = useState(false);
+
+  useEffect(() => {
+    if (abrirSinal > 0) setAberto(true);
+  }, [abrirSinal]);
 
   const pdfPorCompetencia = useMemo(
     () => new Map(competencias.map((c) => [c.chave, c.arquivoUrl])),
@@ -73,7 +80,7 @@ export function TerceirizadosFalhasCard({
   }, [falhas]);
 
   return (
-    <Card>
+    <Card id="registro-falhas" className="scroll-mt-4">
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-base font-semibold">

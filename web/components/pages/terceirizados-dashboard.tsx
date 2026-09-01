@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   AlertTriangle,
-  ArrowDown,
   ArrowLeft,
   ArrowUpRight,
   Briefcase,
@@ -16,9 +15,8 @@ import {
   UserMinus,
   Users,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { StatCard } from '@/components/dashboard/stat-card';
-import { ContagemDonut, type FatiaContagem } from '@/components/dashboard/contagem-donut';
+import type { FatiaContagem } from '@/components/dashboard/contagem-donut';
+import { KpiRoscaCard } from '@/components/dashboard/kpi-rosca-card';
 import { TerceirizadosTabela } from '@/components/dashboard/terceirizados-tabela';
 import { TerceirizadosContratosCard } from '@/components/dashboard/terceirizados-contratos-card';
 import { TerceirizadosFalhasCard } from '@/components/dashboard/terceirizados-falhas-card';
@@ -31,7 +29,7 @@ import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
 import { bool } from '@/lib/url-filtros';
-import { brlCompacto, mesAnoLongo, numero } from '@/lib/utils';
+import { brlCompacto, mesAnoLongo, numero, percentual } from '@/lib/utils';
 import {
   urlTerceirizados,
   type ContratoResumo,
@@ -72,10 +70,20 @@ export function TerceirizadosDashboard() {
   // "Terceirizados ativos" poder garantir que ele fique LIGADO ao rolar até a
   // tabela. Regra do projeto: começa ligado (ver README).
   const [vigenteTerc, setVigenteTerc] = useState(true);
+  // Recorte "só encerrados" da tabela, acionado pelo KPI "Já deixaram o TSE".
+  const [encerradosTerc, setEncerradosTerc] = useState(false);
+  // Sinal p/ o card de falhas se auto-expandir quando o KPI "Falhas" é clicado.
+  const [falhasSinal, setFalhasSinal] = useState(0);
 
   useSincronizarUrl(
-    { vig: bool.escrever(vigenteTerc, true) },
-    (sp) => setVigenteTerc(bool.ler(sp.get('vig'), true)),
+    {
+      vig: bool.escrever(vigenteTerc, true),
+      enc: bool.escrever(encerradosTerc, false),
+    },
+    (sp) => {
+      setVigenteTerc(bool.ler(sp.get('vig'), true));
+      setEncerradosTerc(bool.ler(sp.get('enc'), false));
+    },
   );
 
   const contratoPorId = useMemo(
@@ -135,8 +143,45 @@ export function TerceirizadosDashboard() {
   const contratosComAtivos = t.porContrato.filter((c) => c.ativos > 0).length;
   const semHistoricoUtil = t.historicoMeses <= 1;
 
+  // Rosca "Já deixaram o TSE": encerrados × ainda no TSE, sobre o total de
+  // terceirizados (vigentes + não vigentes).
+  const fatiasEncerrados = useMemo<FatiaContagem[]>(
+    () => [
+      { rotulo: 'Já deixaram', quantidade: t.encerrados, cor: 'var(--chart-3)', meta: 'encerrados' },
+      { rotulo: 'Ainda no TSE', quantidade: t.ativos, cor: '#898781', meta: 'ativos' },
+    ],
+    [t.encerrados, t.ativos],
+  );
+
+  // Rosca "Falhas de cruzamento": terceirizados afetados por alguma falha ×
+  // sem falha, sobre o total.
+  const terceirizadosComFalha = useMemo(
+    () => new Set(t.falhas.filter((f) => f.nome && f.nome !== '(vazio)').map((f) => f.nome)).size,
+    [t.falhas],
+  );
+  const fatiasFalhas = useMemo<FatiaContagem[]>(
+    () => [
+      { rotulo: 'Com falha', quantidade: terceirizadosComFalha, cor: 'var(--destructive)', meta: 'falhas' },
+      {
+        rotulo: 'Sem falha',
+        quantidade: Math.max(0, t.totalPessoas - terceirizadosComFalha),
+        cor: '#898781',
+      },
+    ],
+    [terceirizadosComFalha, t.totalPessoas],
+  );
+
   function irParaTabela() {
     setVigenteTerc(true);
+    setEncerradosTerc(false);
+    requestAnimationFrame(() =>
+      document.getElementById('tabela-terceirizados')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
+  }
+
+  function irParaEncerrados() {
+    setVigenteTerc(false);
+    setEncerradosTerc(true);
     requestAnimationFrame(() =>
       document.getElementById('tabela-terceirizados')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
     );
@@ -144,6 +189,13 @@ export function TerceirizadosDashboard() {
 
   function irParaContratos() {
     document.getElementById('contratos-cessao')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function irParaFalhas() {
+    setFalhasSinal((n) => n + 1);
+    requestAnimationFrame(() =>
+      document.getElementById('registro-falhas')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    );
   }
 
   function abrirModalContrato(c: ContratoTerceirizados) {
@@ -212,99 +264,78 @@ export function TerceirizadosDashboard() {
       </header>
 
       <div className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-          <Card className="transition-colors duration-200 sm:col-span-2 lg:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-muted-foreground">Terceirizados ativos</CardTitle>
-              <HardHat className="h-4 w-4 text-muted-foreground" aria-hidden />
-            </CardHeader>
-            <CardContent className="flex flex-col items-center gap-1">
-              {fatiasAtivosPorContrato.length > 0 ? (
-                <ContagemDonut
-                  fatias={fatiasAtivosPorContrato}
-                  unidadeSingular="terceirizado"
-                  unidadePlural="terceirizados"
-                  onSelecionar={(f) => {
-                    const c = f.meta as ContratoTerceirizados | undefined;
-                    if (c) abrirModalContrato(c);
-                  }}
-                />
-              ) : (
-                <div className="py-4 text-center">
-                  <div className="text-3xl font-semibold tabular-nums">{numero(t.ativos)}</div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {t.competenciaAtual ? `na listagem de ${rotuloCompetencia}` : 'sem histórico disponível'}
-                  </p>
-                </div>
-              )}
-              <p className="text-center text-xs text-muted-foreground">
-                por contrato de cessão{t.competenciaAtual ? ` · ${rotuloCompetencia}` : ''}
-              </p>
-              <button
-                type="button"
-                onClick={irParaTabela}
-                className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-              >
-                Ver na tabela (Vigente) <ArrowDown className="h-3 w-3" aria-hidden />
-              </button>
-            </CardContent>
-          </Card>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <KpiRoscaCard
+            titulo="Terceirizados ativos"
+            icone={<HardHat className="h-4 w-4" aria-hidden />}
+            fatias={fatiasAtivosPorContrato}
+            unidadeSingular="terceirizado"
+            unidadePlural="terceirizados"
+            onSelecionar={(f) => {
+              const c = f.meta as ContratoTerceirizados | undefined;
+              if (c) abrirModalContrato(c);
+            }}
+            nota={`por contrato de cessão${t.competenciaAtual ? ` · ${rotuloCompetencia}` : ''}`}
+            acaoRotulo="Ver na tabela (Vigente)"
+            onAcao={irParaTabela}
+            fallbackValor={numero(t.ativos)}
+            fallbackNota={
+              t.competenciaAtual ? `na listagem de ${rotuloCompetencia}` : 'sem histórico disponível'
+            }
+          />
 
-          <Card className="transition-colors duration-200 sm:col-span-2 lg:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-muted-foreground">Contratos de cessão</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" aria-hidden />
-            </CardHeader>
-            <CardContent className="flex flex-col items-center gap-1">
-              {fatiasValorPorContrato.length > 0 ? (
-                <ContagemDonut
-                  fatias={fatiasValorPorContrato}
-                  unidadeSingular="valor global"
-                  unidadePlural="valor global"
-                  formatar={brlCompacto}
-                  onSelecionar={(f) => {
-                    const c = f.meta as ContratoTerceirizados | undefined;
-                    if (c) abrirModalContrato(c);
-                  }}
-                />
-              ) : (
-                <div className="py-4 text-center">
-                  <div className="text-3xl font-semibold tabular-nums">{numero(t.contratos)}</div>
-                  <p className="mt-1 text-xs text-muted-foreground">contratos de cessão</p>
-                </div>
-              )}
-              <p className="text-center text-xs text-muted-foreground">
-                {numero(t.contratos)} contratos · {numero(contratosComAtivos)} com terceirizado ativo
-              </p>
-              <button
-                type="button"
-                onClick={irParaContratos}
-                className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-              >
-                Ver a lista de contratos <ArrowDown className="h-3 w-3" aria-hidden />
-              </button>
-            </CardContent>
-          </Card>
+          <KpiRoscaCard
+            titulo="Contratos de cessão"
+            icone={<FileText className="h-4 w-4" aria-hidden />}
+            fatias={fatiasValorPorContrato}
+            unidadeSingular="valor global"
+            unidadePlural="valor global"
+            formatar={brlCompacto}
+            onSelecionar={(f) => {
+              const c = f.meta as ContratoTerceirizados | undefined;
+              if (c) abrirModalContrato(c);
+            }}
+            nota={`${numero(t.contratos)} contratos · ${numero(contratosComAtivos)} com terceirizado ativo`}
+            acaoRotulo="Ver a lista de contratos"
+            onAcao={irParaContratos}
+            fallbackValor={numero(t.contratos)}
+            fallbackNota="contratos de cessão"
+          />
 
-          <StatCard
+          <KpiRoscaCard
             titulo={
               <span className="inline-flex items-center gap-1">
                 Já deixaram o TSE <DicaTermo id="terceirizadoMesFim" />
               </span>
             }
-            valor={numero(t.encerrados)}
-            detalhe={semHistoricoUtil ? 'requer +1 mês de histórico' : 'com mês de fim registrado'}
             icone={<UserMinus className="h-4 w-4" aria-hidden />}
+            fatias={fatiasEncerrados}
+            unidadeSingular="terceirizado"
+            unidadePlural="terceirizados"
+            onSelecionar={(f) => (f.meta === 'ativos' ? irParaTabela() : irParaEncerrados())}
+            nota={
+              semHistoricoUtil
+                ? 'requer +1 mês de histórico'
+                : `${numero(t.encerrados)} · ${percentual(t.encerrados, t.totalPessoas)}% do total de terceirizados`
+            }
+            acaoRotulo="Ver encerrados na tabela"
+            onAcao={irParaEncerrados}
           />
-          <StatCard
+
+          <KpiRoscaCard
             titulo={
               <span className="inline-flex items-center gap-1">
                 Falhas de cruzamento <DicaTermo id="terceirizadoFalhas" />
               </span>
             }
-            valor={numero(t.falhas.length)}
-            detalhe={`${numero(t.semLotacao)} sem lotação identificada`}
             icone={<AlertTriangle className="h-4 w-4" aria-hidden />}
+            fatias={fatiasFalhas}
+            unidadeSingular="terceirizado"
+            unidadePlural="terceirizados"
+            onSelecionar={() => irParaFalhas()}
+            nota={`${numero(t.falhas.length)} registros · ${percentual(terceirizadosComFalha, t.totalPessoas)}% dos terceirizados afetados`}
+            acaoRotulo="Ver registro de falhas"
+            onAcao={irParaFalhas}
           />
         </div>
 
@@ -350,11 +381,20 @@ export function TerceirizadosDashboard() {
           pessoas={t.pessoas}
           empresaPorContrato={empresaPorContrato}
           vigente={vigenteTerc}
-          onVigenteChange={setVigenteTerc}
+          onVigenteChange={(v) => {
+            setVigenteTerc(v);
+            setEncerradosTerc(false);
+          }}
+          encerradosApenas={encerradosTerc}
+          onEncerradosApenasChange={setEncerradosTerc}
           onVerContrato={abrirContratoPorNumero}
         />
 
-        <TerceirizadosFalhasCard falhas={t.falhas} competencias={t.competencias} />
+        <TerceirizadosFalhasCard
+          falhas={t.falhas}
+          competencias={t.competencias}
+          abrirSinal={falhasSinal}
+        />
       </div>
 
       <footer className="mt-8 text-xs text-muted-foreground">

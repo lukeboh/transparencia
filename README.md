@@ -140,11 +140,17 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   tabela de **contratos de cessão** com filtro textual por empresa, toggle
   **Vigente** (contratos com terceirizado ativo hoje) e ordenação da coluna
   Contrato quebrando "NN/AAAA" por ano→número ou número→ano (× asc/desc).
-  Ambas as tabelas colapsáveis. Dois KPIs em rosca (`ContagemDonut`, com
-  legenda nº do contrato + empresa e clique → modal "Detalhes do Contrato"):
+  Ambas as tabelas colapsáveis. Os **4 KPIs do topo são roscas**
+  (`KpiRoscaCard` sobre `ContagemDonut`), cada uma com uma nota e um atalho
+  para o detalhe correspondente, e fatias/legenda clicáveis:
   **Terceirizados ativos** = ativos por contrato de cessão (10 maiores +
-  "Outros"), com atalho para a tabela já com o filtro Vigente ligado; e
-  **Contratos de cessão** = os 10 contratos de maior valor global + "Outros".
+  "Outros"; clique → modal "Detalhes do Contrato"; atalho → tabela com
+  Vigente ligado); **Contratos de cessão** = os 10 contratos de maior valor
+  global + "Outros" (mesmo clique/atalho); **Já deixaram o TSE** = encerrados
+  × ainda no TSE, sobre o total (vigentes + não vigentes); atalho abre a
+  tabela recortada em "só encerrados"; **Falhas de cruzamento** = terceirizados
+  afetados × sem falha, sobre o total; atalho rola até o "Registro de falhas"
+  e o expande.
   KPI por contrato
   (terceirizados ativos e no histórico, com desempate de contratos de número
   igual entre modalidades pela empresa). O número do contrato é canonicalizado
@@ -179,7 +185,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   Compras.gov.br.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.32**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.33**.
 
 ## Dashboard web
 
