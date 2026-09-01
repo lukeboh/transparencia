@@ -42,9 +42,16 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
     agente público da relação oficial de hoje, unida a quem aparece como
     fiscal/gestor em contrato sem constar nela (ex-servidor / divergência de
     grafia entre as fontes) — ~1.032 pessoas. Cada linha tem `rankingIndex`
-    (índice em `responsaveis.ranking`, `null` quem não fiscaliza nada) e
+    (índice em `responsaveis.ranking`, `null` quem não fiscaliza nada),
     `funcoesIndex` (índice em `funcoes.servidores`, `null` quem nunca teve
-    FC/CJ), resolvidos por nome normalizado no servidor.
+    FC/CJ) e `teletrabalhoIndex` (índice em `teletrabalho.ranking`, `null` sem
+    período), resolvidos por nome normalizado no servidor.
+  - Clicar numa linha abre o modal **"Detalhes do Servidor"**
+    (`servidor-detalhe-dialog.tsx`) com três seções colapsáveis: **Histórico
+    de Funções** (mesmo conteúdo do histórico de `/funcoes`), **Consolidado de
+    Dias de Teletrabalho** (dias somados + períodos + link para a consulta de
+    teletrabalho do TSE filtrada por ele) e **Histórico de Contratos** (os
+    contratos em que é fiscal/gestor, cada um com link para o Compras.gov.br).
   - No card de **Filtro** a seção **Por função** subiu para primeiro; o
     checkbox "Incluir quem não tem função vigente" virou dois chips: **SEM
     FUNÇÃO** (mesmo efeito) e **VIGENTE** (ligado por padrão = recorta só pela

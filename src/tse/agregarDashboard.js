@@ -173,6 +173,9 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
   const funcoesIndexPorNome = new Map(
     funcoesServidores.map((s, i) => [normalizeNome(s.nome), i]),
   );
+  const teletrabalhoIndexPorNome = new Map(
+    teletrabalho.ranking.map((r, i) => [normalizeNome(r.nome), i]),
+  );
   const servidoresLista = [];
   const vistosServidores = new Set();
   for (const ap of agentesPublicos) {
@@ -189,6 +192,7 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
       funcaoAtual: ap.funcao ?? null,
       rankingIndex: indicePorNomeRanking.get(chave) ?? null,
       funcoesIndex: funcoesIndexPorNome.get(chave) ?? null,
+      teletrabalhoIndex: teletrabalhoIndexPorNome.get(chave) ?? null,
     });
   }
   for (let i = 0; i < ranking.length; i++) {
@@ -205,6 +209,7 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
       funcaoAtual: fi !== null ? funcoesServidores[fi].funcaoAtual ?? null : null,
       rankingIndex: i,
       funcoesIndex: fi,
+      teletrabalhoIndex: teletrabalhoIndexPorNome.get(chave) ?? null,
     });
   }
   servidoresLista.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));

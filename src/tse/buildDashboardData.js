@@ -212,6 +212,8 @@ export interface LinhaServidor {
   rankingIndex: number | null;
   /** Índice em DashboardData.funcoes.servidores, ou null quando o servidor nunca teve FC/CJ (nem no histórico de portarias). */
   funcoesIndex: number | null;
+  /** Índice em DashboardData.teletrabalho.ranking, ou null quando o servidor nunca registrou período de teletrabalho. */
+  teletrabalhoIndex: number | null;
 }
 
 export interface ServidoresData {

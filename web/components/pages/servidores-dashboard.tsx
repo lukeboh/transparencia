@@ -21,7 +21,12 @@ import { bool, excluidos, incluidos } from '@/lib/url-filtros';
 import { brlCompacto, numero } from '@/lib/utils';
 import { ehSubstituto } from '@/lib/perfis-fiscalizacao';
 import { CATEGORIAS_VALOR, categoriaDoValor, type CategoriaValorId } from '@/lib/categorias-valor';
-import type { ContratoResumo, LinhaRanking, ServidorFuncoes } from '@/lib/dashboard-data';
+import type {
+  ContratoResumo,
+  LinhaRanking,
+  LinhaTeletrabalho,
+  ServidorFuncoes,
+} from '@/lib/dashboard-data';
 
 const IDS_FAIXA_VALOR = CATEGORIAS_VALOR.map((c) => c.id);
 
@@ -136,7 +141,7 @@ function filtrarSemContrato(
 
 export function ServidoresDashboard() {
   const estado = useDadosDashboard();
-  const { responsaveis, funcoes, contratos, fonte, servidores } = estado.dados;
+  const { responsaveis, funcoes, contratos, fonte, servidores, teletrabalho } = estado.dados;
 
   // Um registro de função (atual + histórico de portarias) por servidor,
   // chaveado pelo nome exato usado nas linhas da tabela (ver `linhasServidores`
@@ -150,6 +155,18 @@ export function ServidoresDashboard() {
     }
     return map;
   }, [servidores.lista, funcoes.servidores]);
+
+  // Consolidado de teletrabalho por servidor, chaveado pelo mesmo nome das
+  // linhas da tabela (para o modal "Detalhes do Servidor").
+  const teletrabalhoPorNome = useMemo(() => {
+    const map = new Map<string, LinhaTeletrabalho>();
+    for (const s of servidores.lista) {
+      if (s.teletrabalhoIndex === null) continue;
+      const t = teletrabalho.ranking[s.teletrabalhoIndex];
+      if (t) map.set(s.nome, t);
+    }
+    return map;
+  }, [servidores.lista, teletrabalho.ranking]);
 
   const todosPapeis = useMemo(() => {
     const set = new Set<string>();
@@ -611,7 +628,12 @@ export function ServidoresDashboard() {
           />
         </div>
 
-        <RankingTable ranking={rankingFiltrado} contratos={contratos} funcoesPorNome={funcoesPorNome} />
+        <RankingTable
+          ranking={rankingFiltrado}
+          contratos={contratos}
+          funcoesPorNome={funcoesPorNome}
+          teletrabalhoPorNome={teletrabalhoPorNome}
+        />
       </div>
 
       <footer className="mt-8 text-xs text-muted-foreground">

@@ -29,10 +29,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  ContratosDialog,
-  type ContratoAuditavel,
-} from '@/components/dashboard/contratos-dialog';
+import { type ContratoAuditavel } from '@/components/dashboard/contratos-dialog';
+import { ServidorDetalheDialog } from '@/components/dashboard/servidor-detalhe-dialog';
 import { FuncoesBadges, funcaoDestaque } from '@/components/dashboard/funcoes-table';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
 import { brlCompleto, cn, nomeProprio, numero } from '@/lib/utils';
@@ -41,7 +39,12 @@ import { rotuloPerfil } from '@/lib/perfis-fiscalizacao';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
 import { inteiro, ordem } from '@/lib/url-filtros';
 import type { ColunaExport } from '@/lib/exportar-dados';
-import type { ContratoResumo, LinhaRanking, ServidorFuncoes } from '@/lib/dashboard-data';
+import type {
+  ContratoResumo,
+  LinhaRanking,
+  LinhaTeletrabalho,
+  ServidorFuncoes,
+} from '@/lib/dashboard-data';
 
 const CAMPOS_ORD_RANKING = new Set(['nome', 'contratos', 'valor', 'empenhado', 'pago']);
 
@@ -180,11 +183,14 @@ export function RankingTable({
   ranking,
   contratos,
   funcoesPorNome,
+  teletrabalhoPorNome,
 }: {
   ranking: LinhaRanking[];
   contratos: ContratoResumo[];
   /** Servidor (com função atual + histórico) por nome — mesma string de `linha.nome`, ver servidores-dashboard.tsx. */
   funcoesPorNome: Map<string, ServidorFuncoes>;
+  /** Consolidado de teletrabalho por nome — mesma string de `linha.nome`. */
+  teletrabalhoPorNome: Map<string, LinhaTeletrabalho>;
 }) {
   const [pagina, setPagina] = useState(0);
   const [busca, setBusca] = useState('');
@@ -294,7 +300,8 @@ export function RankingTable({
             /funcoes
           </Link>
           ). A coluna Faixas mostra os símbolos das faixas de valor (ver filtro acima) presentes entre os
-          contratos do servidor. Clique em um servidor para auditar seus contratos.
+          contratos do servidor. Clique numa linha para abrir <strong>Detalhes do Servidor</strong> —
+          histórico de funções, consolidado de teletrabalho e histórico de contratos.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -492,9 +499,11 @@ export function RankingTable({
         </div>
 
         {selecionado && (
-          <ContratosDialog
-            titulo={nomeProprio(selecionado.nome)}
-            contratos={contratosDoResponsavel(selecionado, contratos)}
+          <ServidorDetalheDialog
+            linha={selecionado}
+            servidorFuncoes={funcoesPorNome.get(selecionado.nome) ?? null}
+            teletrabalho={teletrabalhoPorNome.get(selecionado.nome) ?? null}
+            contratos={contratos}
             open
             onClose={() => setSelecionado(null)}
           />
