@@ -164,6 +164,51 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
     responsavelRankingIndex: indicePorNomeRanking.get(normalizeNome(s.nome)) ?? null,
   }));
 
+  // "Todos os servidores (agentes públicos)": a relação atual de agentes
+  // públicos do TSE (fonte primária) unida a quem aparece como fiscal/gestor
+  // em contrato sem constar nela (ex-servidor, ou divergência de grafia entre
+  // as fontes). Cada linha aponta, por nome normalizado, para o índice no
+  // ranking de responsáveis (null = não fiscaliza nada) e para o índice em
+  // funcoes.servidores (null = nunca teve FC/CJ, nem no histórico de portarias).
+  const funcoesIndexPorNome = new Map(
+    funcoesServidores.map((s, i) => [normalizeNome(s.nome), i]),
+  );
+  const servidoresLista = [];
+  const vistosServidores = new Set();
+  for (const ap of agentesPublicos) {
+    if (!ap.nome) continue;
+    const chave = normalizeNome(ap.nome);
+    if (vistosServidores.has(chave)) continue;
+    vistosServidores.add(chave);
+    servidoresLista.push({
+      nome: ap.nome,
+      matricula: ap.matricula ?? null,
+      cargo: ap.cargo ?? null,
+      lotacao: ap.lotacao ?? null,
+      naRelacaoAtual: true,
+      funcaoAtual: ap.funcao ?? null,
+      rankingIndex: indicePorNomeRanking.get(chave) ?? null,
+      funcoesIndex: funcoesIndexPorNome.get(chave) ?? null,
+    });
+  }
+  for (let i = 0; i < ranking.length; i++) {
+    const chave = normalizeNome(ranking[i].nome);
+    if (vistosServidores.has(chave)) continue;
+    vistosServidores.add(chave);
+    const fi = funcoesIndexPorNome.get(chave) ?? null;
+    servidoresLista.push({
+      nome: ranking[i].nome,
+      matricula: fi !== null ? funcoesServidores[fi].matricula ?? null : null,
+      cargo: fi !== null ? funcoesServidores[fi].cargo ?? null : null,
+      lotacao: fi !== null ? funcoesServidores[fi].lotacao ?? null : null,
+      naRelacaoAtual: false,
+      funcaoAtual: fi !== null ? funcoesServidores[fi].funcaoAtual ?? null : null,
+      rankingIndex: i,
+      funcoesIndex: fi,
+    });
+  }
+  servidoresLista.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
   return {
     geradoEm: new Date().toISOString(),
     fonte: 'https://contratos.comprasnet.gov.br/transparencia/contratos?unidade=TSE',
@@ -203,6 +248,12 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
       // enriquecimento/checagem, refletido nas observações de cada servidor.
       vigentes: funcoesServidores.filter((s) => s.funcaoAtual !== null).length,
       servidores: funcoesServidores,
+    },
+    servidores: {
+      total: servidoresLista.length,
+      comContrato: servidoresLista.filter((s) => s.rankingIndex !== null).length,
+      semContrato: servidoresLista.filter((s) => s.rankingIndex === null).length,
+      lista: servidoresLista,
     },
     teletrabalho,
     unidades,

@@ -286,8 +286,9 @@ export function RankingTable({
       <CardHeader>
         <CardTitle className="text-base font-semibold">Ranking completo</CardTitle>
         <CardDescription>
-          Todos os {numero(ranking.length)} responsáveis, com valores Globais, Empenhados (Emp.) e Pagos (Pg) — o
-          valor de um contrato conta uma única vez por pessoa. A coluna Função mostra a função comissionada (FC/CJ)
+          Todos os {numero(ranking.length)} servidores no filtro, com valores Globais, Empenhados (Emp.) e Pagos
+          (Pg) — o valor de um contrato conta uma única vez por pessoa; quem não é fiscal/gestor de nenhum
+          contrato aparece zerado. A coluna Função mostra a função comissionada (FC/CJ)
           que o servidor tem hoje ou já teve (ver detalhe completo em{' '}
           <Link href="/funcoes" className="underline decoration-border underline-offset-4 hover:text-foreground">
             /funcoes

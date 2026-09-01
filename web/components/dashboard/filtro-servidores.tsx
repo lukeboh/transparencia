@@ -36,6 +36,10 @@ export interface FiltroServidoresProps {
    *  desligado = também o histórico de FC/CJ do servidor. */
   funcaoVigente: boolean;
   onFuncaoVigenteChange: (v: boolean) => void;
+  /** Chip "Com contrato": ligado = só fiscais/gestores; desligado (padrão) =
+   *  todos os agentes públicos, inclusive quem não atua em contrato. */
+  soComContrato: boolean;
+  onSoComContratoChange: (v: boolean) => void;
   className?: string;
 }
 
@@ -187,6 +191,8 @@ function CorpoFiltro(props: FiltroServidoresProps) {
     onIncluirSemFuncaoChange,
     funcaoVigente,
     onFuncaoVigenteChange,
+    soComContrato,
+    onSoComContratoChange,
   } = props;
 
   const grupos = agruparPapeis(todosPapeis);
@@ -251,6 +257,17 @@ function CorpoFiltro(props: FiltroServidoresProps) {
       <div>
         <Secao titulo="Por contratos">
           <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-1.5">
+            <Chip
+              ativo={soComContrato}
+              onClick={() => onSoComContratoChange(!soComContrato)}
+              title={
+                soComContrato
+                  ? 'Só fiscais e gestores de contrato — clique para incluir todos os agentes públicos'
+                  : 'Todos os agentes públicos do TSE — clique para ver só fiscais/gestores de contrato'
+              }
+            >
+              COM CONTRATO
+            </Chip>
             <Chip
               ativo={somenteVigentes}
               onClick={() => onSomenteVigentesChange(!somenteVigentes)}
@@ -393,6 +410,7 @@ function contarAtivos(p: FiltroServidoresProps): number {
   let n = 0;
   if (p.somenteVigentes) n++;
   if (p.funcaoVigente) n++;
+  if (p.soComContrato) n++;
   if (!p.considerarSubstitutos) n++;
   if (selConsiderados.length < papeisConsiderados.length) n++;
   if (p.categoriasSelecionadas.length < CATEGORIAS_VALOR.length) n++;
@@ -406,6 +424,7 @@ function limparTudo(p: FiltroServidoresProps) {
   p.onConsiderarSubstitutosChange(true);
   p.onSomenteVigentesChange(false);
   p.onFuncaoVigenteChange(false);
+  p.onSoComContratoChange(false);
   p.onCategoriasChange(CATEGORIAS_VALOR.map((c) => c.id));
   p.onFuncoesChange([...p.todasFuncoes]);
   p.onIncluirSemFuncaoChange(true);

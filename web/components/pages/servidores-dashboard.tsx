@@ -103,22 +103,53 @@ function filtrarRanking(
   return resultado.sort((a, b) => b.valorConsolidado - a.valorConsolidado);
 }
 
+/** Linha zerada para um servidor sem atuação como fiscal/gestor de contrato. */
+function linhaVaziaDe(nome: string): LinhaRanking {
+  return {
+    nome,
+    papeis: [],
+    valorConsolidado: 0,
+    valorEmpenhadoConsolidado: 0,
+    valorPagoConsolidado: 0,
+    quantidadeContratos: 0,
+    contratos: [],
+  };
+}
+
+/** Servidores sem atuação em contrato: passam só pelo filtro de função — os
+ *  cortes de papel/valor/vigência são sobre contratos, que essas pessoas não
+ *  têm. Devolvidos zerados como vieram de `linhaVaziaDe`. */
+function filtrarSemContrato(
+  linhas: LinhaRanking[],
+  chavesFuncaoPorNome: Map<string, Set<string>>,
+  funcoesSelecionadas: string[] | null,
+  incluirSemFuncao: boolean,
+): LinhaRanking[] {
+  const setFuncoes = funcoesSelecionadas ? new Set(funcoesSelecionadas) : null;
+  if (!setFuncoes) return linhas;
+  return linhas.filter((s) => {
+    const chaves = chavesFuncaoPorNome.get(s.nome);
+    if (!chaves || chaves.size === 0) return incluirSemFuncao;
+    return [...chaves].some((k) => setFuncoes.has(k));
+  });
+}
+
 export function ServidoresDashboard() {
   const estado = useDadosDashboard();
-  const { responsaveis, funcoes, contratos, fonte } = estado.dados;
+  const { responsaveis, funcoes, contratos, fonte, servidores } = estado.dados;
 
-  // Chave é o nome exato de `responsaveis.ranking[i].nome` — `rankingFiltrado`
-  // (abaixo) copia esse mesmo texto, então o mapa continua válido mesmo com o
-  // filtro de papéis aplicado (que muda os índices, mas não os nomes).
+  // Um registro de função (atual + histórico de portarias) por servidor,
+  // chaveado pelo nome exato usado nas linhas da tabela (ver `linhasServidores`
+  // abaixo, que também usa `servidores.lista[i].nome`).
   const funcoesPorNome = useMemo(() => {
     const map = new Map<string, ServidorFuncoes>();
-    for (const s of funcoes.servidores) {
-      if (s.responsavelRankingIndex === null) continue;
-      const nomeRanking = responsaveis.ranking[s.responsavelRankingIndex]?.nome;
-      if (nomeRanking) map.set(nomeRanking, s);
+    for (const s of servidores.lista) {
+      if (s.funcoesIndex === null) continue;
+      const sf = funcoes.servidores[s.funcoesIndex];
+      if (sf) map.set(s.nome, sf);
     }
     return map;
-  }, [funcoes.servidores, responsaveis.ranking]);
+  }, [servidores.lista, funcoes.servidores]);
 
   const todosPapeis = useMemo(() => {
     const set = new Set<string>();
@@ -156,6 +187,25 @@ export function ServidoresDashboard() {
   // comissionada de hoje; desligado = também considera o histórico de FC/CJ.
   // Padrão ligado, mesma regra do Vigente de contratos.
   const [funcaoVigente, setFuncaoVigente] = useState(true);
+  // Chip "Com contrato" da seção "Por contratos": ligado = só fiscais/gestores
+  // (como a antiga /fiscais); desligado (padrão) = todos os agentes públicos,
+  // inclusive quem não atua em nenhum contrato.
+  const [soComContrato, setSoComContrato] = useState(false);
+
+  // Uma linha por servidor, na grafia da relação de agentes públicos, com os
+  // dados de contrato do ranking de responsáveis quando houver — ou zerada.
+  const linhasServidores = useMemo<LinhaRanking[]>(
+    () =>
+      servidores.lista.map((s) => {
+        const r = s.rankingIndex !== null ? responsaveis.ranking[s.rankingIndex] : null;
+        return r ? { ...r, nome: s.nome } : linhaVaziaDe(s.nome);
+      }),
+    [servidores.lista, responsaveis.ranking],
+  );
+  const fiscaisServidores = useMemo(
+    () => linhasServidores.filter((l) => l.quantidadeContratos > 0),
+    [linhasServidores],
+  );
 
   // Chaves de função de cada servidor do ranking, por nome. Com `funcaoVigente`
   // ligado (padrão) é só a função comissionada de hoje; desligado, acrescenta
@@ -196,6 +246,7 @@ export function ServidoresDashboard() {
       subs: bool.escrever(considerarSubstitutos, false),
       vig: bool.escrever(somenteVigentes, true),
       func_vig: bool.escrever(funcaoVigente, true),
+      com_contrato: bool.escrever(soComContrato, false),
       semfunc: bool.escrever(incluirSemFuncao, true),
       // esquema antigo ("guardava os desmarcados"): limpa se aparecer num link
       func_off: null,
@@ -213,6 +264,7 @@ export function ServidoresDashboard() {
       setConsiderarSubstitutos(bool.ler(sp.get('subs'), false));
       setSomenteVigentes(bool.ler(sp.get('vig'), true));
       setFuncaoVigente(bool.ler(sp.get('func_vig'), true));
+      setSoComContrato(bool.ler(sp.get('com_contrato'), false));
       setIncluirSemFuncao(bool.ler(sp.get('semfunc'), true));
     },
   );
@@ -249,9 +301,9 @@ export function ServidoresDashboard() {
       considerarSubstitutos &&
       funcoesIrrestritas &&
       !somenteVigentes;
-    if (semCorte) return responsaveis.ranking;
+    if (semCorte) return fiscaisServidores;
     return filtrarRanking(
-      responsaveis.ranking,
+      fiscaisServidores,
       contratos,
       categoriaIdPorIndice,
       papeisEfetivos,
@@ -262,7 +314,7 @@ export function ServidoresDashboard() {
       incluirSemFuncao,
     );
   }, [
-    responsaveis.ranking,
+    fiscaisServidores,
     contratos,
     categoriaIdPorIndice,
     papeisEfetivos,
@@ -275,24 +327,41 @@ export function ServidoresDashboard() {
     incluirSemFuncao,
   ]);
 
-  // Estágio 2: acrescenta o filtro de faixa de valor sobre o resultado do
-  // estágio 1 — é o que efetivamente aparece na tabela e nos demais KPIs da
-  // página. Papéis/vigência já vieram aplicados; função também (por isso `null`
-  // aqui). Reaplica sobre `rankingPorPapelVigencia` de forma idempotente.
+  // Estágio 2: acrescenta o filtro de faixa de valor sobre o estágio 1. Com o
+  // chip "Com contrato" LIGADO, para por aqui (só fiscais/gestores, como a
+  // antiga /fiscais). DESLIGADO (padrão), todo servidor que não sobreviveu ao
+  // pipeline de fiscal (contrato encerrado, papel/faixa fora do filtro, ou
+  // nunca fiscalizou nada) volta como linha zerada — sujeito só ao filtro de
+  // função, que é sobre a pessoa. Assim "Servidores" mostra mesmo todo mundo,
+  // e os cortes de contrato só moldam as colunas de valor.
   const rankingFiltrado = useMemo(() => {
     if (papeisEfetivos.length === 0 || categoriasSelecionadas.length === 0) return [];
-    if (categoriasSelecionadas.length === CATEGORIAS_VALOR.length) return rankingPorPapelVigencia;
-    return filtrarRanking(
-      rankingPorPapelVigencia,
-      contratos,
-      categoriaIdPorIndice,
-      papeisEfetivos,
-      somenteVigentes,
-      categoriasSelecionadas,
+    const todasFaixas = categoriasSelecionadas.length === CATEGORIAS_VALOR.length;
+    const fiscais = todasFaixas
+      ? rankingPorPapelVigencia
+      : filtrarRanking(
+          rankingPorPapelVigencia,
+          contratos,
+          categoriaIdPorIndice,
+          papeisEfetivos,
+          somenteVigentes,
+          categoriasSelecionadas,
+          chavesFuncaoPorNome,
+          null,
+          incluirSemFuncao,
+        );
+    if (soComContrato) return fiscais;
+    const nomesFiscais = new Set(fiscais.map((r) => r.nome));
+    const resto = linhasServidores
+      .filter((l) => !nomesFiscais.has(l.nome))
+      .map((l) => (l.quantidadeContratos > 0 ? linhaVaziaDe(l.nome) : l));
+    const restoFiltrado = filtrarSemContrato(
+      resto,
       chavesFuncaoPorNome,
-      null,
+      funcoesIrrestritas ? null : funcoesSelecionadas,
       incluirSemFuncao,
     );
+    return [...fiscais, ...restoFiltrado];
   }, [
     rankingPorPapelVigencia,
     contratos,
@@ -302,7 +371,19 @@ export function ServidoresDashboard() {
     categoriasSelecionadas,
     chavesFuncaoPorNome,
     incluirSemFuncao,
+    soComContrato,
+    linhasServidores,
+    funcoesIrrestritas,
+    funcoesSelecionadas,
   ]);
+
+  // Só quem, no filtro atual, é fiscal/gestor de contrato — base das KPIs de
+  // valor (medianas e o donut de função "designada" não fazem sentido para
+  // quem não tem contrato).
+  const fiscaisFiltrados = useMemo(
+    () => rankingFiltrado.filter((r) => r.quantidadeContratos > 0),
+    [rankingFiltrado],
+  );
 
   // KPI: contratos por faixa de valor — universo completo de contratos,
   // respeitando "Somente contratos vigentes" (mesmo corte usado no resto da
@@ -341,18 +422,18 @@ export function ServidoresDashboard() {
   };
 
   const medianaValor = useMemo(
-    () => calcMediana(rankingFiltrado.map((r) => r.valorConsolidado)),
-    [rankingFiltrado]
+    () => calcMediana(fiscaisFiltrados.map((r) => r.valorConsolidado)),
+    [fiscaisFiltrados]
   );
 
   const medianaEmpenhado = useMemo(
-    () => calcMediana(rankingFiltrado.map((r) => r.valorEmpenhadoConsolidado)),
-    [rankingFiltrado]
+    () => calcMediana(fiscaisFiltrados.map((r) => r.valorEmpenhadoConsolidado)),
+    [fiscaisFiltrados]
   );
 
   const medianaPago = useMemo(
-    () => calcMediana(rankingFiltrado.map((r) => r.valorPagoConsolidado)),
-    [rankingFiltrado]
+    () => calcMediana(fiscaisFiltrados.map((r) => r.valorPagoConsolidado)),
+    [fiscaisFiltrados]
   );
 
   // Distribuição por função (FC/CJ) dos responsáveis visíveis no ranking
@@ -362,9 +443,9 @@ export function ServidoresDashboard() {
   const donutFuncoesResponsaveis = useMemo(
     () =>
       contarPorFuncaoAtual(
-        rankingFiltrado.map((r) => ({ funcaoAtual: funcoesPorNome.get(r.nome)?.funcaoAtual ?? null })),
+        fiscaisFiltrados.map((r) => ({ funcaoAtual: funcoesPorNome.get(r.nome)?.funcaoAtual ?? null })),
       ),
-    [rankingFiltrado, funcoesPorNome],
+    [fiscaisFiltrados, funcoesPorNome],
   );
 
   const emContratosVigentesCount = useMemo(() => {
@@ -373,13 +454,13 @@ export function ServidoresDashboard() {
       if (contratos[i].vigente) vigentesSet.add(i);
     }
     let count = 0;
-    for (const r of rankingFiltrado) {
+    for (const r of fiscaisFiltrados) {
       if (r.contratos.some((c) => vigentesSet.has(c.i))) {
         count++;
       }
     }
     return count;
-  }, [rankingFiltrado, contratos]);
+  }, [fiscaisFiltrados, contratos]);
 
   return (
     <main className="max-w-none px-4 py-8 sm:px-6 lg:px-8">
@@ -394,10 +475,10 @@ export function ServidoresDashboard() {
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight">Servidores (Agentes Públicos)</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Agentes públicos do TSE que atuam como fiscais e gestores{' '}
-            <DicaTermo id="fiscalGestor" alinhamento="esquerda" /> pelos maiores valores
-            consolidados <DicaTermo id="valorConsolidado" alinhamento="esquerda" /> de
-            contratos ·{' '}
+            {numero(servidores.total)} agentes públicos do TSE · {numero(servidores.comContrato)}{' '}
+            atuam como fiscais/gestores <DicaTermo id="fiscalGestor" alinhamento="esquerda" /> de
+            contrato, ordenados pelo maior valor consolidado{' '}
+            <DicaTermo id="valorConsolidado" alinhamento="esquerda" /> ·{' '}
             <a
               href={fonte}
               target="_blank"
@@ -473,15 +554,19 @@ export function ServidoresDashboard() {
           onIncluirSemFuncaoChange={setIncluirSemFuncao}
           funcaoVigente={funcaoVigente}
           onFuncaoVigenteChange={setFuncaoVigente}
+          soComContrato={soComContrato}
+          onSoComContratoChange={setSoComContrato}
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <FuncaoStatCard
             titulo="Fiscais designados"
             detalhe={
-              somenteVigentes
-                ? `${numero(rankingFiltrado.length)} com contrato vigente hoje`
-                : `${numero(rankingFiltrado.length)} no total · ${numero(emContratosVigentesCount)} atuam em contratos vigentes hoje`
+              soComContrato
+                ? somenteVigentes
+                  ? `${numero(fiscaisFiltrados.length)} com contrato vigente hoje`
+                  : `${numero(fiscaisFiltrados.length)} no total · ${numero(emContratosVigentesCount)} em contratos vigentes hoje`
+                : `${numero(fiscaisFiltrados.length)} de ${numero(rankingFiltrado.length)} servidores no filtro`
             }
             icone={<Users className="h-4 w-4" aria-hidden />}
             contagens={donutFuncoesResponsaveis}
@@ -517,13 +602,19 @@ export function ServidoresDashboard() {
       </div>
 
       <footer className="mt-8 text-xs text-muted-foreground">
-        O valor consolidado soma o &ldquo;Valor Global&rdquo; de cada contrato em que
-        o servidor aparece como responsável nos papéis selecionados
+        A lista traz todos os agentes públicos do TSE (relação oficial de hoje) mais
+        quem aparece como fiscal/gestor em contrato sem constar nela; o chip
+        &ldquo;Com contrato&rdquo; restringe aos fiscais/gestores. O valor
+        consolidado soma o &ldquo;Valor Global&rdquo; de cada contrato em que o
+        servidor aparece como responsável nos papéis selecionados
         {considerarSubstitutos ? '' : ' (sem os substitutos)'}
         {somenteVigentes ? ' e vigente hoje' : ''} e dentro das faixas de valor
-        selecionadas, contando cada contrato uma única vez por pessoa. O filtro
-        &ldquo;Por função&rdquo; recorta pelo cargo comissionado vigente do
-        servidor (FC/CJ <DicaTermo id="fcCj" alinhamento="esquerda" />). Faixas de valor:{' '}
+        selecionadas, contando cada contrato uma única vez por pessoa. Com
+        &ldquo;Com contrato&rdquo; desligado, quem não casa com esses cortes de
+        contrato aparece zerado, filtrado só por &ldquo;Por função&rdquo; — o
+        cargo comissionado (FC/CJ <DicaTermo id="fcCj" alinhamento="esquerda" />),
+        atual ou, com o &ldquo;Vigente&rdquo; da seção desligado, também do
+        histórico de portarias. Faixas de valor:{' '}
         {CATEGORIAS_VALOR.map((c) => `${c.simbolo} ${c.nome}`).join(' · ')}.
         <AppVersion />
       </footer>

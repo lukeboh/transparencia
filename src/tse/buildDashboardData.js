@@ -199,6 +199,30 @@ export interface ResponsaveisData {
   ranking: LinhaRanking[];
 }
 
+export interface LinhaServidor {
+  nome: string;
+  matricula: string | null;
+  cargo: string | null;
+  lotacao: string | null;
+  /** true = consta na relação atual de agentes públicos do TSE; false = só aparece como fiscal/gestor em contrato (ex-servidor / divergência de grafia entre as fontes). */
+  naRelacaoAtual: boolean;
+  /** Função comissionada vigente (FC/CJ) segundo a relação de agentes públicos, ou null. */
+  funcaoAtual: FuncaoResumo | null;
+  /** Índice em DashboardData.responsaveis.ranking, ou null quando o servidor não é fiscal/gestor de nenhum contrato. */
+  rankingIndex: number | null;
+  /** Índice em DashboardData.funcoes.servidores, ou null quando o servidor nunca teve FC/CJ (nem no histórico de portarias). */
+  funcoesIndex: number | null;
+}
+
+export interface ServidoresData {
+  /** Todos os agentes públicos do TSE hoje, mais quem fiscaliza contrato sem constar na relação. */
+  total: number;
+  /** Quantos, do total, são fiscais/gestores de ao menos um contrato. */
+  comContrato: number;
+  semContrato: number;
+  lista: LinhaServidor[];
+}
+
 export interface PortariaRef {
   numero: string | null;
   ano: number | null;
@@ -451,6 +475,7 @@ export interface DashboardData {
   contratos: ContratoResumo[];
   responsaveis: ResponsaveisData;
   funcoes: FuncoesData;
+  servidores: ServidoresData;
   teletrabalho: TeletrabalhoData;
   unidades: UnidadesData;
   terceirizados: TerceirizadosData;
