@@ -309,7 +309,7 @@ hoje destacada (borda + cor primária) e as anteriores apagadas; "—" quando
 nunca teve nenhuma. `FuncoesBadges` ganhou o modo `todas` para isso (o modo
 compacto — destaque + "+N" — segue em `/funcoes` e `/teletrabalho`). A coluna
 **Lotação** traz as 3 unidades mais específicas da hierarquia oficial (ex.:
-`SETOT | CSELE | STI`), resolvidas pelo mesmo `criarResolvedorLotacao` de
+`SETOT / CSELE / STI`), resolvidas pelo mesmo `criarResolvedorLotacao` de
 `/funcoes` a partir do nome plano da relação de agentes públicos. A tabela tem
 filtro incremental **por servidor** e **por lotação** (campo de texto com
 `datalist` das lotações presentes, sem distinção de acentos/caixa) e

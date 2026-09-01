@@ -448,7 +448,7 @@ export function RankingTable({
                   <InfoDica titulo="O que a coluna Lotação mostra?" alinhamento="esquerda">
                     A lotação atual do servidor (relação de agentes públicos), como as 3
                     unidades mais específicas da hierarquia oficial de{' '}
-                    <strong>/unidades</strong> — ex.: <em>SETOT | CSELE | STI</em>. Sem
+                    <strong>/unidades</strong> — ex.: <em>SETOT / CSELE / STI</em>. Sem
                     resolução confiável, mostra o nome plano da fonte.
                   </InfoDica>
                 </span>

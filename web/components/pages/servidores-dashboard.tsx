@@ -170,7 +170,7 @@ export function ServidoresDashboard() {
   }, [servidores.lista, teletrabalho.ranking]);
 
   // Lotação atual por servidor: as 3 unidades mais específicas da hierarquia
-  // oficial (ex.: "SETOT | CSELE | STI"), resolvidas do nome plano da relação
+  // oficial (ex.: "SETOT / CSELE / STI"), resolvidas do nome plano da relação
   // de agentes públicos contra a árvore de /unidades; `completo` = nome plano
   // (fallback e title).
   const lotacaoPorNome = useMemo(() => {
@@ -179,7 +179,7 @@ export function ServidoresDashboard() {
     for (const s of servidores.lista) {
       const completo = s.lotacao ?? '';
       const siglas = resolver(s.lotacao);
-      map.set(s.nome, { curto: siglas.length > 0 ? siglas.join(' | ') : completo, completo });
+      map.set(s.nome, { curto: siglas.length > 0 ? siglas.join(' / ') : completo, completo });
     }
     return map;
   }, [servidores.lista, unidades.arvore]);
