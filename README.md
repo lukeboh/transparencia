@@ -34,16 +34,31 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
 - ✅ A antiga página `/responsaveis` foi renomeada para `/fiscais` (rota e
   label) — nome interno de dados (`DashboardData.responsaveis`) não mudou.
 - ✅ `/fiscais` renomeada para `/servidores` — título **Servidores (Agentes
-  Públicos)** — porque a página não olha só para fiscais/gestores, mas para o
-  agente público por trás deles (`web/app/servidores/`,
-  `ServidoresDashboard`, `FiltroServidores`, `CategoriaValorServidoresCard`;
-  nome interno de dados `DashboardData.responsaveis` segue igual). No card de
-  **Filtro** a seção **Por função** subiu para primeiro; o checkbox "Incluir
-  quem não tem função vigente" virou dois chips: **SEM FUNÇÃO** (mesmo efeito
-  de antes) e **VIGENTE** (ligado por padrão = recorta só pela função
-  comissionada de hoje; desligado = casa também o histórico de FC/CJ das
-  portarias). Em **Por contratos**, "Somente contratos vigentes" virou o chip
-  **VIGENTE** e "Considerar substitutos" passou a começar DESLIGADO.
+  Públicos)** — e passou a listar **todos** os agentes públicos do TSE, não só
+  fiscais/gestores (`web/app/servidores/`, `ServidoresDashboard`,
+  `FiltroServidores`, `CategoriaValorServidoresCard`; nome interno de dados
+  `DashboardData.responsaveis` segue igual).
+  - **`DashboardData.servidores`** (`agregarDashboard.js`): uma linha por
+    agente público da relação oficial de hoje, unida a quem aparece como
+    fiscal/gestor em contrato sem constar nela (ex-servidor / divergência de
+    grafia entre as fontes) — ~1.032 pessoas. Cada linha tem `rankingIndex`
+    (índice em `responsaveis.ranking`, `null` quem não fiscaliza nada) e
+    `funcoesIndex` (índice em `funcoes.servidores`, `null` quem nunca teve
+    FC/CJ), resolvidos por nome normalizado no servidor.
+  - No card de **Filtro** a seção **Por função** subiu para primeiro; o
+    checkbox "Incluir quem não tem função vigente" virou dois chips: **SEM
+    FUNÇÃO** (mesmo efeito) e **VIGENTE** (ligado por padrão = recorta só pela
+    função comissionada de hoje; desligado = casa também o histórico de FC/CJ
+    das portarias).
+  - Em **Por contratos**: "Somente contratos vigentes" virou o chip
+    **VIGENTE**; "Considerar substitutos" começa DESLIGADO; e o chip **COM
+    CONTRATO** (desligado por padrão) restringe aos fiscais/gestores,
+    reproduzindo a antiga `/fiscais`. Com ele desligado, os cortes de contrato
+    (papel/faixa/vigência) só moldam as colunas de valor — a lista continua
+    com todos os servidores, filtrada só por função; quem não casa com os
+    cortes aparece zerado.
+  - KPIs de valor (medianas, donut "Fiscais designados") passam a considerar
+    só quem tem contrato, com rótulo "de N servidores".
 - ✅ Estrutura hierárquica de unidades do TSE (`/unidades`) — fonte: o
   endpoint JSON por trás do organograma oficial
   ([agrupamento por unidade](https://transparencia.tse.jus.br/transparenciaDadosServidores/smvc/relatorios/lotacao-geral/sem-assinatura/agrupamento-por-unidade),
@@ -262,27 +277,28 @@ Tema claro/escuro com toggle; paleta de gráficos validada para daltonismo
 (CVD) nos dois modos, com "Outros" em cinza de de-ênfase.
 
 A rota `/servidores` (linkada no header e no card "Fiscais designados")
-traz o dashboard da primeira funcionalidade do projeto: cards com maior valor
-sob responsabilidade e mediana por responsável, e um card "Fiscais
-designados" que, em vez de só um número, é um donut (mesmo componente de
-`/funcoes`) com a distribuição por função comissionada (FC/CJ, mais "Sem
-função") de quem está no ranking — restrito aos responsáveis de fato (quem
-fiscaliza/gerencia algum contrato), não ao universo mais amplo de
-`/funcoes`. Também tem gráfico de barras horizontais com o top 10 e tabela
-paginada com o ranking completo — todos os responsáveis, 25 por página
-(papéis como badges; valor de cada contrato contado uma única vez por
-pessoa). A coluna Função da tabela mostra, com o mesmo badge usado em
-`/funcoes`, a função comissionada que o servidor tem hoje ou já teve —
-cruzada por nome com `funcoes.servidores`, "—" quando nunca teve nenhuma. A
+traz o dashboard da primeira funcionalidade do projeto: a lista de **todos os
+agentes públicos do TSE** (`DashboardData.servidores`, ver acima), ordenada
+pelo maior valor consolidado sob responsabilidade; quem não é fiscal/gestor
+de nenhum contrato aparece zerado. Cards com maior valor sob responsabilidade
+e mediana por responsável (calculada só sobre quem tem contrato), e um card
+"Fiscais designados" que, em vez de só um número, é um donut (mesmo
+componente de `/funcoes`) com a distribuição por função comissionada (FC/CJ,
+mais "Sem função") de quem está no ranking com contrato. Tabela paginada, 25
+por página (papéis como badges; valor de cada contrato contado uma única vez
+por pessoa). A coluna Função mostra, com o mesmo badge usado em `/funcoes`, a
+função comissionada que o servidor tem hoje ou já teve — de
+`funcoes.servidores` via `funcoesIndex`, "—" quando nunca teve nenhuma. A
 tabela tem filtro incremental por servidor (sem distinção de acentos/caixa) e
 ordenação clicável nos cabeçalhos Servidor (alfabética), Contratos e Valor
 consolidado (1º clique ordena, 2º inverte, 3º volta à ordem do ranking); a
 coluna # sempre mostra a posição original no ranking por valor.
 
-Além do filtro por papéis (fiscal/gestor), um toggle "Somente contratos
-vigentes" restringe ranking, gráfico, tabela e o donut de função a apenas
-contratos ainda vigentes hoje — quem só tem contrato encerrado some da lista
-enquanto o toggle está ativo.
+O chip **COM CONTRATO** (desligado por padrão) restringe a lista aos
+fiscais/gestores, reproduzindo a antiga `/fiscais`; com ele ligado, o chip
+**VIGENTE** de "Por contratos" faz quem só tem contrato encerrado sumir da
+lista. Com **COM CONTRATO** desligado, esses cortes de contrato só zeram as
+colunas de valor da pessoa — ela continua na lista, filtrada só por função.
 
 ### Temas
 
@@ -717,12 +733,13 @@ superconjunto). Cada commit que inclua um scrape novo adiciona alguns MB ao
   1. Cada modal deve ter um nome para ficar fácil fazer referência e 
   reutilização entre todas as funcionalidades.
   2. ✅ Rota `/fiscais` renomeada para `/servidores` (título "Servidores
-  (Agentes Públicos)"), porque o objetivo não é mostrar apenas os servidores
-  que são fiscais, mas qualquer um. O filtro "Por função" ganhou o chip
+  (Agentes Públicos)") e agora lista **todos** os agentes públicos, não só os
+  fiscais (`DashboardData.servidores`). O filtro "Por função" ganhou o chip
   **VIGENTE** (ligado = só a função de hoje; desligado = casa também o
-  histórico de FC/CJ das portarias). **Falta ainda:** ao clicar num servidor,
-  o detalhamento deveria listar o histórico de FCs/CJs que ele já ocupou, com
-  a função atual marcada com um chip VIGENTE.
+  histórico de FC/CJ das portarias) e "Por contratos" ganhou o chip **COM
+  CONTRATO** (recorta aos fiscais/gestores). **Falta ainda:** ao clicar num
+  servidor, o detalhamento deveria listar o histórico de FCs/CJs que ele já
+  ocupou, com a função atual marcada com um chip VIGENTE.
   3. ✅ Onde existir o botão/chip VIGENTE como filtro, ele começa ligado — ver
   "Regra: filtro Vigente sempre ligado por padrão" acima. Os dados históricos
   só aparecem se explicitamente solicitado (desligar o VIGENTE).
