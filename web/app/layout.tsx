@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Transparência · Contratos TSE',
+  title: 'Transparência TSE',
   description:
-    'Dashboard de gastos com contratos do Tribunal Superior Eleitoral, a partir dos dados públicos do Compras.gov.br.',
+    'Panorama dos gastos com contratos e do quadro de pessoal do Tribunal Superior Eleitoral, a partir de dados públicos (Compras.gov.br e portais do TSE).',
 };
 
 const themeInit = `

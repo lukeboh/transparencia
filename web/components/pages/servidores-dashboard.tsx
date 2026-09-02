@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Ban, Briefcase, Coins, HardHat, Laptop, Network, Percent, Users } from 'lucide-react';
+import { Ban, Briefcase, Coins, Users } from 'lucide-react';
+import { AppHeader } from '@/components/app-header';
 import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
 import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
 import { ContagemStatCard } from '@/components/dashboard/contagem-stat-card';
@@ -12,8 +12,6 @@ import { RankingTable } from '@/components/dashboard/ranking-table';
 import { DadosStatus } from '@/components/dashboard/dados-status';
 import { DicaTermo } from '@/components/ui/dica-termo';
 import { AppVersion } from '@/components/app-version';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
 import { bool, excluidos, incluidos } from '@/lib/url-filtros';
@@ -517,17 +515,11 @@ export function ServidoresDashboard() {
 
   return (
     <main className="max-w-none px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-8 flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <Link
-            href="/"
-            className="mb-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-            Contratos do TSE
-          </Link>
-          <h1 className="text-2xl font-semibold tracking-tight">Servidores (Agentes Públicos)</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+      <AppHeader
+        atual="servidores"
+        titulo="Servidores (Agentes Públicos)"
+        descricao={
+          <>
             {numero(servidores.total)} agentes públicos do TSE · {numero(servidores.comContrato)}{' '}
             atuam como fiscais/gestores <DicaTermo id="fiscalGestor" alinhamento="esquerda" /> de
             contrato, ordenados pelo maior valor consolidado{' '}
@@ -541,45 +533,9 @@ export function ServidoresDashboard() {
               fonte: Compras.gov.br
             </a>{' '}
             · <DadosStatus estado={estado} />
-          </p>
-        </div>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          <Link
-            href="/teletrabalho"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Laptop className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Teletrabalho</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
-            href="/unidades"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Network className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Unidades</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
-            href="/terceirizados"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <HardHat className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Terceirizados</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
-            href="/indicadores"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Percent className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Indicadores</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <ThemePicker />
-          <ThemeToggle />
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <div className="space-y-4">
         <FiltroServidores

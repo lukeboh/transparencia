@@ -1,22 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
-import {
-  Activity,
-  ArrowLeft,
-  ArrowUpRight,
-  Briefcase,
-  Building2,
-  Check,
-  HardHat,
-  Laptop,
-  Network,
-  Percent,
-  Scale,
-  ShieldCheck,
-  Users,
-} from 'lucide-react';
+import { Activity, Briefcase, Building2, Check, Laptop, Scale, ShieldCheck } from 'lucide-react';
+import { AppHeader } from '@/components/app-header';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { FuncaoStatCard } from '@/components/dashboard/funcao-stat-card';
 import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
@@ -29,8 +15,6 @@ import { contratosDoResponsavel } from '@/components/dashboard/ranking-table';
 import { DadosStatus } from '@/components/dashboard/dados-status';
 import { DicaTermo } from '@/components/ui/dica-termo';
 import { AppVersion } from '@/components/app-version';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
 import { bool } from '@/lib/url-filtros';
@@ -170,17 +154,11 @@ export function TeletrabalhoDashboard() {
 
   return (
     <main className="max-w-none px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-8 flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <Link
-            href="/"
-            className="mb-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-            Contratos do TSE
-          </Link>
-          <h1 className="text-2xl font-semibold tracking-tight">Teletrabalho</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+      <AppHeader
+        atual="teletrabalho"
+        titulo="Teletrabalho"
+        descricao={
+          <>
             Dias em regime de teletrabalho por servidor{' '}
             <DicaTermo id="teletrabalhoVigente" alinhamento="esquerda" /> ·{' '}
             <a
@@ -192,45 +170,9 @@ export function TeletrabalhoDashboard() {
               fonte: TSE — servidores em regime de teletrabalho
             </a>{' '}
             · <DadosStatus estado={estado} />
-          </p>
-        </div>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          <Link
-            href="/servidores"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Users className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Servidores</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
-            href="/unidades"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Network className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Unidades</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
-            href="/terceirizados"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <HardHat className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Terceirizados</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
-            href="/indicadores"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Percent className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Indicadores</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <ThemePicker />
-          <ThemeToggle />
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <div className="space-y-4">
         <div className="flex flex-wrap items-start gap-3">

@@ -1,31 +1,92 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowUpRight, HardHat, Laptop, Network, Percent, Users } from 'lucide-react';
+import { ArrowUpRight, HardHat, Laptop, Network, Percent, Users, type LucideIcon } from 'lucide-react';
+import { AppHeader } from '@/components/app-header';
 import { StatCards } from '@/components/dashboard/stat-cards';
+import { StatCard } from '@/components/dashboard/stat-card';
 import { EvolucaoChart } from '@/components/dashboard/evolucao-chart';
 import { CategoriasChart } from '@/components/dashboard/categorias-chart';
 import { DadosStatus } from '@/components/dashboard/dados-status';
 import { DicaTermo } from '@/components/ui/dica-termo';
 import { AppVersion } from '@/components/app-version';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
+import { numero } from '@/lib/utils';
+import type { UnidadeNode } from '@/lib/dashboard-data';
+
+/** Total de nós na árvore de unidades (mesma contagem da tela /unidades). */
+function contarUnidades(no: UnidadeNode): number {
+  return 1 + no.children.reduce((soma, filho) => soma + contarUnidades(filho), 0);
+}
+
+const umDecimal = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 });
+
+interface KpiSecao {
+  href: string;
+  Icone: LucideIcon;
+  titulo: string;
+  valor: string;
+  detalhe: string;
+}
 
 export function HomeDashboard() {
   const estado = useDadosDashboard();
-  const { resumo, evolucao, categorias, contratos, fonte } = estado.dados;
+  const { resumo, evolucao, categorias, contratos, fonte, servidores, teletrabalho, unidades, terceirizados } =
+    estado.dados;
+
+  const totalUnidades = unidades.arvore ? contarUnidades(unidades.arvore) : 0;
+  const servidoresLotados = unidades.arvore?.consolidado.servidores ?? 0;
+  const terceirizadosPorServidor =
+    servidores.total > 0 ? terceirizados.ativos / servidores.total : 0;
+
+  // Um KPI ilustrativo por seção, cada card levando ao detalhamento da página.
+  const kpisSecao: KpiSecao[] = [
+    {
+      href: '/servidores',
+      Icone: Users,
+      titulo: 'Servidores (agentes públicos)',
+      valor: numero(servidores.total),
+      detalhe: `${numero(servidores.comContrato)} atuam como fiscais/gestores de contrato`,
+    },
+    {
+      href: '/teletrabalho',
+      Icone: Laptop,
+      titulo: 'Em teletrabalho',
+      valor: numero(teletrabalho.total),
+      detalhe: `mediana de ${numero(Math.round(teletrabalho.medianaDias))} dias em regime`,
+    },
+    {
+      href: '/unidades',
+      Icone: Network,
+      titulo: 'Unidades na estrutura',
+      valor: numero(totalUnidades),
+      detalhe: `${numero(servidoresLotados)} servidores lotados, do tribunal à seção`,
+    },
+    {
+      href: '/terceirizados',
+      Icone: HardHat,
+      titulo: 'Terceirizados ativos',
+      valor: numero(terceirizados.ativos),
+      detalhe: `em ${numero(terceirizados.contratos)} contratos de cessão de mão de obra`,
+    },
+    {
+      href: '/indicadores',
+      Icone: Percent,
+      titulo: 'Terceirizados / servidores',
+      valor: `${Math.round(terceirizadosPorServidor * 100)}%`,
+      detalhe: `${umDecimal.format(terceirizadosPorServidor)}× o quadro · relações comparáveis por unidade`,
+    },
+  ];
 
   return (
     <main className="max-w-none px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-8 flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Contratos do TSE
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Gastos com contratos do Tribunal Superior Eleitoral{' '}
-            <DicaTermo id="valoresContrato" alinhamento="esquerda" /> ·{' '}
+      <AppHeader
+        titulo="Transparência TSE"
+        descricao={
+          <>
+            Panorama dos gastos com contratos{' '}
+            <DicaTermo id="valoresContrato" alinhamento="esquerda" /> e do quadro de pessoal do
+            Tribunal Superior Eleitoral ·{' '}
             <a
               href={fonte}
               target="_blank"
@@ -35,60 +96,49 @@ export function HomeDashboard() {
               fonte: Compras.gov.br
             </a>{' '}
             · <DadosStatus estado={estado} />
-          </p>
-        </div>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          <Link
-            href="/servidores"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Users className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Servidores</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
-            href="/teletrabalho"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Laptop className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Teletrabalho</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
-            href="/unidades"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Network className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Unidades</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
-            href="/terceirizados"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <HardHat className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Terceirizados</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
-            href="/indicadores"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Percent className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Indicadores</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <ThemePicker />
-          <ThemeToggle />
-        </div>
-      </header>
+          </>
+        }
+      />
 
-      <div className="space-y-4">
-        <StatCards resumo={resumo} contratos={contratos} />
-        <div className="grid gap-4 lg:grid-cols-3">
-          <EvolucaoChart dados={evolucao} contratos={contratos} />
-          <CategoriasChart dados={categorias} contratos={contratos} />
-        </div>
+      <div className="space-y-8">
+        <section className="space-y-3">
+          <h2 className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            Contratos
+          </h2>
+          <StatCards resumo={resumo} contratos={contratos} />
+          <div className="grid gap-4 lg:grid-cols-3">
+            <EvolucaoChart dados={evolucao} contratos={contratos} />
+            <CategoriasChart dados={categorias} contratos={contratos} />
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            Panorama por seção
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {kpisSecao.map(({ href, Icone, titulo, valor, detalhe }) => (
+              <Link
+                key={href}
+                href={href}
+                aria-label={`${titulo} — ver detalhamento`}
+                className="rounded-lg outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <StatCard
+                  titulo={titulo}
+                  valor={valor}
+                  detalhe={
+                    <span className="inline-flex items-center gap-1">
+                      {detalhe}
+                      <ArrowUpRight className="h-3 w-3 shrink-0" aria-hidden />
+                    </span>
+                  }
+                  icone={<Icone className="h-4 w-4" aria-hidden />}
+                />
+              </Link>
+            ))}
+          </div>
+        </section>
       </div>
 
       <footer className="mt-8 text-xs text-muted-foreground">

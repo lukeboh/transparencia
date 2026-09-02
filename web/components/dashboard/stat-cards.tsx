@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { FileCheck2, Landmark, Users } from 'lucide-react';
+import { FileCheck2, FileText, Landmark } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { ContratosDialog } from '@/components/dashboard/contratos-dialog';
 import { brlCompacto, numero } from '@/lib/utils';
@@ -55,18 +54,19 @@ export function StatCards({
         />
       </button>
 
-      <Link
-        href="/servidores"
-        aria-label="Ver dashboard de servidores (agentes públicos)"
-        className="rounded-lg outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring"
+      <button
+        type="button"
+        onClick={() => setTodosAberto(true)}
+        aria-label="Listar todos os contratos contabilizados"
+        className="rounded-lg text-left outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring"
       >
         <StatCard
-          titulo="Fiscais designados"
-          valor={numero(resumo.totalResponsaveis)}
-          detalhe="ver ranking por valor sob responsabilidade →"
-          icone={<Users className="h-4 w-4" aria-hidden />}
+          titulo="Contratos contabilizados"
+          valor={numero(resumo.totalContratos)}
+          detalhe={`${numero(resumo.contratosVigentes)} vigentes · demais já encerrados`}
+          icone={<FileText className="h-4 w-4" aria-hidden />}
         />
-      </Link>
+      </button>
 
       {vigentesAberto && (
         <ContratosDialog

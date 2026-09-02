@@ -2,13 +2,11 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, HardHat, Laptop, Network, Users } from 'lucide-react';
+import { AppHeader } from '@/components/app-header';
 import { IndicadoresTable } from '@/components/dashboard/indicadores-table';
 import { DadosStatus } from '@/components/dashboard/dados-status';
 import { DicaTermo } from '@/components/ui/dica-termo';
 import { AppVersion } from '@/components/app-version';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { ThemePicker } from '@/components/theme-picker';
 import { useDadosDashboard } from '@/lib/use-dados';
 import { achatarUnidades } from '@/lib/unidades-flat';
 import { classificarUnidades, type CategoriaUnidade } from '@/lib/unidades-categoria';
@@ -29,17 +27,11 @@ export function IndicadoresDashboard() {
 
   return (
     <main className="max-w-none px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-8 flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <Link
-            href="/"
-            className="mb-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-            Contratos do TSE
-          </Link>
-          <h1 className="text-2xl font-semibold tracking-tight">Indicadores por unidade</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+      <AppHeader
+        atual="indicadores"
+        titulo="Indicadores por unidade"
+        descricao={
+          <>
             Relações percentuais comparáveis entre unidades — escolha as colunas e ordene por qualquer uma{' '}
             <DicaTermo id="consolidado" alinhamento="esquerda" /> ·{' '}
             <Link
@@ -49,45 +41,9 @@ export function IndicadoresDashboard() {
               base: estrutura de unidades
             </Link>{' '}
             · <DadosStatus estado={estado} />
-          </p>
-        </div>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          <Link
-            href="/servidores"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Users className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Servidores</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
-            href="/teletrabalho"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Laptop className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Teletrabalho</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
-            href="/unidades"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Network className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Unidades</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
-            href="/terceirizados"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <HardHat className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Terceirizados</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <ThemePicker />
-          <ThemeToggle />
-        </div>
-      </header>
+          </>
+        }
+      />
 
       {!unidades.arvore ? (
         <p className="text-sm text-muted-foreground">
