@@ -777,6 +777,7 @@ export function RankingTable({
             linha={selecionado}
             servidorFuncoes={funcoesPorNome.get(selecionado.nome) ?? null}
             teletrabalho={teletrabalhoPorNome.get(selecionado.nome) ?? null}
+            lotacao={lotacaoDe(selecionado.nome)}
             contratos={contratos}
             open
             onClose={() => setSelecionado(null)}

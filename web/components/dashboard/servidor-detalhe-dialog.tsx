@@ -354,6 +354,7 @@ export function ServidorDetalheDialog({
   linha,
   servidorFuncoes,
   teletrabalho,
+  lotacao,
   contratos,
   open,
   onClose,
@@ -361,12 +362,15 @@ export function ServidorDetalheDialog({
   linha: LinhaRanking;
   servidorFuncoes: ServidorFuncoes | null;
   teletrabalho: LinhaTeletrabalho | null;
+  /** Lotação atual resolvida: `siglas` = "SETOT / CSELE / STI" (ou nome plano
+   *  quando não resolve); `unidades` = cada nível com sigla + nome por extenso. */
+  lotacao: { siglas: string; unidades: { sigla: string; nome: string }[] };
   contratos: ContratoResumo[];
   open: boolean;
   onClose: () => void;
 }) {
   const identidade = servidorFuncoes
-    ? [servidorFuncoes.matricula && `Matrícula ${servidorFuncoes.matricula}`, servidorFuncoes.cargo, servidorFuncoes.lotacao]
+    ? [servidorFuncoes.matricula && `Matrícula ${servidorFuncoes.matricula}`, servidorFuncoes.cargo]
         .filter(Boolean)
         .join(' · ')
     : '';
@@ -378,6 +382,21 @@ export function ServidorDetalheDialog({
         descricao={nomeProprio(linha.nome) + (identidade ? ` — ${identidade}` : '')}
         onClose={onClose}
       />
+      {lotacao.siglas && (
+        <div className="border-b border-border px-4 py-3 text-xs">
+          <div className="text-muted-foreground">Lotação atual</div>
+          <div className="mt-0.5 font-medium tabular-nums">{lotacao.siglas}</div>
+          {lotacao.unidades.length > 0 && (
+            <ul className="mt-1 space-y-0.5 text-muted-foreground">
+              {lotacao.unidades.map((u, i) => (
+                <li key={u.sigla + i}>
+                  <span className="font-semibold">{u.sigla}</span> — {u.nome}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       <div className="max-h-[75vh] overflow-y-auto">
         <SecaoColapsavel
           titulo="Histórico de Funções"
