@@ -96,6 +96,16 @@ function HistoricoFuncoes({ servidor }: { servidor: ServidorFuncoes | null }) {
   const mandatos = [...servidor.mandatos].sort((a, b) =>
     (b.nomeacaoData ?? '').localeCompare(a.nomeacaoData ?? ''),
   );
+  const chaveFuncaoAtual = servidor.funcaoAtual
+    ? `${servidor.funcaoAtual.tipo}-${servidor.funcaoAtual.nivel}`
+    : null;
+  // Está numa função hoje, mas nenhuma portaria de nomeação (vigente e do mesmo
+  // nível) foi localizada no histórico coberto.
+  const nomeadoSemPortaria =
+    servidor.funcaoAtual != null &&
+    !servidor.mandatos.some(
+      (m) => m.vigente && `${m.tipo}-${m.nivel}` === chaveFuncaoAtual && m.nomeacaoData,
+    );
 
   return (
     <div className="space-y-3">
@@ -107,6 +117,14 @@ function HistoricoFuncoes({ servidor }: { servidor: ServidorFuncoes | null }) {
               ? `${servidor.funcaoAtual.tipo}-${servidor.funcaoAtual.nivel} — ${servidor.funcaoAtual.cargoTitulo}`
               : 'nenhuma na relação atual de agentes públicos'}
           </span>
+          {nomeadoSemPortaria && (
+            <span
+              className="ml-2 rounded-sm bg-secondary px-1 py-px text-[10px] uppercase tracking-wide text-secondary-foreground font-semibold"
+              title="A relação atual de agentes públicos confirma esta função, mas a portaria de nomeação não foi localizada no histórico coberto."
+            >
+              Nomeado sem portaria localizada
+            </span>
+          )}
         </div>
       </div>
 
@@ -127,54 +145,55 @@ function HistoricoFuncoes({ servidor }: { servidor: ServidorFuncoes | null }) {
             Nenhum mandato encontrado no histórico de portarias cobertas.
           </li>
         )}
-        {mandatos.map((m, i) => (
-          <li key={i} className="flex flex-col gap-1.5 py-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-primary">
-                {m.tipo}-{m.nivel}
-              </span>
-              <span className="text-sm font-medium">{m.cargoTitulo}</span>
-              {m.vigente && (
-                <span className="rounded-sm bg-secondary px-1 py-px text-[10px] uppercase tracking-wide text-secondary-foreground font-semibold">
-                  sem exoneração localizada
+        {mandatos.map((m, i) => {
+          // O servidor ocupa HOJE a função deste mandato (fonte primária confirma).
+          const ehFuncaoAtual = m.vigente && chaveFuncaoAtual === `${m.tipo}-${m.nivel}`;
+          // Não está mais nessa função, mas nenhuma portaria de exoneração foi achada.
+          const exoneradoSemPortaria = !m.exoneracaoData && !ehFuncaoAtual;
+          return (
+            <li key={i} className="flex flex-col gap-1.5 py-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-primary">
+                  {m.tipo}-{m.nivel}
                 </span>
-              )}
-              {m.exoneracaoInferida && (
-                <span
-                  className="rounded-sm bg-muted px-1 py-px text-[10px] uppercase tracking-wide text-muted-foreground font-semibold"
-                  title="Sem função na relação atual — mandato encerrado sem portaria de exoneração localizada"
-                >
-                  encerrada — exoneração não localizada
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">{m.unidade}</p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <span className="text-muted-foreground">Nomeação: </span>
-                <LinkPortaria
-                  data={m.nomeacaoData}
-                  numero={m.nomeacaoPortaria?.numero ?? null}
-                  url={m.nomeacaoPortaria?.url}
-                />
-              </div>
-              <div>
-                <span className="text-muted-foreground">Exoneração: </span>
-                {m.vigente ? (
-                  <span className="text-muted-foreground">—</span>
-                ) : m.exoneracaoInferida ? (
-                  <span className="text-muted-foreground">não localizada (inferida)</span>
-                ) : (
-                  <LinkPortaria
-                    data={m.exoneracaoData}
-                    numero={m.exoneracaoPortaria?.numero ?? null}
-                    url={m.exoneracaoPortaria?.url}
-                  />
+                <span className="text-sm font-medium">{m.cargoTitulo}</span>
+                {exoneradoSemPortaria && (
+                  <span
+                    className="rounded-sm bg-muted px-1 py-px text-[10px] uppercase tracking-wide text-muted-foreground font-semibold"
+                    title="O servidor não consta mais com esta função, mas a portaria de exoneração não foi localizada no histórico coberto."
+                  >
+                    Exonerado sem portaria localizada
+                  </span>
                 )}
               </div>
-            </div>
-          </li>
-        ))}
+              <p className="text-xs text-muted-foreground">{m.unidade}</p>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-muted-foreground">Nomeação: </span>
+                  <LinkPortaria
+                    data={m.nomeacaoData}
+                    numero={m.nomeacaoPortaria?.numero ?? null}
+                    url={m.nomeacaoPortaria?.url}
+                  />
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Exoneração: </span>
+                  {m.exoneracaoData ? (
+                    <LinkPortaria
+                      data={m.exoneracaoData}
+                      numero={m.exoneracaoPortaria?.numero ?? null}
+                      url={m.exoneracaoPortaria?.url}
+                    />
+                  ) : ehFuncaoAtual ? (
+                    <span className="text-muted-foreground">—</span>
+                  ) : (
+                    <span className="text-muted-foreground">não localizada</span>
+                  )}
+                </div>
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
