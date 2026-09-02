@@ -78,3 +78,26 @@ test('array cru legado é aceito', () => {
   assert.deepEqual(r.ranking, []);
   assert.equal(r.totalHoras, 0);
 });
+
+test('base parcial na folha de pagamento é substituída pela base do mês de referência', () => {
+  const r = agregarHorasExtras({
+    porCompetencia: {
+      // meses "normais": base 20.000
+      '2022-10': [
+        { nome: 'ANA LIMA', unidade: 'SEÇÃO X', base: 20000, valorRubrica: 3000, rubricas: [{ ref: '10/2022', valor: 3000 }] },
+      ],
+      '2022-11': [
+        { nome: 'ANA LIMA', unidade: 'SEÇÃO X', base: 20000, valorRubrica: 3000, rubricas: [{ ref: '11/2022', valor: 3000 }] },
+      ],
+      // folha 2023-01 PARCIAL (base 2.000, ~10% da mediana) pagando HE de 12/2022
+      '2023-01': [
+        { nome: 'ANA LIMA', unidade: 'SEÇÃO X', base: 2000, valorRubrica: 3000, rubricas: [{ ref: '12/2022', valor: 3000 }] },
+      ],
+    },
+  });
+  const ana = r.ranking.find((x) => x.nome === 'ANA LIMA');
+  const dez = ana.porCompetencia.find((c) => c.chave === '2022-12');
+  // com a base parcial (2.000) daria 3000 / (2000/200 × 1,5) = 200 h;
+  // com a mediana (20.000) dá 3000 / (20000/200 × 1,5) = 20 h
+  assert.ok(Math.abs(dez.horas - 20) < 1e-6, `esperava ~20 h, veio ${dez.horas}`);
+});

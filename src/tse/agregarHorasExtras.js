@@ -56,6 +56,41 @@ const mediana = (nums) => {
 function agregarHorasExtras(entrada) {
   const { porCompetencia } = normalizarEntrada(entrada);
 
+  // --- Índice de base por (pessoa, competência da FOLHA) ---
+  // A rubrica "HORAS EXTRAS" é de um mês de REFERÊNCIA (rub.ref); a base a usar
+  // é a remuneração da pessoa NAQUELE mês, não a da folha em que o valor foi
+  // pago. Folhas de pagamento parciais (licença, saída de função) têm
+  // "VENCIMENTOS E VANTAGENS" reduzido e distorceriam a estimativa. Preferimos,
+  // nesta ordem: base do contracheque do próprio mês de referência da pessoa →
+  // mediana das bases observadas dela → base da folha de pagamento.
+  const basePorPessoaComp = new Map(); // `${nomeNorm}|${chaveFolha}` -> base
+  const basesPorPessoa = new Map(); // nomeNorm -> number[]
+  for (const chaveFolha of Object.keys(porCompetencia)) {
+    for (const reg of porCompetencia[chaveFolha] ?? []) {
+      const nomeNorm = normalizeNome(reg.nome);
+      if (!nomeNorm || !(reg.base > 0)) continue;
+      basePorPessoaComp.set(`${nomeNorm}|${chaveFolha}`, reg.base);
+      const arr = basesPorPessoa.get(nomeNorm) ?? [];
+      arr.push(reg.base);
+      basesPorPessoa.set(nomeNorm, arr);
+    }
+  }
+  const medianaBasePorPessoa = new Map(
+    [...basesPorPessoa].map(([k, v]) => [k, mediana(v)]),
+  );
+  /** Base a usar para a rubrica de `nomeNorm` referente a `chaveRef`.
+   *  Preferência: base do próprio mês de referência → base da folha de
+   *  pagamento → mediana das bases da pessoa. Uma base < 60% da mediana da
+   *  pessoa é tida como PARCIAL (mês de licença/saída de função) e pulada. */
+  function baseParaRef(nomeNorm, chaveRef, baseDaFolha) {
+    const med = medianaBasePorPessoa.get(nomeNorm) ?? 0;
+    const parcial = (b) => med > 0 && b > 0 && b < med * 0.6;
+    const doRef = basePorPessoaComp.get(`${nomeNorm}|${chaveRef}`) ?? 0;
+    if (doRef > 0 && !parcial(doRef)) return doRef;
+    if (baseDaFolha > 0 && !parcial(baseDaFolha)) return baseDaFolha;
+    return med > 0 ? med : doRef || baseDaFolha;
+  }
+
   // pessoa (nome normalizado) -> acumulador
   const pessoas = new Map();
   // cicloId -> { rotulo, tipo, horas, servidores:Set<nomeNorm> }
@@ -86,7 +121,7 @@ function agregarHorasExtras(entrada) {
 
         const est = estimarHorasExtras({
           valorRubrica: rub.valor,
-          base: reg.base ?? 0,
+          base: baseParaRef(nomeNorm, chaveRef, reg.base ?? 0),
           chaveCompetencia: chaveRef,
         });
         if (est.horas == null) continue; // base ausente/zerada — não dá para estimar

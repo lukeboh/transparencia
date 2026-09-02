@@ -853,6 +853,16 @@ Anexo VIII do TSE (link no modal).
   própria competência** (histórico), não a lotação de hoje.
 - Contracheques cuja base (`VENCIMENTOS E VANTAGENS` + `EXERCÍCIO FC/CJ` +
   `REMUNERAÇÃO ÓRGÃO ORIGEM`) fica ≤ 0 são ignorados — não dá para estimar.
+- **Base pelo mês de referência.** A rubrica `HORAS EXTRAS` é de um mês de
+  referência (`ref`), não da folha em que foi paga. `agregarHorasExtras.js` usa,
+  nesta ordem: a base do contracheque da pessoa **no próprio mês de referência**
+  → a **mediana** das bases observadas dela → a base da folha de pagamento. Uma
+  base < 60 % da mediana da pessoa é tida como **parcial** (mês de licença/saída
+  de função) e descartada. Quem só aparece uma vez, num mês parcial, ainda pode
+  ficar superestimado — nesse caso a estimativa carrega o selo "acima do teto".
+- **Retroativos** viram o ciclo eleitoral do ano de referência: HE de 2018/2020
+  paga em 2022 conta no ciclo 2018/2020. HE referente a ano sem eleição
+  ordinária (ex.: 2021) cai em "fora de período eleitoral".
 - A estimativa é **estimativa** — `base` aproximada, `divisor` legal por época,
   mix 50/100 % desconhecido. Toda a UI rotula assim e mostra a faixa
   min–máx.
