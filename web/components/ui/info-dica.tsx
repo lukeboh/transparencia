@@ -77,7 +77,10 @@ export function InfoDica({
           role="tooltip"
           className={cn(
             'absolute top-[calc(100%+6px)] z-50 w-64 max-w-[min(16rem,calc(100vw-2rem))] rounded-md border border-border bg-popover p-2.5',
-            'text-left text-xs font-normal leading-relaxed text-popover-foreground shadow-md',
+            // whitespace-normal: força a quebra mesmo dentro de um <th>/<td>, que
+            // herdam `whitespace-nowrap` do componente de tabela e fariam a dica
+            // estourar numa linha só.
+            'whitespace-normal break-words text-left text-xs font-normal leading-relaxed text-popover-foreground shadow-md',
             posicao,
           )}
         >
