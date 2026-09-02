@@ -467,9 +467,7 @@ export function ServidoresDashboard() {
   );
 
   // Distribuição por função (FC/CJ) dos responsáveis visíveis no ranking
-  // filtrado — mesmo donut de /funcoes, aqui aplicado só a quem fiscaliza ou
-  // gerencia contrato (o universo de /funcoes é mais amplo: inclui quem
-  // nunca aparece como responsável, os "Não-Fiscal").
+  // filtrado — aqui aplicada só a quem fiscaliza ou gerencia contrato.
   const donutFuncoesResponsaveis = useMemo(
     () =>
       contarPorFuncaoAtual(
@@ -478,8 +476,8 @@ export function ServidoresDashboard() {
     [fiscaisFiltrados, funcoesPorNome],
   );
 
-  // KPIs herdados de /funcoes (em vias de ser descontinuada): distribuição por
-  // função (FC/CJ + "Sem função") de três recortes do que está no filtro.
+  // KPIs de distribuição por função comissionada (FC/CJ + "Sem função"), de
+  // dois recortes do que está no filtro (herdados da antiga /funcoes).
   const servidoresComFuncao = useMemo(
     () => rankingFiltrado.filter((r) => funcoesPorNome.get(r.nome)?.funcaoAtual != null),
     [rankingFiltrado, funcoesPorNome],
@@ -546,14 +544,6 @@ export function ServidoresDashboard() {
           </p>
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          <Link
-            href="/funcoes"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Briefcase className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Funções</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
           <Link
             href="/teletrabalho"
             className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
@@ -643,8 +633,8 @@ export function ServidoresDashboard() {
           />
         </div>
 
-        {/* Distribuição por função comissionada (FC/CJ + "Sem função"), herdada
-            de /funcoes — dois recortes do que está no filtro. */}
+        {/* Distribuição por função comissionada (FC/CJ + "Sem função") — dois
+            recortes do que está no filtro. */}
         <div className="grid gap-4 sm:grid-cols-2">
           <FuncaoStatCard
             titulo="Servidores com função"

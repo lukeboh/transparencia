@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import {
   ArrowDown,
   ArrowUp,
@@ -34,7 +33,7 @@ import {
 } from '@/components/ui/table';
 import { type ContratoAuditavel } from '@/components/dashboard/contratos-dialog';
 import { ServidorDetalheDialog } from '@/components/dashboard/servidor-detalhe-dialog';
-import { FuncoesBadges, funcoesTexto } from '@/components/dashboard/funcoes-table';
+import { FuncoesBadges, funcoesTexto } from '@/components/dashboard/funcoes-badges';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
 import { InfoDica } from '@/components/ui/info-dica';
 import { brlCompleto, cn, nomeProprio, numero } from '@/lib/utils';
@@ -475,11 +474,8 @@ export function RankingTable({
           Todos os {numero(ranking.length)} servidores no filtro, com valores Globais, Empenhados (Emp.) e Pagos
           (Pg) — o valor de um contrato conta uma única vez por pessoa; quem não é fiscal/gestor de nenhum
           contrato aparece zerado. A coluna <strong>Funções</strong> lista os níveis FC/CJ que o servidor já
-          ocupou (a vigente destacada; ver detalhe em{' '}
-          <Link href="/funcoes" className="underline decoration-border underline-offset-4 hover:text-foreground">
-            /funcoes
-          </Link>
-          ); a <strong>Lotação</strong> traz as 3 unidades mais específicas da hierarquia oficial. A coluna
+          ocupou (a vigente destacada; histórico completo no modal <strong>Detalhes do Servidor</strong>);
+          a <strong>Lotação</strong> traz as 3 unidades mais específicas da hierarquia oficial. A coluna
           Faixas mostra os símbolos das faixas de valor presentes entre os contratos do servidor. Clique numa
           linha para abrir <strong>Detalhes do Servidor</strong> — histórico de funções, consolidado de
           teletrabalho e histórico de contratos.

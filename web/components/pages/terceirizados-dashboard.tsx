@@ -6,7 +6,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowUpRight,
-  Briefcase,
   FileText,
   HardHat,
   Laptop,
@@ -55,7 +54,6 @@ interface ModalContrato {
 
 const NAV = [
   { href: '/servidores', label: 'Servidores', Icone: Users },
-  { href: '/funcoes', label: 'Funções', Icone: Briefcase },
   { href: '/teletrabalho', label: 'Teletrabalho', Icone: Laptop },
   { href: '/unidades', label: 'Unidades', Icone: Network },
   { href: '/indicadores', label: 'Indicadores', Icone: Percent },

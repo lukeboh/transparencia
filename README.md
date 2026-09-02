@@ -13,11 +13,13 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   contra a API oficial, 1268 contratos extraídos com sucesso.
 - ✅ Dashboard web (`web/`) — Next.js (App Router) + Tailwind CSS + componentes
   no padrão shadcn/ui + Recharts, com dados reais agregados.
-- ✅ Funções comissionadas FC/CJ por servidor (`/funcoes`) — fonte primária:
-  relação atual de agentes públicos (`src/tse/scrapeAgentesPublicos.js`);
-  fonte secundária/histórico: portarias (`src/tse/scrapeFuncoes.js`).
-  Reconciliação entre as duas com observações de inconsistência — ver seção
-  própria abaixo.
+- ✅ Funções comissionadas FC/CJ por servidor (`DashboardData.funcoes`) —
+  fonte primária: relação atual de agentes públicos
+  (`src/tse/scrapeAgentesPublicos.js`); fonte secundária/histórico: portarias
+  (`src/tse/scrapeFuncoes.js`). Reconciliação entre as duas com observações de
+  inconsistência — ver seção própria abaixo. A tela dedicada `/funcoes` foi
+  **removida** (`/servidores` cobre todo o caso de uso); os dados de função
+  seguem alimentando `/servidores`, `/teletrabalho` e `/unidades`.
 - ✅ Correção manual de dados sabidamente errados via arquivo de exceções
   (`data/tse_excecoes.json`, `src/tse/excecoes.js`) — ver seção "Exceções"
   abaixo.
@@ -78,6 +80,16 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
     auto-seleção da página só disparam na transição "lista carregou pela 1ª
     vez", para não repor um "nenhum" deliberado quando os dados atualizam em
     runtime.
+  - Depois que `/servidores` absorveu tudo — histórico completo de FC/CJ na
+    coluna Funções + no modal, coluna Lotação, coluna Teletrabalho, os KPIs de
+    distribuição por função e o filtro "NÃO FISCAL"/"Por função" — a tela
+    dedicada **`/funcoes` foi removida** (`web/app/funcoes/`,
+    `FuncoesDashboard`, `FuncoesFilter`, `FuncoesHistoricoDialog`, `FuncoesTable`
+    e o `/funcoes` da navegação). Os helpers ainda usados por `/servidores` e
+    `/teletrabalho` (`FuncoesBadges`, `funcaoDestaque`, `funcoesTexto`)
+    migraram de `funcoes-table.tsx` para `funcoes-badges.tsx`. `DashboardData.funcoes`
+    (dados de função) permanece e alimenta `/servidores`, `/teletrabalho` e
+    `/unidades`.
 - ✅ Estrutura hierárquica de unidades do TSE (`/unidades`) — fonte: o
   endpoint JSON por trás do organograma oficial
   ([agrupamento por unidade](https://transparencia.tse.jus.br/transparenciaDadosServidores/smvc/relatorios/lotacao-geral/sem-assinatura/agrupamento-por-unidade),
@@ -108,8 +120,8 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   tabela de ranking ganhou a coluna "Faixas", com os símbolos (badge colorido
   na cor da faixa) de todas as faixas presentes entre os contratos do
   servidor no filtro atual.
-- ✅ Coluna "Lotação" na tabela de servidores com função comissionada em
-  `/funcoes` (`web/lib/lotacao-hierarquia.ts`) — resolve o nome plano de
+- ✅ Coluna "Lotação" na tabela de servidores (`web/lib/lotacao-hierarquia.ts`,
+  originalmente em `/funcoes`) — resolve o nome plano de
   lotação da relação de agentes públicos contra a árvore oficial de unidades
   (`/unidades`) e mostra o caminho de siglas da unidade mais específica para a
   mais alta, ex.: `SETOT / CSELE / STI`. Regras de exibição: no máximo 3
@@ -238,7 +250,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   Compras.gov.br.
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.35**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.36**.
 
 ## Dashboard web
 
@@ -307,8 +319,8 @@ agentes públicos do TSE** (`DashboardData.servidores`, ver acima), ordenada
 pelo maior valor consolidado sob responsabilidade; quem não é fiscal/gestor
 de nenhum contrato aparece zerado. Uma primeira faixa de KPIs de contrato
 ("Fiscais designados", contratos e fiscais por faixa de valor) e uma segunda
-faixa com **dois donuts de distribuição por função comissionada herdados de
-`/funcoes`** (que está em vias de ser descontinuada): "Servidores com função" e
+faixa com **dois donuts de distribuição por função comissionada** (herdados da
+antiga `/funcoes`): "Servidores com função" e
 "Não-Fiscal". **Todos os KPIs reagem a todos os filtros da tela** — inclusive
 "Contratos por faixa de valor", que conta os contratos DISTINTOS sob
 responsabilidade dos servidores no recorte atual (não mais o universo de
@@ -318,12 +330,14 @@ valor de cada contrato contado uma única vez por pessoa). O card se chama
 **Funções** (com dica (i) no cabeçalho) lista **todos** os níveis FC/CJ que o
 servidor já ocupou — de `funcoes.servidores` via `funcoesIndex` —, a vigente
 hoje destacada (borda + cor primária) e as anteriores apagadas; "—" quando
-nunca teve nenhuma. `FuncoesBadges` ganhou o modo `todas` para isso (o modo
-compacto — destaque + "+N" — segue em `/funcoes` e `/teletrabalho`). A coluna
+nunca teve nenhuma. `FuncoesBadges` (`funcoes-badges.tsx`) ganhou o modo
+`todas` para isso (o modo compacto — destaque + "+N" — segue em
+`/teletrabalho`). A coluna
 **Lotação** traz as unidades da hierarquia oficial da mais específica para a
-mais alta (ex.: `SETOT / CSELE / STI`), resolvidas pelo mesmo
-`criarResolvedorLotacao` de `/funcoes` (no máximo 3 níveis, para no nível de
-secretaria, "Secretaria do Tribunal" nunca aparece — ver o item de changelog);
+mais alta (ex.: `SETOT / CSELE / STI`), resolvidas por
+`criarResolvedorLotacao` (`web/lib/lotacao-hierarquia.ts`) (no máximo 3 níveis,
+para no nível de secretaria, "Secretaria do Tribunal" nunca aparece — ver o
+item de changelog);
 **cada sigla tem o nome por extenso da sua unidade no tooltip** (não só a
 folha — o resolvedor devolve `{ sigla, nome }[]`). A coluna
 **Teletrabalho** mostra o total de dias em regime de teletrabalho
@@ -424,9 +438,8 @@ Consequências para quem implementa:
   que é só sobre o **estado inicial**.
 
 Páginas com filtro Vigente hoje: `/servidores` (dois: o chip **VIGENTE** de
-"Por contratos" e o de "Por função"), `/funcoes`, `/teletrabalho` e
-`/terceirizados` (um para a tabela de terceirizados e outro para a de
-contratos de cessão).
+"Por contratos" e o de "Por função"), `/teletrabalho` e `/terceirizados` (um
+para a tabela de terceirizados e outro para a de contratos de cessão).
 
 ## Como os dados são obtidos
 
@@ -643,18 +656,17 @@ consolidado e quantidade de contratos.
 
 ## Funções comissionadas (FC/CJ)
 
-A rota `/funcoes` (linkada no header) traz **todo servidor do TSE que tem ou
-já teve uma Função Comissionada (FC-1 a FC-6) ou um Cargo em Comissão (CJ-1 a
-CJ-4)**, fiscalizando contrato ou não — matrícula, cargo, lotação, função
-vigente e histórico de nomeação/exoneração com data e link da portaria
-correspondente. Servidores que nunca aparecem como fiscal/gestor de nenhum
-contrato recebem a tag **"Não-Fiscal"**. Filtro por tipo/nível de função e
-busca por nome, mesmo padrão da tabela de Fiscais. Também é possível
-ver, para quem fiscaliza algum contrato, a lista desses contratos
-(reaproveitando o mesmo modal auditável da página de Fiscais) — e, na
-própria página de Fiscais, cada contrato listado no modal de um fiscal
-mostra uma tag (ex.: "FC-6") com a função que esse fiscal ocupava durante a
-vigência daquele contrato específico, quando houver.
+`DashboardData.funcoes` reúne **todo servidor do TSE que tem ou já teve uma
+Função Comissionada (FC-1 a FC-6) ou um Cargo em Comissão (CJ-1 a CJ-4)**,
+fiscalizando contrato ou não — matrícula, cargo, lotação, função vigente e
+histórico de nomeação/exoneração com data e link da portaria correspondente.
+Servidores que nunca aparecem como fiscal/gestor de nenhum contrato têm
+`zeroFiscal: true`. **Não há mais tela dedicada** (`/funcoes` foi removida): a
+coluna Funções, o modal "Detalhes do Servidor" e os KPIs de distribuição por
+função de `/servidores` cobrem tudo, e `/teletrabalho`/`/unidades` consomem os
+mesmos dados. Cada contrato listado no modal de um servidor mostra uma tag
+(ex.: "FC-6") com a função que ele ocupava durante a vigência daquele contrato,
+quando houver.
 
 ### Duas fontes: primária (estado atual) + secundária (histórico)
 
@@ -690,11 +702,15 @@ Um caso a reconciliação **resolve** em vez de só sinalizar: o servidor
 um mandato "em aberto" (exoneração não localizada). A relação atual é a fonte
 do "hoje" e não se acumula função comissionada, então esse mandato é dado
 como **encerrado**: `vigente` vira `false` e `exoneracaoInferida` vira `true`
-(a portaria de saída não foi achada, mas sabe-se que houve). O selo da função
-mostra "encerrada" em vez de "vigente" e o histórico registra "exoneração não
-localizada (inferida)". Quando o servidor **não** está na relação atual
-(saiu do órgão, ou o nome divergiu entre as fontes), não dá pra inferir — o
-mandato segue "em aberto" com a observação de sempre.
+(a portaria de saída não foi achada, mas sabe-se que houve). O selo da coluna
+Funções mostra "encerrada" em vez de "vigente". No modal **Detalhes do
+Servidor**, o Histórico de Funções marca cada mandato: **"Exonerado sem
+portaria localizada"** (o servidor não consta mais com aquela função e não se
+achou a portaria de saída — inclui os `exoneracaoInferida` e quem deixou o
+órgão) e, na linha "Função vigente", **"Nomeado sem portaria localizada"** (tem
+função hoje, mas nenhuma portaria de nomeação vigente foi localizada). Quando
+o servidor **não** está na relação atual (saiu do órgão, ou o nome divergiu
+entre as fontes), não dá pra inferir o encerramento — `vigente` segue `true`.
 
 Extração de cada portaria (texto integral, HTML estático): um ou mais
 "movimentos" — "Fica(m) dispensado(s)/exonerado(s)" ou o imperativo

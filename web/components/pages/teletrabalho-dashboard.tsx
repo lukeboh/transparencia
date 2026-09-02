@@ -204,14 +204,6 @@ export function TeletrabalhoDashboard() {
             <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
           </Link>
           <Link
-            href="/funcoes"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Briefcase className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Funções</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
             href="/unidades"
             className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >

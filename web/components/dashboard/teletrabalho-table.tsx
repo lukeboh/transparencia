@@ -29,7 +29,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Papeis } from '@/components/dashboard/ranking-table';
-import { FuncoesBadges, funcaoDestaque } from '@/components/dashboard/funcoes-table';
+import { FuncoesBadges, funcaoDestaque } from '@/components/dashboard/funcoes-badges';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
 import { cn, nomeProprio, numero } from '@/lib/utils';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
@@ -64,7 +64,7 @@ function nomeLotacao(niveis: string[] | null): string | null {
   return niveis && niveis.length > 0 ? niveis[0] : null;
 }
 
-/** Mesma apresentação da coluna Lotação de /funcoes: caminho de até 3 siglas da
+/** Mesma apresentação da coluna Lotação de /servidores: caminho de até 3 siglas da
  *  unidade mais específica para a mais alta ("SEVIN / COTEL / STI"); cai no nome
  *  plano da fonte quando a árvore não resolve. */
 function siglasLotacao(niveis: string[] | null, resolver: ResolvedorLotacao): string {
@@ -138,7 +138,7 @@ export function TeletrabalhoTable({
   funcaoDe: (linha: LinhaTeletrabalho) => ServidorFuncoes | undefined;
   /** Níveis da lotação do período mais recente, do menor (seção) para o maior (secretaria/gabinete/assessoria). */
   lotacaoDe: (linha: LinhaTeletrabalho) => string[] | null;
-  /** Resolve o nome plano da lotação para o caminho de siglas da árvore de unidades (mesma coluna de /funcoes). */
+  /** Resolve o nome plano da lotação para o caminho de siglas da árvore de unidades (mesmo caminho de siglas de /servidores). */
   resolverLotacao: ResolvedorLotacao;
   /** true = tem período em aberto hoje (vigente). */
   vigenteDe: (linha: LinhaTeletrabalho) => boolean;
@@ -194,7 +194,7 @@ export function TeletrabalhoTable({
         case 'dias':
           return fator * (a.linha.diasConsolidados - b.linha.diasConsolidados);
         case 'lotacao': {
-          // Sem lotação resolvida sempre ao fim, independente da direção (igual /funcoes).
+          // Sem lotação resolvida sempre ao fim, independente da direção.
           const la = siglasLotacao(lotacaoDe(a.linha), resolverLotacao);
           const lb = siglasLotacao(lotacaoDe(b.linha), resolverLotacao);
           if (!la || !lb) return la ? -1 : lb ? 1 : 0;

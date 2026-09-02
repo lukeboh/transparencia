@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Briefcase, Building2, GitBranch, HardHat, Laptop, Percent, Users } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Building2, GitBranch, HardHat, Laptop, Percent, Users } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { UnidadeArvore } from '@/components/dashboard/unidade-arvore';
 import { DadosStatus } from '@/components/dashboard/dados-status';
@@ -70,14 +70,6 @@ export function UnidadesDashboard() {
           >
             <Users className="h-4 w-4" aria-hidden />
             <span className="sr-only sm:not-sr-only">Servidores</span>
-            <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
-          </Link>
-          <Link
-            href="/funcoes"
-            className="inline-flex h-9 items-center gap-2 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            <Briefcase className="h-4 w-4" aria-hidden />
-            <span className="sr-only sm:not-sr-only">Funções</span>
             <ArrowUpRight className="hidden h-3.5 w-3.5 text-muted-foreground sm:block" aria-hidden />
           </Link>
           <Link
