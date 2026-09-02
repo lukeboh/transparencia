@@ -49,9 +49,10 @@ export function tetoMensalPorCompetencia(chave) {
   return 124; // redação original: 44h, estendível até 124h — usamos o teto estendido
 }
 
-// Anos com eleição ordinária. O pagamento de HE (art. 2º) só é permitido em
-// janela eleitoral — HE fora de um ciclo é atípica (retroativo, eleição
-// suplementar não mapeada, ou erro de fonte) e recebe a flag `foraDaJanela`.
+// Anos com eleição ordinária — usados só para AGRUPAR as horas por ciclo
+// (o volume dispara nesses anos). Meses de anos sem eleição ordinária caem no
+// balde "Outros meses" (eleições suplementares, plebiscitos, recesso — que
+// ocorrem ao longo de todo o ano); não é um sinal de anomalia.
 export const CICLOS_ELEITORAIS = [
   { ano: 2008, tipo: 'municipal' },
   { ano: 2010, tipo: 'geral' },
@@ -70,10 +71,11 @@ const rotuloCiclo = (ano, tipo) =>
   `Eleições ${ano}${tipo === 'geral' ? ' (gerais)' : tipo === 'municipal' ? ' (municipais)' : ''}`;
 
 /**
- * Ciclo eleitoral de uma competência "AAAA-MM". A competência pertence ao ciclo
- * do seu próprio ano quando esse ano é eleitoral; janeiro é atribuído também ao
- * ciclo do ano anterior (diplomação/pagamentos residuais viram o ano). Devolve
- * `null` quando a competência não cai em nenhum ciclo.
+ * Ciclo eleitoral de uma competência "AAAA-MM", só para agrupar as horas na
+ * apresentação. A competência pertence ao ciclo do seu próprio ano quando esse
+ * ano tem eleição ordinária; janeiro é atribuído também ao ciclo do ano
+ * anterior (diplomação/pagamentos residuais). `null` = ano sem eleição
+ * ordinária (agrupado como "Outros meses").
  */
 export function cicloEleitoralDe(chave) {
   const [anoStr, mesStr] = String(chave).split('-');
@@ -105,7 +107,7 @@ export function cicloEleitoralDe(chave) {
  * @param {number} [p.fator=1.5]   1 + adicional (1,5 = +50%).
  * @returns {{
  *   horas: number|null, horasMin: number|null, divisor: number,
- *   valorHoraNormal: number|null, acimaDoTeto: boolean, foraDaJanela: boolean,
+ *   valorHoraNormal: number|null, acimaDoTeto: boolean,
  *   ciclo: {ciclo:string,rotulo:string,tipo:string}|null
  * }}
  */
@@ -116,14 +118,12 @@ export function estimarHorasExtras({ valorRubrica, base, chaveCompetencia: chave
     valorHoraNormal && valorHoraNormal > 0 ? valorRubrica / (valorHoraNormal * fator) : null;
   const horasMin =
     valorHoraNormal && valorHoraNormal > 0 ? valorRubrica / (valorHoraNormal * 2.0) : null;
-  const ciclo = cicloEleitoralDe(chave);
   return {
     horas,
     horasMin,
     divisor,
     valorHoraNormal,
     acimaDoTeto: horas != null && horas > tetoMensalPorCompetencia(chave),
-    foraDaJanela: ciclo === null,
-    ciclo,
+    ciclo: cicloEleitoralDe(chave),
   };
 }

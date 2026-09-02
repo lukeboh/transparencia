@@ -648,8 +648,7 @@ export function ServidoresDashboard() {
         <strong>estimada</strong> de serviço extraordinário desde 2009 (
         <DicaTermo id="horasExtras" alinhamento="esquerda" />): a folha de
         pagamento do TSE publica só o valor em R$, e a hora é inferida pela
-        Resolução TSE nº 22.901/2008 — é um limite superior, e a Resolução só
-        permite pagamento de hora extra em período eleitoral. Faixas de valor:{' '}
+        Resolução TSE nº 22.901/2008 — é um limite superior. Faixas de valor:{' '}
         {CATEGORIAS_VALOR.map((c) => `${c.simbolo} ${c.nome}`).join(' · ')}.
         <AppVersion />
       </footer>

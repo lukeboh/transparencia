@@ -292,17 +292,17 @@ function HorasExtrasEstimadas({ nome, linha }: { nome: string; linha: LinhaHoras
           <strong className="tabular-nums">
             {numero(piso)}–{numero(total)} h
           </strong>
-          . Só há pagamento de hora extra em <strong>período eleitoral</strong>.
+          .
         </p>
       </div>
 
       {linha.porCiclo.length > 0 && (
         <div>
-          <p className="mb-1 text-xs font-semibold">Por ciclo eleitoral</p>
+          <p className="mb-1 text-xs font-semibold">Por ciclo</p>
           <ul className="divide-y divide-border/40">
             {linha.porCiclo.map((c) => (
               <li key={c.ciclo} className="flex items-center justify-between gap-3 py-1.5 text-xs">
-                <span className={cn(c.ciclo === 'fora' && 'text-muted-foreground')}>
+                <span className={cn(c.ciclo === 'outros' && 'text-muted-foreground')}>
                   {c.rotulo}
                   <span className="text-muted-foreground">
                     {' '}
@@ -328,17 +328,9 @@ function HorasExtrasEstimadas({ nome, linha }: { nome: string; linha: LinhaHoras
               {m.acimaDoTeto && (
                 <span
                   className="rounded-sm bg-amber-500/15 px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400"
-                  title="A estimativa passa do limite mensal de serviço extraordinário (art. 4º da Resolução) — provável mês com pagamento retroativo ou acumulado."
+                  title="A estimativa passa do limite mensal de serviço extraordinário (art. 4º da Resolução) — provável mês com pagamento retroativo ou acumulado, ou base de cálculo subestimada."
                 >
                   acima do teto
-                </span>
-              )}
-              {m.foraDaJanela && (
-                <span
-                  className="rounded-sm bg-muted px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
-                  title="Pagamento fora de qualquer janela eleitoral (art. 2º) — em geral um valor retroativo lançado meses depois."
-                >
-                  fora de período eleitoral
                 </span>
               )}
             </li>

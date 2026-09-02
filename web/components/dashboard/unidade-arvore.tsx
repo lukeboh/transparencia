@@ -93,9 +93,9 @@ const COLUNAS_EXPORT_UNIDADES: ColunaExport<LinhaUnidade>[] = [
   { cabecalho: 'Horas extras estimadas (consolidado)', valor: (u) => Math.round(u.node.consolidado.horasExtras) },
 ];
 
-/** Rótulo curto de um ciclo eleitoral pelo id ("2022" | "fora"). */
+/** Rótulo curto do agrupamento de horas extras por ciclo ("2022" | "outros"). */
 function rotuloCicloHE(ciclo: string): string {
-  if (ciclo === 'fora') return 'fora de período eleitoral';
+  if (ciclo === 'outros') return 'outros meses';
   return `Eleições ${ciclo}`;
 }
 
@@ -259,7 +259,7 @@ function UnidadeCard({
             </span>
             <span
               className="font-medium tabular-nums"
-              title="Serviço extraordinário estimado (limite superior) — soma das ocorrências mensais dos servidores lotados aqui, desde 2009. Só há pagamento em período eleitoral."
+              title="Serviço extraordinário estimado (limite superior) — soma das ocorrências mensais dos servidores lotados aqui, desde 2009."
             >
               {metricas.horasExtras > 0 ? (
                 <>

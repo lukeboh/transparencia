@@ -250,7 +250,8 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   Compras.gov.br.
 - ✅ **Horas extras (serviço extraordinário) estimadas** por servidor, unidade e
   indicador — fonte: o **Anexo VIII (Detalhamento da Folha de Pagamento)** do TSE
-  (`transparencia.tse.jus.br/transparenciaDadosServidores`, mês a mês desde 2009).
+  (`transparencia.tse.jus.br/transparenciaDadosServidores`, mês a mês; o
+  detalhamento online só tem dados de ~2016 em diante).
   A fonte publica só o **valor em R$** da rubrica `HORAS EXTRAS`; a **quantidade
   de horas é inferida** pela fórmula do art. 9º da **Resolução TSE nº
   22.901/2008** (`valor ÷ (remuneração mensal ÷ divisor) ÷ 1,5`; divisor 200, ou
@@ -259,10 +260,11 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   `src/tse/horasExtras.js`, `src/tse/agregarHorasExtras.js`). Ver a seção
   "Horas extras" abaixo. Aparece: coluna **Horas extras** + seção **"Horas Extras
   (estimadas)"** no modal Detalhes do Servidor em `/servidores`; métrica no card
-  de cada unidade em `/unidades` (com quebra por ciclo eleitoral no modo
-  detalhado); coluna **Horas extras · média por servidor** (em `h`, não `%`) em
-  `/indicadores`. Toda exibição é rotulada como **estimativa** e **limite
-  superior**, com o método no glossário (`horasExtras`, `horasExtrasCiclo`).
+  de cada unidade em `/unidades` (com quebra por ciclo — ano de eleição
+  ordinária, e "Outros meses" — no modo detalhado); coluna **Horas extras ·
+  média por servidor** (em `h`, não `%`) em `/indicadores`. Toda exibição é
+  rotulada como **estimativa** e **limite superior**, com o método no glossário
+  (`horasExtras`, `horasExtrasCiclo`).
 
 O rodapé de cada página traz um identificador de versão do app
 (`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.37**.
@@ -823,15 +825,18 @@ horas estimadas     = valor pago na rubrica ÷ (salário-hora normal × 1,5)
   superior** — toda hora que na verdade foi de fim de semana entra inflada em
   até 33 %. O piso (fator 2,0) é calculado em paralelo (`horasConsolidadasMin`)
   e aparece só como faixa no modal/tooltip.
-- **ciclo eleitoral** (art. 2º): o pagamento de HE só é permitido em janela
-  eleitoral. Cada competência é atribuída ao ciclo do seu ano quando é ano de
-  eleição (2010/2014/2018/2022/2026 gerais; 2012/2016/2020/2024 municipais),
-  com jan do ano seguinte no mesmo ciclo; o resto cai no balde **"fora de
-  período eleitoral"** e ganha a flag `foraDaJanela` (pagamento atípico —
-  retroativo, suplementar não mapeada, ou erro de fonte).
+- **agrupamento por ciclo** (só apresentação): cada competência é atribuída ao
+  ano da eleição ordinária (2010/2014/2018/2022/2026 gerais; 2012/2016/2020/2024
+  municipais), com jan do ano seguinte no mesmo ciclo; o resto vai para o balde
+  **"Outros meses"**. Isso é só para leitura — o volume dispara nos anos de
+  eleição ordinária, mas **eleições suplementares, plebiscitos e recesso
+  ocorrem ao longo de todo o ano**, então HE fora desses anos é normal e **não
+  é sinalizada** como anomalia. Pagamentos retroativos entram no ano em que o
+  trabalho foi feito (HE de 2018 paga em 2022 conta no ciclo 2018).
 - **teto de sanidade** (art. 4º): estimativa acima do limite mensal vigente
-  (44 h → 124 h → 60 h+30 h conforme a época) ganha a flag `acimaDoTeto`. Nada é
-  descartado — as flags aparecem no modal Detalhes do Servidor.
+  (44 h → 124 h → 60 h+30 h conforme a época) ganha a flag `acimaDoTeto` —
+  em geral pagamento retroativo/acumulado ou base de cálculo subestimada. Nada
+  é descartado; a flag aparece no modal Detalhes do Servidor.
 
 ### Privacidade
 
@@ -860,9 +865,9 @@ Anexo VIII do TSE (link no modal).
   base < 60 % da mediana da pessoa é tida como **parcial** (mês de licença/saída
   de função) e descartada. Quem só aparece uma vez, num mês parcial, ainda pode
   ficar superestimado — nesse caso a estimativa carrega o selo "acima do teto".
-- **Retroativos** viram o ciclo eleitoral do ano de referência: HE de 2018/2020
-  paga em 2022 conta no ciclo 2018/2020. HE referente a ano sem eleição
-  ordinária (ex.: 2021) cai em "fora de período eleitoral".
+- **Retroativos** viram o ciclo do ano de referência: HE de 2018/2020 paga em
+  2022 conta no ciclo 2018/2020. HE referente a ano sem eleição ordinária
+  (ex.: 2021, ano de suplementares) cai em "Outros meses".
 - A estimativa é **estimativa** — `base` aproximada, `divisor` legal por época,
   mix 50/100 % desconhecido. Toda a UI rotula assim e mostra a faixa
   min–máx.
@@ -870,7 +875,7 @@ Anexo VIII do TSE (link no modal).
 ### Rodando a extração
 
 ```bash
-npm run tse:scrape-horas-extras                    # 2009 → hoje (LONGO — ver abaixo)
+npm run tse:scrape-horas-extras                    # do começo dos dados até hoje (LONGO — ver abaixo)
 npm run tse:scrape-horas-extras -- --desde 2022-08 --ate 2023-02   # só um intervalo
 npm run tse:scrape-horas-extras -- --amostra 150   # 150 linhas/competência (prévia rápida)
 npm run tse:scrape-horas-extras -- --concorrencia 3 --refazer
@@ -884,8 +889,12 @@ quando feito por `fetch` puro; um navegador real passa. Por isso a extração
 versionado, como faz com terceirizados). É **incremental por competência**
 (meses fechados são imutáveis) e o arquivo é regravado a cada competência
 concluída, então uma varredura longa é retomável. Ordem de grandeza: ~1.000
-contracheques/mês a ~0,4 s cada com `--concorrencia 3` ≈ 7 min/mês; o backfill
-completo (2009→hoje, ~200 meses) é uma execução de horas, feita uma vez.
+contracheques/mês a ~0,4 s cada com `--concorrencia 3` ≈ 7 min/mês.
+
+**Cobertura da fonte:** apesar de o seletor de ano ir a 2009, o detalhamento
+online do Anexo VIII só devolve dados a partir de ~2016 — competências
+anteriores voltam vazias (`totalRegistros: 0`), o que o scraper registra como
+"sem HE" (não é falha). O backfill completo é, na prática, ~2016→hoje.
 
 ## Próximas funcionalidades (roadmap)
 

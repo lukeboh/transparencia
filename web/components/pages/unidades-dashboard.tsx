@@ -148,9 +148,9 @@ export function UnidadesDashboard() {
         está naquela unidade (soma 100% na raiz). <strong>Horas extras estimadas</strong> vem do Anexo VIII da
         folha de pagamento do TSE (rubrica &ldquo;Horas Extras&rdquo;, mês a mês desde 2009): a fonte publica
         só o valor em R$, e a quantidade de horas é inferida pela Resolução TSE nº 22.901/2008 (valor ÷ hora
-        normal ÷ 1,5) — é um <strong>limite superior</strong>, e a Resolução só permite pagamento em período
-        eleitoral. A soma por unidade usa a lotação de cada competência (histórico), cruzada por nome; no modo
-        &ldquo;Detalhe: detalhado&rdquo; a unidade mostra a quebra por ciclo eleitoral.
+        normal ÷ 1,5) — é um <strong>limite superior</strong>. A soma por unidade usa a lotação de cada
+        competência (histórico), cruzada por nome; no modo &ldquo;Detalhe: detalhado&rdquo; a unidade mostra
+        a quebra por ciclo (ano de eleição ordinária, e &ldquo;outros meses&rdquo;).
         <AppVersion />
       </footer>
     </main>

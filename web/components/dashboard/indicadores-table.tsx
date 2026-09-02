@@ -397,7 +397,7 @@ export function IndicadoresTable({
           <strong>Colunas</strong> — em geral um percentual (com barra que trava em 100%), mas{' '}
           <strong>Horas extras</strong> é uma média por servidor, em horas <strong>estimadas</strong>{' '}
           (serviço extraordinário desde 2009; valor pago ÷ hora normal ÷ 1,5, Res. TSE 22.901/2008 —
-          limite superior, só há pagamento em período eleitoral). Clique num cabeçalho para ordenar.
+          limite superior). Clique num cabeçalho para ordenar.
         </CardDescription>
       </CardHeader>
       <CardContent>

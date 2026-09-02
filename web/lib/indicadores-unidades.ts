@@ -73,7 +73,7 @@ const METRICAS_BASE: MetricaBase[] = [
     id: 'horas_extras',
     grupo: 'Horas extras',
     descricao:
-      'Horas extras estimadas por servidor (serviço extraordinário, desde 2009; valor pago ÷ hora normal ÷ 1,5, Res. TSE 22.901/2008 — limite superior, só há pagamento em período eleitoral)',
+      'Horas extras estimadas por servidor (serviço extraordinário, desde 2009; valor pago ÷ hora normal ÷ 1,5, Res. TSE 22.901/2008 — limite superior)',
     valor: (m) => m.horasExtras,
     formato: 'num',
     sufixo: ' h',

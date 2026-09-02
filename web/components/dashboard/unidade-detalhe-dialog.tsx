@@ -66,7 +66,7 @@ function BlocoMetricas({
           <dt className="text-muted-foreground">Horas extras estimadas</dt>
           <dd
             className="font-medium tabular-nums"
-            title="Serviço extraordinário estimado (limite superior), desde 2009 — só há pagamento em período eleitoral. Ver o glossário."
+            title="Serviço extraordinário estimado (limite superior), desde 2009. Ver o glossário."
           >
             {metricas.horasExtras > 0 ? (
               <>
@@ -194,7 +194,7 @@ export function UnidadeDetalheDialog({
         TSE; o de terceirizados é a parcela do total de terceirizados do TSE que está nesta unidade
         (soma 100% na raiz). <strong>Horas extras estimadas</strong> é a soma, desde 2009, das horas de
         serviço extraordinário inferidas do valor pago na folha (Anexo VIII; Resolução TSE nº
-        22.901/2008) — limite superior, só há pagamento em período eleitoral. Tudo vem de cruzamento
+        22.901/2008) — limite superior. Tudo vem de cruzamento
         por nome/sigla de unidade entre a estrutura oficial e as relações de agentes públicos,
         teletrabalho, fiscais de contrato, o PDF mensal de terceirizados e a folha de pagamento —
         pequenas divergências de grafia entre as fontes podem deslocar alguns registros.

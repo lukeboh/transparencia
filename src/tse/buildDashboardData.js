@@ -351,15 +351,13 @@ export interface HorasExtrasCompetencia {
   divisor: number;
   /** Estimativa acima do teto mensal do art. 4º da Resolução — provável mês com pagamento retroativo/acumulado. */
   acimaDoTeto: boolean;
-  /** Competência fora de qualquer janela eleitoral (art. 2º) — pagamento atípico. */
-  foraDaJanela: boolean;
 }
 
 export interface CicloHorasExtras {
-  /** Ano do ciclo eleitoral ("2022"), ou "fora". */
+  /** Ano da eleição ordinária ("2022"), ou "outros" (anos sem eleição ordinária). */
   ciclo: string;
   rotulo: string;
-  tipo: 'geral' | 'municipal' | 'fora';
+  tipo: 'geral' | 'municipal' | 'outros';
   horas: number;
   /** Nº de meses (LinhaHorasExtras) ou de servidores (HorasExtrasData.ciclos). */
   meses?: number;
@@ -377,7 +375,7 @@ export interface LinhaHorasExtras {
   ultimaCompetencia: string | null;
   porCiclo: CicloHorasExtras[];
   porCompetencia: HorasExtrasCompetencia[];
-  flags: { acimaDoTeto: number; foraDaJanela: number };
+  flags: { acimaDoTeto: number };
 }
 
 export interface HorasExtrasData {

@@ -41,9 +41,9 @@ export function HomeDashboard() {
   const terceirizadosPorServidor =
     servidores.total > 0 ? terceirizados.ativos / servidores.total : 0;
 
-  // Ciclo eleitoral mais recente com horas extras (ignora o balde "fora").
+  // Ano de eleição ordinária mais recente com horas extras (ignora "outros meses").
   const ciclosOrdenados = [...horasExtras.ciclos]
-    .filter((c) => c.ciclo !== 'fora')
+    .filter((c) => c.ciclo !== 'outros')
     .sort((a, b) => a.ciclo.localeCompare(b.ciclo));
   const cicloRecenteHE = ciclosOrdenados[ciclosOrdenados.length - 1];
 

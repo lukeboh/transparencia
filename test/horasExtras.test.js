@@ -56,15 +56,17 @@ test('flag acimaDoTeto quando a estimativa passa do limite mensal do art. 4º', 
   assert.equal(ok.acimaDoTeto, false);
 });
 
-test('ciclo eleitoral: ano eleitoral casa; janeiro seguinte também; resto = fora da janela', () => {
+test('agrupamento por ciclo: ano eleitoral casa; janeiro seguinte também; resto = null', () => {
   assert.equal(cicloEleitoralDe('2022-08')?.ciclo, '2022');
   assert.equal(cicloEleitoralDe('2022-08')?.tipo, 'geral');
   assert.equal(cicloEleitoralDe('2023-01')?.ciclo, '2022'); // spillover
-  assert.equal(cicloEleitoralDe('2023-06'), null); // ano sem eleição
+  assert.equal(cicloEleitoralDe('2023-06'), null); // ano sem eleição ordinária
   assert.equal(cicloEleitoralDe('2024-10')?.tipo, 'municipal');
 
+  // O ciclo entra na estimativa só como agrupamento — não há mais flag de "fora da janela".
   const fora = estimarHorasExtras({ valorRubrica: 3000, base: 20000, chaveCompetencia: '2023-06' });
-  assert.equal(fora.foraDaJanela, true);
+  assert.equal(fora.ciclo, null);
+  assert.ok(!('foraDaJanela' in fora));
   const dentro = estimarHorasExtras({ valorRubrica: 3000, base: 20000, chaveCompetencia: '2022-09' });
-  assert.equal(dentro.foraDaJanela, false);
+  assert.equal(dentro.ciclo?.ciclo, '2022');
 });

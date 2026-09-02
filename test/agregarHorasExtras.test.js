@@ -25,7 +25,8 @@ function entrada() {
           matricula: '1', nome: 'MARIA DA SILVA', cargo: 'ANALISTA', funcao: 'FC-4',
           classePadrao: 'B-9', unidade: 'SEÇÃO DE TESTES',
           base: 20000, valorRubrica: 300,
-          // pagamento fora de janela eleitoral, sem mês de referência
+          // sem mês de referência → cai na competência da folha (2023-02),
+          // ano sem eleição ordinária → agrupa em "outros"
           rubricas: [{ ref: null, valor: 300 }],
         },
       ],
@@ -45,15 +46,16 @@ test('estima horas por servidor e consolida', () => {
   assert.equal(maria.ultimaCompetencia, '2023-02');
 });
 
-test('ranking ordenado por horas desc; quebra por ciclo eleitoral', () => {
+test('ranking ordenado por horas desc; quebra por ciclo ("2022" e "outros")', () => {
   const r = agregarHorasExtras(entrada());
   assert.equal(r.ranking[0].nome, 'MARIA DA SILVA');
   const maria = r.ranking[0];
   const ciclo2022 = maria.porCiclo.find((c) => c.ciclo === '2022');
-  const fora = maria.porCiclo.find((c) => c.ciclo === 'fora');
+  const outros = maria.porCiclo.find((c) => c.ciclo === 'outros');
   assert.ok(Math.abs(ciclo2022.horas - 40) < 1e-6);
-  assert.ok(Math.abs(fora.horas - 2) < 1e-6);
-  assert.equal(maria.flags.foraDaJanela, 1);
+  assert.ok(Math.abs(outros.horas - 2) < 1e-6);
+  assert.equal(outros.rotulo, 'Outros meses');
+  assert.deepEqual(Object.keys(maria.flags), ['acimaDoTeto']);
 });
 
 test('ocorrencias trazem a unidade da competência para o rollup por unidade', () => {

@@ -496,7 +496,7 @@ export function RankingTable({
           a <strong>Lotação</strong> traz as 3 unidades mais específicas da hierarquia oficial. A coluna{' '}
           <strong>Horas extras</strong> é o total <strong>estimado</strong> de serviço extraordinário desde
           2009 (a folha do TSE publica só o valor pago — a hora é inferida pela Resolução TSE 22.901/2008;
-          limite superior, só há pagamento em período eleitoral). A coluna
+          limite superior). A coluna
           Faixas mostra os símbolos das faixas de valor presentes entre os contratos do servidor. Clique numa
           linha para abrir <strong>Detalhes do Servidor</strong> — histórico de funções, consolidado de
           teletrabalho, horas extras estimadas e histórico de contratos.
@@ -635,8 +635,7 @@ export function RankingTable({
                     desde 2009. A folha de pagamento do TSE publica só o <strong>valor em
                     R$</strong> pago — a quantidade de horas é inferida pela fórmula da{' '}
                     <strong>Resolução TSE nº 22.901/2008</strong> (valor ÷ hora normal ÷ 1,5).
-                    É um <strong>limite superior</strong> e só há pagamento em{' '}
-                    <strong>período eleitoral</strong>. Método e quebra por eleição em{' '}
+                    É um <strong>limite superior</strong>. Método e quebra por ciclo em{' '}
                     <strong>Detalhes do Servidor</strong>. &ldquo;—&rdquo; quando não há
                     registro.
                   </InfoDica>

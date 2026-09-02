@@ -113,12 +113,12 @@ export const GLOSSARIO = {
   horasExtras: {
     titulo: 'Horas extras (estimadas)',
     texto:
-      'Serviço extraordinário é o trabalho além da jornada, pago com adicional. A folha de pagamento do TSE (Anexo VIII) publica só o VALOR em R$ da rubrica "Horas Extras", não a quantidade de horas — então aqui a quantidade é ESTIMADA: valor pago ÷ (valor da hora normal × 1,5), com a hora normal = remuneração do mês ÷ 200 (÷ 175 entre 2017 e fevereiro/2020), conforme a Resolução TSE nº 22.901/2008. Como a hora de domingo/feriado custa o dobro (× 2), a mesma quantia pode representar menos horas — por isso o número é um LIMITE SUPERIOR. Pela mesma resolução, só há pagamento de hora extra em período eleitoral; fora disso as horas viram banco de horas. Confira os valores no Anexo VIII do TSE.',
+      'Serviço extraordinário é o trabalho além da jornada, pago com adicional. A folha de pagamento do TSE (Anexo VIII) publica só o VALOR em R$ da rubrica "Horas Extras", não a quantidade de horas — então aqui a quantidade é ESTIMADA: valor pago ÷ (valor da hora normal × 1,5), com a hora normal = remuneração do mês ÷ 200 (÷ 175 entre 2017 e fevereiro/2020), conforme a Resolução TSE nº 22.901/2008. Como a hora de domingo/feriado custa o dobro (× 2), a mesma quantia pode representar menos horas — por isso o número é um LIMITE SUPERIOR. Confira os valores no Anexo VIII do TSE.',
   },
   horasExtrasCiclo: {
-    titulo: 'Ciclo eleitoral',
+    titulo: 'Agrupamento por ciclo',
     texto:
-      'O pagamento de horas extras no TSE é permitido apenas nas janelas do calendário eleitoral (das convenções/registro de candidaturas até a diplomação dos eleitos), além de eleições suplementares e plebiscitos. Por isso as horas são agrupadas por ano de eleição (geral em 2010, 2014, 2018, 2022, 2026; municipal em 2012, 2016, 2020, 2024). "Fora de período eleitoral" sinaliza pagamento atípico — em geral um valor retroativo lançado meses depois.',
+      'As horas são agrupadas pelo ano da eleição ordinária (geral em 2010, 2014, 2018, 2022, 2026; municipal em 2012, 2016, 2020, 2024), porque é quando o volume dispara. "Outros meses" junta os demais anos — eleições suplementares, plebiscitos e recesso ocorrem ao longo de todo o ano, então é normal haver alguma hora extra fora dos anos de eleição ordinária. Pagamentos retroativos entram no ano em que o trabalho foi feito.',
   },
 } as const satisfies Record<string, VerbeteGlossario>;
 

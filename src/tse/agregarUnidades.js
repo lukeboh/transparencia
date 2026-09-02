@@ -326,7 +326,7 @@ function agregarUnidades(
     }
     const metrica = metricas.get(id);
     metrica.horasExtras += o.horas;
-    const chaveCiclo = o.cicloId ?? 'fora';
+    const chaveCiclo = o.cicloId ?? 'outros';
     const atual = metrica.horasExtrasPorCicloMap.get(chaveCiclo) ?? { ciclo: chaveCiclo, horas: 0 };
     atual.horas += o.horas;
     metrica.horasExtrasPorCicloMap.set(chaveCiclo, atual);

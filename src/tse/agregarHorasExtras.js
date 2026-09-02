@@ -134,16 +134,15 @@ function agregarHorasExtras(entrada) {
           horasMin: 0,
           divisor: est.divisor,
           acimaDoTeto: false,
-          foraDaJanela: est.foraDaJanela,
         };
         ec.horas += est.horas;
         ec.horasMin += est.horasMin ?? 0;
         ec.acimaDoTeto = ec.acimaDoTeto || est.acimaDoTeto;
         pessoa.porCompetencia.set(chaveRef, ec);
 
-        const cicloId = est.ciclo?.ciclo ?? 'fora';
-        const rotuloCiclo = est.ciclo?.rotulo ?? 'Fora de período eleitoral';
-        const tipoCiclo = est.ciclo?.tipo ?? 'fora';
+        const cicloId = est.ciclo?.ciclo ?? 'outros';
+        const rotuloCiclo = est.ciclo?.rotulo ?? 'Outros meses';
+        const tipoCiclo = est.ciclo?.tipo ?? 'outros';
 
         const pc = pessoa.porCiclo.get(cicloId) ?? { ciclo: cicloId, rotulo: rotuloCiclo, tipo: tipoCiclo, horas: 0, meses: new Set() };
         pc.horas += est.horas;
@@ -183,11 +182,9 @@ function agregarHorasExtras(entrada) {
           horasMin: c.horasMin,
           divisor: c.divisor,
           acimaDoTeto: c.acimaDoTeto,
-          foraDaJanela: c.foraDaJanela,
         })),
         flags: {
           acimaDoTeto: comps.filter((c) => c.acimaDoTeto).length,
-          foraDaJanela: comps.filter((c) => c.foraDaJanela).length,
         },
       };
     })
