@@ -109,12 +109,18 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   `/funcoes` (`web/lib/lotacao-hierarquia.ts`) — resolve o nome plano de
   lotação da relação de agentes públicos contra a árvore oficial de unidades
   (`/unidades`) e mostra o caminho de siglas da unidade mais específica para a
-  mais alta, só os 3 primeiros níveis — ex.: `SEVIN / COTEL / STI` (suficiente
-  para identificar a lotação sem arrastar secretaria/presidência em toda
-  linha; a raiz TSE fica de fora; quando o nome não bate em exatamente um nó,
-  cai no nome plano da fonte). Coluna filtrável por campo de texto com `datalist` das lotações
-  presentes (digitar para filtrar por trecho ou escolher da lista) e
-  ordenável crescente/decrescente.
+  mais alta, ex.: `SETOT / CSELE / STI`. Regras de exibição: no máximo 3
+  níveis; a exibição **para no nível de secretaria** (inclusive) — quem está
+  lotado direto na STI vira só `STI`; a **"Secretaria do Tribunal" (SEC)**,
+  guarda-chuva administrativo, **nunca aparece** (quem é filho dela mostra só
+  o caminho até ali — `ASJUR`, `GAB.DG` etc.), e a raiz TSE também fica de
+  fora; o que está sob a Presidência / Gabinete do DG segue a regra normal e
+  mostra os pais visíveis (`SPR`, `PRES`…). A mesma regra vale para a coluna
+  Lotação de `/servidores` e `/teletrabalho` (todas via `criarResolvedorLotacao`)
+  e para o `lotacaoSiglas` dos terceirizados (`src/tse/agregarTerceirizados.js`).
+  Quando o nome não bate em exatamente um nó, cai no nome plano da fonte.
+  Coluna filtrável por campo de texto com `datalist` das lotações presentes
+  (digitar para filtrar por trecho ou escolher da lista) e ordenável.
 - ✅ Painel de filtro genérico em `/funcoes` (`FuncoesFilter`) — `/fiscais` tem
   o seu próprio (`FiltroFiscais`, ver abaixo). Passou a se chamar só "Filtro" e
   reúne, em seções de chips: (1)
@@ -311,9 +317,11 @@ servidor já ocupou — de `funcoes.servidores` via `funcoesIndex` —, a vigent
 hoje destacada (borda + cor primária) e as anteriores apagadas; "—" quando
 nunca teve nenhuma. `FuncoesBadges` ganhou o modo `todas` para isso (o modo
 compacto — destaque + "+N" — segue em `/funcoes` e `/teletrabalho`). A coluna
-**Lotação** traz as 3 unidades mais específicas da hierarquia oficial (ex.:
-`SETOT / CSELE / STI`), resolvidas pelo mesmo `criarResolvedorLotacao` de
-`/funcoes` a partir do nome plano da relação de agentes públicos. A coluna
+**Lotação** traz as unidades da hierarquia oficial da mais específica para a
+mais alta (ex.: `SETOT / CSELE / STI`), resolvidas pelo mesmo
+`criarResolvedorLotacao` de `/funcoes` (no máximo 3 níveis, para no nível de
+secretaria, "Secretaria do Tribunal" nunca aparece — ver o item de changelog).
+A coluna
 **Teletrabalho** mostra o total de dias em regime de teletrabalho
 (`teletrabalho.ranking[teletrabalhoIndex].diasConsolidados`), "—" sem registro.
 A tabela tem filtro incremental **por servidor** e **por lotação** (campo de

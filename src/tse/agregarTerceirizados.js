@@ -26,6 +26,12 @@ import {
 } from './nomesTerceirizados.js';
 
 const MAX_NIVEIS_LOTACAO = 3;
+// Exibição do caminho de lotação (mesma regra da UI, ver web/lib/lotacao-hierarquia.ts):
+// para no nível de secretaria (inclusive) e nunca mostra a "Secretaria do
+// Tribunal" (SEC), que é o guarda-chuva administrativo.
+const ehUmbrellaUnidade = (no) =>
+  no.sigla === 'SEC' || normalizeUnidade(no.nome) === 'SECRETARIA DO TRIBUNAL';
+const ehSecretariaUnidade = (no) => /^SECRETARIA[ -]/.test(normalizeUnidade(no.nome));
 // Competência com mais que isso de linhas sem nome recuperável é uma falha
 // estrutural de extração do PDF daquele mês (o parser mapeou as colunas
 // errado) — melhor descartá-la inteira do que injetar milhares de "pessoas"
@@ -160,7 +166,9 @@ function indexarSiglas(arvoreBruta) {
     const caminho = [];
     let atual = id ? porId.get(id) : undefined;
     while (atual && atual.parentId !== null && caminho.length < MAX_NIVEIS_LOTACAO) {
+      if (ehUmbrellaUnidade(atual)) break; // "Secretaria do Tribunal" nunca aparece
       if (atual.sigla) caminho.push(atual.sigla);
+      if (ehSecretariaUnidade(atual)) break; // a exibição para no nível de secretaria
       atual = porId.get(atual.parentId);
     }
     return caminho;
