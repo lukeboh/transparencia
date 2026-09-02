@@ -18,8 +18,10 @@
 // (fator 2,0) é o piso.
 //
 // Base de cálculo ("remuneração mensal"): a melhor aproximação disponível no
-// Anexo VIII é a rubrica "VENCIMENTOS E VANTAGENS" (somada a "EXERCÍCIO FC/CJ"
-// quando a função não está embutida nela) — ver src/tse/scrapeHorasExtras.js.
+// Anexo VIII é "VENCIMENTOS E VANTAGENS" + "EXERCÍCIO FC/CJ" + "REMUNERAÇÃO
+// ÓRGÃO ORIGEM". Esta última cobre o servidor REQUISITADO, cuja remuneração
+// básica é paga pelo órgão de origem mas cuja hora extra o TSE calcula sobre a
+// remuneração total e paga — ver src/tse/scrapeHorasExtras.js (parseContracheque).
 
 /** "AAAA-MM" a partir de ano/mês numéricos. */
 export const chaveCompetencia = (ano, mes) => `${ano}-${String(mes).padStart(2, '0')}`;

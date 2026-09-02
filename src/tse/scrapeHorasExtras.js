@@ -21,6 +21,8 @@
 // de horas — NUNCA a remuneração inteira:
 //   { matricula, nome, cargo, funcao, classePadrao, unidade,
 //     base,            // "VENCIMENTOS E VANTAGENS" + "EXERCÍCIO FC/CJ"
+//                      //   + "REMUNERAÇÃO ÓRGÃO ORIGEM" (requisitado — ver parseContracheque)
+//     componentes,     // { vv, fccj, origem } — a base aberta, para auditoria
 //     valorRubrica,    // soma das linhas "HORAS EXTRAS [- MM/AAAA]"
 //     rubricas: [{ ref, valor }] }   // uma por mês de referência (retroativos)
 // Linhas sem "HORAS EXTRAS" > 0 são descartadas.
@@ -53,23 +55,42 @@ export function numeroBR(bruto) {
 }
 
 /**
- * Extrai base e horas extras do texto (innerText) de um contracheque detalhado.
- * @returns {{ base:number, valorRubrica:number, rubricas:{ref:string|null,valor:number}[] } | null}
- *   null quando não achou "VENCIMENTOS E VANTAGENS" (não dá para estimar base).
+ * Extrai a base de cálculo e as horas extras do texto (innerText) de um
+ * contracheque detalhado do Anexo VIII.
+ *
+ * base = "VENCIMENTOS E VANTAGENS" + "EXERCÍCIO FC/CJ" + "REMUNERAÇÃO ÓRGÃO ORIGEM"
+ *
+ * Para servidor REQUISITADO a remuneração básica é paga pelo órgão de origem —
+ * no TSE "VENCIMENTOS E VANTAGENS" fica 0,00, aparece só "EXERCÍCIO FC/CJ" (a
+ * função exercida aqui) e a remuneração de origem vem numa linha à parte, na
+ * seção "LÍQUIDO", como "REMUNERAÇÃO ÓRGÃO ORIGEM". O serviço extraordinário é
+ * calculado sobre a remuneração TOTAL (origem + função no TSE) e pago pelo TSE,
+ * então essa linha PRECISA entrar na base (ex.: MAURO SANS JUNIOR, ago/2022:
+ * VV 0,00 + FC/CJ 1.379,07 + órgão origem 18.799,87).
+ *
+ * @returns {{ base:number, valorRubrica:number, rubricas:{ref:string|null,valor:number}[],
+ *            componentes:{vv:number,fccj:number,origem:number} } | null}
+ *   null quando a base fica <= 0 (contracheque não renderizado, ou requisitado
+ *   sem remuneração de origem legível — não dá para estimar).
  */
 export function parseContracheque(innerText) {
   const t = String(innerText).replace(/ /g, ' ').replace(/\s+/g, ' ');
-  const vv = t.match(/VENCIMENTOS E VANTAGENS\s+(-?[\d.,]+)/i);
-  if (!vv) return null;
-  const fccj = t.match(/EXERC[IÍ]CIO FC\/CJ\s+(-?[\d.,]+)/i);
-  const base = numeroBR(vv[1]) + (fccj ? numeroBR(fccj[1]) : 0);
+  const valorDe = (re) => {
+    const m = t.match(re);
+    return m ? numeroBR(m[1]) : 0;
+  };
+  const vv = valorDe(/VENCIMENTOS E VANTAGENS\s+(-?[\d.,]+)/i);
+  const fccj = valorDe(/EXERC[IÍ]CIO FC\/CJ\s+(-?[\d.,]+)/i);
+  const origem = valorDe(/REMUNERA[ÇC][ÃA]O [ÓO]RG[ÃA]O ORIGEM\s+(-?[\d.,]+)/i);
+  const base = vv + fccj + origem;
 
   const rubricas = [...t.matchAll(/HORAS EXTRAS(?:\s*-\s*(\d{2}\/\d{4}))?\s+(-?[\d.,]+)/gi)].map((m) => ({
     ref: m[1] || null,
     valor: numeroBR(m[2]),
   }));
   const valorRubrica = rubricas.reduce((s, r) => s + r.valor, 0);
-  return { base, valorRubrica, rubricas };
+  if (base <= 0) return null;
+  return { base, valorRubrica, rubricas, componentes: { vv, fccj, origem } };
 }
 
 function competenciasNoIntervalo(desde, ate) {
@@ -200,6 +221,8 @@ async function processarLinha(page, l) {
     classePadrao: (l.classePadrao || '').trim() || null,
     unidade: l.unidade,
     base: cc.base,
+    // Composição da base — para auditar o caso do requisitado (órgão origem).
+    componentes: cc.componentes,
     valorRubrica: cc.valorRubrica,
     rubricas: cc.rubricas,
   };

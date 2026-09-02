@@ -809,9 +809,14 @@ horas estimadas     = valor pago na rubrica ÷ (salário-hora normal × 1,5)
   2020; **175** entre jan/2017 e fev/2020 (Res. 23.497/2016). O caso de jornada
   de 30 h/semana (divisor 150) **não é identificável** na fonte — superestima
   esse subgrupo.
-- **`remuneração mensal`** (base): a melhor aproximação disponível no Anexo VIII
-  é `VENCIMENTOS E VANTAGENS` + `EXERCÍCIO FC/CJ` (as demais rubricas — 1/3 de
-  férias, 13º, auxílios — têm linhas próprias e ficam de fora).
+- **`remuneração mensal`** (base): `VENCIMENTOS E VANTAGENS` + `EXERCÍCIO FC/CJ`
+  + `REMUNERAÇÃO ÓRGÃO ORIGEM` (as demais rubricas — 1/3 de férias, 13º,
+  auxílios — têm linhas próprias e ficam de fora). A parcela do **órgão de
+  origem** é o que cobre o servidor **requisitado**: sua remuneração básica é
+  paga pelo órgão de origem (no TSE `VENCIMENTOS E VANTAGENS` = 0,00), mas o
+  serviço extraordinário é calculado sobre a remuneração total e pago pelo TSE
+  (ex.: MAURO SANS JUNIOR, folha de ago/2022). Sem essa parcela a base ficaria
+  só na função exercida no TSE e as horas seriam grosseiramente superestimadas.
 - **fator 1,5** (+50 %, dias úteis/sábado): a rubrica é um valor único e não
   separa dias úteis de domingos/feriados (+100 %). Como a hora de
   domingo/feriado custa o dobro, fixar 1,5 faz o número ser um **limite
@@ -846,8 +851,8 @@ Anexo VIII do TSE (link no modal).
   (nenhuma fonte tem CPF/matrícula em comum) — mesma limitação de homônimos das
   outras telas. Para a contagem por unidade usa-se o nome da **lotação da
   própria competência** (histórico), não a lotação de hoje.
-- Contracheques sem `VENCIMENTOS E VANTAGENS` legível são ignorados (não dá para
-  estimar a base).
+- Contracheques cuja base (`VENCIMENTOS E VANTAGENS` + `EXERCÍCIO FC/CJ` +
+  `REMUNERAÇÃO ÓRGÃO ORIGEM`) fica ≤ 0 são ignorados — não dá para estimar.
 - A estimativa é **estimativa** — `base` aproximada, `divisor` legal por época,
   mix 50/100 % desconhecido. Toda a UI rotula assim e mostra a faixa
   min–máx.
