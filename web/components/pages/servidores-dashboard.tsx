@@ -21,6 +21,7 @@ import { CATEGORIAS_VALOR, categoriaDoValor, type CategoriaValorId } from '@/lib
 import { criarResolvedorLotacao, textoSiglas } from '@/lib/lotacao-hierarquia';
 import type {
   ContratoResumo,
+  LinhaHorasExtras,
   LinhaRanking,
   LinhaTeletrabalho,
   ServidorFuncoes,
@@ -139,7 +140,8 @@ function filtrarSemContrato(
 
 export function ServidoresDashboard() {
   const estado = useDadosDashboard();
-  const { responsaveis, funcoes, contratos, fonte, servidores, teletrabalho, unidades } = estado.dados;
+  const { responsaveis, funcoes, contratos, fonte, servidores, teletrabalho, horasExtras, unidades } =
+    estado.dados;
 
   // Um registro de função (atual + histórico de portarias) por servidor,
   // chaveado pelo nome exato usado nas linhas da tabela (ver `linhasServidores`
@@ -165,6 +167,17 @@ export function ServidoresDashboard() {
     }
     return map;
   }, [servidores.lista, teletrabalho.ranking]);
+
+  // Horas extras estimadas por servidor, chaveado pelo mesmo nome das linhas.
+  const horasExtrasPorNome = useMemo(() => {
+    const map = new Map<string, LinhaHorasExtras>();
+    for (const s of servidores.lista) {
+      if (s.horasExtrasIndex === null) continue;
+      const h = horasExtras.ranking[s.horasExtrasIndex];
+      if (h) map.set(s.nome, h);
+    }
+    return map;
+  }, [servidores.lista, horasExtras.ranking]);
 
   // Lotação atual por servidor: o caminho de unidades (até 3 níveis) da mais
   // específica para a mais alta, resolvido do nome plano da relação de agentes
@@ -611,6 +624,7 @@ export function ServidoresDashboard() {
           contratos={contratos}
           funcoesPorNome={funcoesPorNome}
           teletrabalhoPorNome={teletrabalhoPorNome}
+          horasExtrasPorNome={horasExtrasPorNome}
           lotacaoPorNome={lotacaoPorNome}
         />
       </div>
@@ -629,7 +643,13 @@ export function ServidoresDashboard() {
         por &ldquo;Por função&rdquo; — o cargo comissionado (FC/CJ{' '}
         <DicaTermo id="fcCj" alinhamento="esquerda" />), atual ou, com o
         &ldquo;Vigente&rdquo; da seção desligado, também do histórico de
-        portarias; desligue-o para ver só o ranking de fiscais. Faixas de valor:{' '}
+        portarias; desligue-o para ver só o ranking de fiscais. A coluna{' '}
+        &ldquo;Horas extras&rdquo; traz a quantidade{' '}
+        <strong>estimada</strong> de serviço extraordinário desde 2009 (
+        <DicaTermo id="horasExtras" alinhamento="esquerda" />): a folha de
+        pagamento do TSE publica só o valor em R$, e a hora é inferida pela
+        Resolução TSE nº 22.901/2008 — é um limite superior, e a Resolução só
+        permite pagamento de hora extra em período eleitoral. Faixas de valor:{' '}
         {CATEGORIAS_VALOR.map((c) => `${c.simbolo} ${c.nome}`).join(' · ')}.
         <AppVersion />
       </footer>

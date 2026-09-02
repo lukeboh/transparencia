@@ -31,6 +31,15 @@ const CANDIDATOS_TERCEIRIZADOS = [
   path.join(process.cwd(), 'data', 'tse_terceirizados.json'),
 ];
 
+// Idem para horas extras (Anexo VIII): raspagem pesada por Playwright, feita à
+// mão via `npm run tse:scrape-horas-extras` e versionada em
+// data/tse_horas_extras.json. O rebuild em runtime só relê o arquivo.
+const CANDIDATOS_HORAS_EXTRAS = [
+  path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../../../data/tse_horas_extras.json'),
+  path.join(process.cwd(), '..', 'data', 'tse_horas_extras.json'),
+  path.join(process.cwd(), 'data', 'tse_horas_extras.json'),
+];
+
 async function carregarTerceirizados(): Promise<{ entrada: unknown; competencia: string | null }> {
   for (const arq of CANDIDATOS_TERCEIRIZADOS) {
     try {
@@ -45,6 +54,17 @@ async function carregarTerceirizados(): Promise<{ entrada: unknown; competencia:
     }
   }
   return { entrada: [], competencia: null };
+}
+
+async function carregarHorasExtras(): Promise<unknown> {
+  for (const arq of CANDIDATOS_HORAS_EXTRAS) {
+    try {
+      return JSON.parse(await fs.readFile(arq, 'utf8'));
+    } catch {
+      // tenta o próximo caminho
+    }
+  }
+  return [];
 }
 
 interface Progresso {
@@ -216,6 +236,7 @@ function iniciarAtualizacao(e: EstadoCache) {
 
       const excecoes = carregarExcecoes();
       const terceirizados = await carregarTerceirizados();
+      const horasExtras = await carregarHorasExtras();
       e.dados = agregarDashboard(
         contratos,
         movimentosFuncoes,
@@ -226,6 +247,7 @@ function iniciarAtualizacao(e: EstadoCache) {
         // objeto { porCompetencia, ... } ou array cru legado — agregarDashboard
         // (JS) aceita os dois; o tipo inferido do .js exige o cast.
         terceirizados.entrada as unknown[],
+        horasExtras as unknown[],
       ) as DashboardData;
       if (e.dados.unidades) e.dados.unidades.terceirizadosCompetencia = terceirizados.competencia;
       await fs.mkdir(path.dirname(ARQUIVO_CACHE), { recursive: true });

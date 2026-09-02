@@ -110,6 +110,16 @@ export const GLOSSARIO = {
     texto:
       'Contrato em que uma empresa fornece profissionais para trabalhar nas dependências do TSE (postos de trabalho), sem vínculo de servidor público. É a fonte da lista de terceirizados.',
   },
+  horasExtras: {
+    titulo: 'Horas extras (estimadas)',
+    texto:
+      'Serviço extraordinário é o trabalho além da jornada, pago com adicional. A folha de pagamento do TSE (Anexo VIII) publica só o VALOR em R$ da rubrica "Horas Extras", não a quantidade de horas — então aqui a quantidade é ESTIMADA: valor pago ÷ (valor da hora normal × 1,5), com a hora normal = remuneração do mês ÷ 200 (÷ 175 entre 2017 e fevereiro/2020), conforme a Resolução TSE nº 22.901/2008. Como a hora de domingo/feriado custa o dobro (× 2), a mesma quantia pode representar menos horas — por isso o número é um LIMITE SUPERIOR. Pela mesma resolução, só há pagamento de hora extra em período eleitoral; fora disso as horas viram banco de horas. Confira os valores no Anexo VIII do TSE.',
+  },
+  horasExtrasCiclo: {
+    titulo: 'Ciclo eleitoral',
+    texto:
+      'O pagamento de horas extras no TSE é permitido apenas nas janelas do calendário eleitoral (das convenções/registro de candidaturas até a diplomação dos eleitos), além de eleições suplementares e plebiscitos. Por isso as horas são agrupadas por ano de eleição (geral em 2010, 2014, 2018, 2022, 2026; municipal em 2012, 2016, 2020, 2024). "Fora de período eleitoral" sinaliza pagamento atípico — em geral um valor retroativo lançado meses depois.',
+  },
 } as const satisfies Record<string, VerbeteGlossario>;
 
 export type TermoId = keyof typeof GLOSSARIO;

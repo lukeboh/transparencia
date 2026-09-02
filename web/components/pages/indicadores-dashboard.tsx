@@ -61,8 +61,12 @@ export function IndicadoresDashboard() {
       )}
 
       <footer className="mt-8 text-xs text-muted-foreground">
-        Cada coluna é uma relação percentual: uma métrica (servidores, com FC, com CJ, fiscais, teletrabalho,
-        terceirizados) sobre um denominador. Variantes: <strong>unidade</strong> (só quem está lotado exatamente no nó),{' '}
+        Cada coluna é uma relação: em geral um percentual — uma métrica (servidores, com FC, com CJ, fiscais,
+        teletrabalho, terceirizados) sobre um denominador —, exceto <strong>Horas extras</strong>, que é a
+        média de horas extras <strong>estimadas</strong> por servidor (serviço extraordinário desde 2009: o
+        valor pago na folha ÷ valor da hora normal ÷ 1,5, conforme a Resolução TSE nº 22.901/2008; é um limite
+        superior, e a Resolução só permite pagamento em período eleitoral). Variantes: <strong>unidade</strong>{' '}
+        (só quem está lotado exatamente no nó),{' '}
         <strong>consolidada</strong> (o nó e toda a subárvore), <strong>órgão · direto</strong> (valor do nó
         sobre o total de servidores do TSE) e <strong>órgão · subárvore</strong> (valor consolidado sobre o
         total do TSE). &ldquo;—&rdquo; aparece quando o denominador é zero (unidade sem servidor lotado

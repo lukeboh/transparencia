@@ -83,6 +83,22 @@ function somarFiscais(...listas) {
   return fiscaisParaArray(map);
 }
 
+function horasExtrasPorCicloParaArray(map) {
+  return [...map.values()].sort((a, b) => a.ciclo.localeCompare(b.ciclo));
+}
+
+function somarHorasExtrasPorCiclo(...listas) {
+  const map = new Map();
+  for (const lista of listas) {
+    for (const item of lista) {
+      const atual = map.get(item.ciclo) ?? { ciclo: item.ciclo, horas: 0 };
+      atual.horas += item.horas;
+      map.set(item.ciclo, atual);
+    }
+  }
+  return horasExtrasPorCicloParaArray(map);
+}
+
 /**
  * @param {object} arvoreBruta árvore crua de scrapeUnidades.js.
  * @param {Array} agentesPublicos relação atual de agentes públicos (scrapeAgentesPublicos.js).
@@ -92,6 +108,10 @@ function somarFiscais(...listas) {
  *   para saber, por pessoa, quais papéis ela tem em contratos.
  * @param {Array} terceirizados registros crus de scrapeTerceirizados.js (um por profissional,
  *   com a `alocacao` = caminho de siglas do posto de trabalho).
+ * @param {Array} horasExtrasOcorrencias ocorrências de horas extras estimadas
+ *   (uma por servidor/mês) de agregarHorasExtras.js: `{ unidade, chave, cicloId, horas }`.
+ *   A `unidade` é o nome da lotação NAQUELA competência (histórico) — casada por
+ *   nome com a árvore, como os agentes públicos.
  */
 function agregarUnidades(
   arvoreBruta,
@@ -99,6 +119,7 @@ function agregarUnidades(
   teletrabalho = { ranking: [] },
   rankingResponsaveis = [],
   terceirizados = [],
+  horasExtrasOcorrencias = [],
 ) {
   const porId = new Map();
   const idPorNomeNormalizado = new Map();
@@ -107,13 +128,22 @@ function agregarUnidades(
 
   const metricas = new Map();
   for (const id of porId.keys()) {
-    metricas.set(id, { servidores: 0, funcoesMap: new Map(), fiscaisMap: new Map(), teletrabalho: 0, terceirizados: 0 });
+    metricas.set(id, {
+      servidores: 0,
+      funcoesMap: new Map(),
+      fiscaisMap: new Map(),
+      teletrabalho: 0,
+      terceirizados: 0,
+      horasExtras: 0,
+      horasExtrasPorCicloMap: new Map(),
+    });
   }
 
   const naoLocalizados = {
     servidores: 0,
     teletrabalho: 0,
     terceirizados: 0,
+    horasExtras: 0,
     ambiguos: 0,
     exemplos: { servidores: [], teletrabalho: [], terceirizados: [] },
   };
@@ -280,6 +310,28 @@ function agregarUnidades(
   }
   terceirizadosResolvidos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
 
+  // --- Horas extras estimadas (uma ocorrência por servidor/mês) ---
+  // A `unidade` de cada ocorrência é o nome da lotação NAQUELA competência
+  // (histórico da folha), casado por nome com a árvore como os agentes públicos.
+  for (const o of horasExtrasOcorrencias) {
+    if (!(o.horas > 0)) continue;
+    const { id, ambiguo } = resolverId(o.unidade);
+    if (ambiguo) {
+      naoLocalizados.ambiguos += 1;
+      continue;
+    }
+    if (!id) {
+      naoLocalizados.horasExtras += o.horas;
+      continue;
+    }
+    const metrica = metricas.get(id);
+    metrica.horasExtras += o.horas;
+    const chaveCiclo = o.cicloId ?? 'fora';
+    const atual = metrica.horasExtrasPorCicloMap.get(chaveCiclo) ?? { ciclo: chaveCiclo, horas: 0 };
+    atual.horas += o.horas;
+    metrica.horasExtrasPorCicloMap.set(chaveCiclo, atual);
+  }
+
   // --- Consolidação bottom-up ---
   function construir(id) {
     const raw = porId.get(id);
@@ -292,6 +344,8 @@ function agregarUnidades(
       fiscais: fiscaisParaArray(metrica.fiscaisMap),
       teletrabalho: metrica.teletrabalho,
       terceirizados: metrica.terceirizados,
+      horasExtras: metrica.horasExtras,
+      horasExtrasPorCiclo: horasExtrasPorCicloParaArray(metrica.horasExtrasPorCicloMap),
     };
     const consolidado = {
       servidores: direto.servidores + filhos.reduce((s, f) => s + f.consolidado.servidores, 0),
@@ -299,6 +353,11 @@ function agregarUnidades(
       fiscais: somarFiscais(direto.fiscais, ...filhos.map((f) => f.consolidado.fiscais)),
       teletrabalho: direto.teletrabalho + filhos.reduce((s, f) => s + f.consolidado.teletrabalho, 0),
       terceirizados: direto.terceirizados + filhos.reduce((s, f) => s + f.consolidado.terceirizados, 0),
+      horasExtras: direto.horasExtras + filhos.reduce((s, f) => s + f.consolidado.horasExtras, 0),
+      horasExtrasPorCiclo: somarHorasExtrasPorCiclo(
+        direto.horasExtrasPorCiclo,
+        ...filhos.map((f) => f.consolidado.horasExtrasPorCiclo),
+      ),
     };
 
     return { id, nome: raw.nome, sigla: raw.sigla, parentId: raw.parentId, direto, consolidado, children: filhos };

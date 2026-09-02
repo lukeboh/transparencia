@@ -248,9 +248,24 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   global/empenhado/pago, vigência (chip **VIGENTE**), classificação do app e —
   para contratos de cessão — a quantidade de terceirizados, com link para o
   Compras.gov.br.
+- ✅ **Horas extras (serviço extraordinário) estimadas** por servidor, unidade e
+  indicador — fonte: o **Anexo VIII (Detalhamento da Folha de Pagamento)** do TSE
+  (`transparencia.tse.jus.br/transparenciaDadosServidores`, mês a mês desde 2009).
+  A fonte publica só o **valor em R$** da rubrica `HORAS EXTRAS`; a **quantidade
+  de horas é inferida** pela fórmula do art. 9º da **Resolução TSE nº
+  22.901/2008** (`valor ÷ (remuneração mensal ÷ divisor) ÷ 1,5`; divisor 200, ou
+  175 entre jan/2017 e fev/2020). Nenhuma remuneração é gravada — só as horas
+  estimadas e os insumos da conta (`src/tse/scrapeHorasExtras.js`,
+  `src/tse/horasExtras.js`, `src/tse/agregarHorasExtras.js`). Ver a seção
+  "Horas extras" abaixo. Aparece: coluna **Horas extras** + seção **"Horas Extras
+  (estimadas)"** no modal Detalhes do Servidor em `/servidores`; métrica no card
+  de cada unidade em `/unidades` (com quebra por ciclo eleitoral no modo
+  detalhado); coluna **Horas extras · média por servidor** (em `h`, não `%`) em
+  `/indicadores`. Toda exibição é rotulada como **estimativa** e **limite
+  superior**, com o método no glossário (`horasExtras`, `horasExtrasCiclo`).
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.36**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.37**.
 
 ## Dashboard web
 
@@ -471,13 +486,13 @@ npm run tse:rank -- --in data/tse_contratos.json --top 30
 
 ### Dados raspados versionados no repositório
 
-Os seis JSON de saída dos scrapers ficam **versionados** em `data/`:
+Os sete JSON de saída dos scrapers ficam **versionados** em `data/`:
 `tse_contratos.json`, `tse_funcoes.json`, `tse_agentes.json`,
-`tse_teletrabalho.json`, `tse_unidades.json` e `tse_terceirizados.json`. Isso
-garante que um clone novo já traga o estado real (o `buildDashboardData.js`
-gera `web/lib/dashboard-data.ts` a partir deles) sem precisar rodar nenhum
-scrape, e — para os que fazem raspagem **incremental** — que o trabalho já
-acumulado não se perca.
+`tse_teletrabalho.json`, `tse_unidades.json`, `tse_terceirizados.json` e
+`tse_horas_extras.json`. Isso garante que um clone novo já traga o estado real
+(o `buildDashboardData.js` gera `web/lib/dashboard-data.ts` a partir deles) sem
+precisar rodar nenhum scrape, e — para os que fazem raspagem **incremental** —
+que o trabalho já acumulado não se perca.
 
 `scrapeContratos.js` e `scrapeFuncoes.js` releem o próprio arquivo de saída
 como cache (`cacheExistente`) e só buscam o que ainda não têm. O arquivo é,
@@ -489,10 +504,12 @@ sessão + cookie httponly + CSRF. `scrapeTerceirizados.js` também é incrementa
 mas por **competência**: relê `tse_terceirizados.json` e só baixa/parseia os
 PDFs mensais de competências que ainda não estão no `porCompetencia` (use
 `--refazer` para ignorar o cache, `--limite N` para pegar só as N mais
-recentes). `tse_agentes.json`, `tse_teletrabalho.json` e
-`tse_unidades.json` não são incrementais (cada um é uma única requisição que
-devolve a base inteira) — são versionados só pela conveniência do clone
-pronto.
+recentes). `scrapeHorasExtras.js` (Playwright) é incremental pela mesma lógica
+de competência sobre `tse_horas_extras.json` (`--desde`/`--ate`/`--refazer`/
+`--amostra`/`--concorrencia` — ver "Horas extras" abaixo). `tse_agentes.json`,
+`tse_teletrabalho.json` e `tse_unidades.json` não são incrementais (cada um é
+uma única requisição que devolve a base inteira) — são versionados só pela
+conveniência do clone pronto.
 
 Consequências operacionais (as mesmas que `tse_funcoes.json` já tinha):
 
@@ -504,9 +521,9 @@ Consequências operacionais (as mesmas que `tse_funcoes.json` já tinha):
   (`web/.cache/tse-dados.json`, no `.gitignore`) nem o CSV derivado
   (`data/ranking_responsaveis.csv`) — esses continuam ignorados de propósito.
 
-A coerência do que o app mostra não depende de os seis arquivos estarem
+A coerência do que o app mostra não depende de os sete arquivos estarem
 sincronizados entre si: ela vem de `web/lib/dashboard-data.ts` ser sempre
-regenerado a partir dos seis juntos e commitado.
+regenerado a partir dos sete juntos e commitado.
 
 ### Nota sobre os valores
 
@@ -762,6 +779,98 @@ são buscados de novo. O app web faz as três coisas automaticamente em
 segundo plano (mesmo mecanismo de atualização dos contratos, ver acima),
 nessa ordem — contratos, agentes públicos, portarias — persistindo o cache
 em `web/.cache/`.
+
+## Horas extras (serviço extraordinário)
+
+`DashboardData.horasExtras` traz, por servidor, a **quantidade estimada de horas
+extras** desde 2009 — total, média mensal e a quebra por **ciclo eleitoral**. A
+mesma estimativa é somada por unidade (`UnidadeMetricas.horasExtras` +
+`horasExtrasPorCiclo`, consolidável na árvore de `/unidades`) e vira a métrica
+`horas_extras` de `/indicadores` (média por servidor, em `h`).
+
+### A fonte só dá R$ — a hora é inferida
+
+A fonte é o **Anexo VIII — Detalhamento da Folha de Pagamento de Pessoal**
+([iframe da página de Remunerações do TSE](https://www.tse.jus.br/transparencia-e-prestacao-de-contas/pessoal/remuneracoes-e-beneficios/remuneracoes-e-beneficios)
+→ `https://transparencia.tse.jus.br/transparenciaDadosServidores/infoServidores?acao=Anexo_VIII`).
+Cada contracheque mensal, por rubrica, tem uma linha **`HORAS EXTRAS`** (às vezes
+`HORAS EXTRAS - MM/AAAA`, com o mês de referência do trabalho) — mas só o
+**valor pago em R$**, nunca a quantidade de horas.
+
+A conversão R$ → horas segue o **art. 9º da Resolução TSE nº 22.901/2008** (com
+as redações das Resoluções 23.497/2016 e 23.629/2020):
+
+```
+salário-hora normal = remuneração mensal ÷ divisor
+horas estimadas     = valor pago na rubrica ÷ (salário-hora normal × 1,5)
+```
+
+- **`divisor`** (`src/tse/horasExtras.js`): **200** na redação original e na de
+  2020; **175** entre jan/2017 e fev/2020 (Res. 23.497/2016). O caso de jornada
+  de 30 h/semana (divisor 150) **não é identificável** na fonte — superestima
+  esse subgrupo.
+- **`remuneração mensal`** (base): a melhor aproximação disponível no Anexo VIII
+  é `VENCIMENTOS E VANTAGENS` + `EXERCÍCIO FC/CJ` (as demais rubricas — 1/3 de
+  férias, 13º, auxílios — têm linhas próprias e ficam de fora).
+- **fator 1,5** (+50 %, dias úteis/sábado): a rubrica é um valor único e não
+  separa dias úteis de domingos/feriados (+100 %). Como a hora de
+  domingo/feriado custa o dobro, fixar 1,5 faz o número ser um **limite
+  superior** — toda hora que na verdade foi de fim de semana entra inflada em
+  até 33 %. O piso (fator 2,0) é calculado em paralelo (`horasConsolidadasMin`)
+  e aparece só como faixa no modal/tooltip.
+- **ciclo eleitoral** (art. 2º): o pagamento de HE só é permitido em janela
+  eleitoral. Cada competência é atribuída ao ciclo do seu ano quando é ano de
+  eleição (2010/2014/2018/2022/2026 gerais; 2012/2016/2020/2024 municipais),
+  com jan do ano seguinte no mesmo ciclo; o resto cai no balde **"fora de
+  período eleitoral"** e ganha a flag `foraDaJanela` (pagamento atípico —
+  retroativo, suplementar não mapeada, ou erro de fonte).
+- **teto de sanidade** (art. 4º): estimativa acima do limite mensal vigente
+  (44 h → 124 h → 60 h+30 h conforme a época) ganha a flag `acimaDoTeto`. Nada é
+  descartado — as flags aparecem no modal Detalhes do Servidor.
+
+### Privacidade
+
+O usuário pediu para **não registrar a remuneração de ninguém**. O scraper lê o
+contracheque em memória e só persiste, por (competência, servidor):
+`{ matricula, nome, cargo, funcao, classePadrao, unidade, base, valorRubrica,
+rubricas }` em `data/tse_horas_extras.json` (`base` e `valorRubrica` são os dois
+insumos da conta — a base é uma soma de rubricas de remuneração, o `valorRubrica`
+é a própria verba de serviço extraordinário). **Nada disso vai para o snapshot
+enviado ao navegador**: `agregarHorasExtras.js` só emite grandezas de tempo
+(horas, `divisor`, flags, ciclo). A conferência dos reais é feita direto no
+Anexo VIII do TSE (link no modal).
+
+### Cruzamento e limitações
+
+- Servidor ↔ servidor e servidor ↔ unidade são casados por **nome normalizado**
+  (nenhuma fonte tem CPF/matrícula em comum) — mesma limitação de homônimos das
+  outras telas. Para a contagem por unidade usa-se o nome da **lotação da
+  própria competência** (histórico), não a lotação de hoje.
+- Contracheques sem `VENCIMENTOS E VANTAGENS` legível são ignorados (não dá para
+  estimar a base).
+- A estimativa é **estimativa** — `base` aproximada, `divisor` legal por época,
+  mix 50/100 % desconhecido. Toda a UI rotula assim e mostra a faixa
+  min–máx.
+
+### Rodando a extração
+
+```bash
+npm run tse:scrape-horas-extras                    # 2009 → hoje (LONGO — ver abaixo)
+npm run tse:scrape-horas-extras -- --desde 2022-08 --ate 2023-02   # só um intervalo
+npm run tse:scrape-horas-extras -- --amostra 150   # 150 linhas/competência (prévia rápida)
+npm run tse:scrape-horas-extras -- --concorrencia 3 --refazer
+npm run data                                       # regrava o snapshot embutido
+```
+
+Diferente das outras fontes, o Anexo VIII **exige Playwright**: o WAF (BIG-IP
+ASM) rejeita o POST do detalhamento individual com `nomeServidor` acentuado
+quando feito por `fetch` puro; um navegador real passa. Por isso a extração
+**não** roda na atualização automática do app (`/api/tse/dados` só relê o JSON
+versionado, como faz com terceirizados). É **incremental por competência**
+(meses fechados são imutáveis) e o arquivo é regravado a cada competência
+concluída, então uma varredura longa é retomável. Ordem de grandeza: ~1.000
+contracheques/mês a ~0,4 s cada com `--concorrencia 3` ≈ 7 min/mês; o backfill
+completo (2009→hoje, ~200 meses) é uma execução de horas, feita uma vez.
 
 ## Próximas funcionalidades (roadmap)
 

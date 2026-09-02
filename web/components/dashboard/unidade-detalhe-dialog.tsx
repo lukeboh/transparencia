@@ -63,6 +63,27 @@ function BlocoMetricas({
           </dd>
         </div>
         <div className="flex items-center justify-between gap-2">
+          <dt className="text-muted-foreground">Horas extras estimadas</dt>
+          <dd
+            className="font-medium tabular-nums"
+            title="Serviço extraordinário estimado (limite superior), desde 2009 — só há pagamento em período eleitoral. Ver o glossário."
+          >
+            {metricas.horasExtras > 0 ? (
+              <>
+                {numero(Math.round(metricas.horasExtras))} h
+                {metricas.servidores > 0 && (
+                  <span className="font-normal text-muted-foreground">
+                    {' · '}
+                    {(metricas.horasExtras / metricas.servidores).toFixed(1)} h/servidor
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="font-normal text-muted-foreground">—</span>
+            )}
+          </dd>
+        </div>
+        <div className="flex items-center justify-between gap-2">
           <dt className="text-muted-foreground">Terceirizados alocados</dt>
           <dd className="inline-flex items-center gap-2">
             {onVerNomes && metricas.terceirizados > 0 && (
@@ -171,9 +192,12 @@ export function UnidadeDetalheDialog({
       <div className="flex flex-col gap-2 border-t border-border p-3 text-xs text-muted-foreground">
         Percentuais de servidores, funções, fiscais e teletrabalho são sobre o total de servidores do
         TSE; o de terceirizados é a parcela do total de terceirizados do TSE que está nesta unidade
-        (soma 100% na raiz). Tudo vem de cruzamento por nome/sigla de unidade entre a estrutura oficial
-        e as relações de agentes públicos, teletrabalho, fiscais de contrato e o PDF mensal de
-        terceirizados — pequenas divergências de grafia entre as fontes podem deslocar alguns registros.
+        (soma 100% na raiz). <strong>Horas extras estimadas</strong> é a soma, desde 2009, das horas de
+        serviço extraordinário inferidas do valor pago na folha (Anexo VIII; Resolução TSE nº
+        22.901/2008) — limite superior, só há pagamento em período eleitoral. Tudo vem de cruzamento
+        por nome/sigla de unidade entre a estrutura oficial e as relações de agentes públicos,
+        teletrabalho, fiscais de contrato, o PDF mensal de terceirizados e a folha de pagamento —
+        pequenas divergências de grafia entre as fontes podem deslocar alguns registros.
         <div className="flex flex-wrap gap-2">
           <BotaoFonteExterna
             href={urlUnidadeDetalhe(node.id)}

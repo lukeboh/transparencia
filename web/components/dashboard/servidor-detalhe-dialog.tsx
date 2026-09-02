@@ -4,12 +4,14 @@ import { useState } from 'react';
 import { AlertTriangle, ChevronDown, ExternalLink, PencilLine } from 'lucide-react';
 import { Dialog, DialogHeader } from '@/components/ui/dialog';
 import { BotaoFonteExterna } from '@/components/dashboard/botao-fonte-externa';
-import { brlCompleto, cn, dataUTC, nomeProprio, numero } from '@/lib/utils';
+import { brlCompleto, cn, dataUTC, mesAnoCurto, nomeProprio, numero } from '@/lib/utils';
 import { rotuloPerfil } from '@/lib/perfis-fiscalizacao';
 import {
+  urlAnexoVIII,
   urlContrato,
   urlTeletrabalho,
   type ContratoResumo,
+  type LinhaHorasExtras,
   type LinhaRanking,
   type LinhaTeletrabalho,
   type ServidorFuncoes,
@@ -258,6 +260,105 @@ function ConsolidadoTeletrabalho({
   );
 }
 
+// ── seção: Horas Extras (estimadas) ────────────────────────────────────────
+function HorasExtrasEstimadas({ nome, linha }: { nome: string; linha: LinhaHorasExtras | null }) {
+  if (!linha || linha.horasConsolidadas <= 0) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        Nenhum valor pago na rubrica &ldquo;Horas Extras&rdquo; encontrado para este servidor no
+        Anexo VIII da folha de pagamento do TSE (desde 2009).
+      </p>
+    );
+  }
+
+  const total = Math.round(linha.horasConsolidadas);
+  const piso = Math.round(linha.horasConsolidadasMin);
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-md bg-muted/50 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+        <p>
+          <span className="text-sm font-semibold text-foreground tabular-nums">≈ {numero(total)}</span>{' '}
+          hora{total === 1 ? '' : 's'} extras <strong>estimadas</strong> no total, em{' '}
+          {numero(linha.mesesComHE)} mês{linha.mesesComHE === 1 ? '' : 'es'} com pagamento (média de{' '}
+          {numero(Math.round(linha.mediaMensal))} h/mês).
+        </p>
+        <p className="mt-1.5">
+          A folha do TSE publica só o <strong>valor em R$</strong> da rubrica, não as horas. A
+          quantidade é inferida assim: valor pago ÷ (valor da hora normal × 1,5), com a hora normal
+          = remuneração do mês ÷ 200 (÷ 175 entre 2017 e fev/2020), pela{' '}
+          <strong>Resolução TSE nº 22.901/2008</strong>. Como a hora de domingo/feriado custa o
+          dobro, esse número é um <strong>limite superior</strong> — a faixa provável é{' '}
+          <strong className="tabular-nums">
+            {numero(piso)}–{numero(total)} h
+          </strong>
+          . Só há pagamento de hora extra em <strong>período eleitoral</strong>.
+        </p>
+      </div>
+
+      {linha.porCiclo.length > 0 && (
+        <div>
+          <p className="mb-1 text-xs font-semibold">Por ciclo eleitoral</p>
+          <ul className="divide-y divide-border/40">
+            {linha.porCiclo.map((c) => (
+              <li key={c.ciclo} className="flex items-center justify-between gap-3 py-1.5 text-xs">
+                <span className={cn(c.ciclo === 'fora' && 'text-muted-foreground')}>
+                  {c.rotulo}
+                  <span className="text-muted-foreground">
+                    {' '}
+                    · {numero(c.meses ?? 0)} mês{(c.meses ?? 0) === 1 ? '' : 'es'}
+                  </span>
+                </span>
+                <span className="tabular-nums font-medium">≈ {numero(Math.round(c.horas))} h</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div>
+        <p className="mb-1 text-xs font-semibold">Mês a mês</p>
+        <ul className="divide-y divide-border/40">
+          {linha.porCompetencia.map((m) => (
+            <li key={m.chave} className="flex flex-wrap items-center gap-x-2 gap-y-1 py-1.5 text-xs">
+              <span className="tabular-nums">{mesAnoCurto(m.chave)}</span>
+              <span className="ml-auto tabular-nums font-medium">
+                ≈ {numero(Math.round(m.horas))} h
+              </span>
+              {m.acimaDoTeto && (
+                <span
+                  className="rounded-sm bg-amber-500/15 px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400"
+                  title="A estimativa passa do limite mensal de serviço extraordinário (art. 4º da Resolução) — provável mês com pagamento retroativo ou acumulado."
+                >
+                  acima do teto
+                </span>
+              )}
+              {m.foraDaJanela && (
+                <span
+                  className="rounded-sm bg-muted px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-muted-foreground"
+                  title="Pagamento fora de qualquer janela eleitoral (art. 2º) — em geral um valor retroativo lançado meses depois."
+                >
+                  fora de período eleitoral
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <BotaoFonteExterna
+        href={urlAnexoVIII()}
+        titulo="Abre a consulta Anexo VIII do TSE (escolha o mês/ano e pesquise o nome para ver o valor pago em horas extras)"
+      >
+        Conferir os valores no Anexo VIII do TSE ({nomeProprio(nome)})
+      </BotaoFonteExterna>
+      <p className="text-[11px] text-muted-foreground">
+        Estimativa, não medição — a fonte não publica a quantidade de horas. Ver o glossário.
+      </p>
+    </div>
+  );
+}
+
 // ── seção: Histórico de Contratos ──────────────────────────────────────────
 function HistoricoContratos({
   linha,
@@ -373,6 +474,7 @@ export function ServidorDetalheDialog({
   linha,
   servidorFuncoes,
   teletrabalho,
+  horasExtras,
   lotacao,
   contratos,
   open,
@@ -381,6 +483,7 @@ export function ServidorDetalheDialog({
   linha: LinhaRanking;
   servidorFuncoes: ServidorFuncoes | null;
   teletrabalho: LinhaTeletrabalho | null;
+  horasExtras: LinhaHorasExtras | null;
   /** Lotação atual resolvida: `siglas` = "SETOT / CSELE / STI" (ou nome plano
    *  quando não resolve); `unidades` = cada nível com sigla + nome por extenso. */
   lotacao: { siglas: string; unidades: { sigla: string; nome: string }[] };
@@ -437,6 +540,17 @@ export function ServidorDetalheDialog({
           }
         >
           <ConsolidadoTeletrabalho nome={linha.nome} linha={teletrabalho} />
+        </SecaoColapsavel>
+
+        <SecaoColapsavel
+          titulo="Horas Extras (estimadas)"
+          resumo={
+            horasExtras && horasExtras.horasConsolidadas > 0
+              ? `≈ ${numero(Math.round(horasExtras.horasConsolidadas))} h`
+              : 'sem registro'
+          }
+        >
+          <HorasExtrasEstimadas nome={linha.nome} linha={horasExtras} />
         </SecaoColapsavel>
 
         <SecaoColapsavel

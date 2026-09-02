@@ -17,6 +17,7 @@ const entradaAgentes = process.argv[5] ?? path.join(raiz, 'data/tse_agentes.json
 const entradaTeletrabalho = process.argv[6] ?? path.join(raiz, 'data/tse_teletrabalho.json');
 const entradaUnidades = process.argv[7] ?? path.join(raiz, 'data/tse_unidades.json');
 const entradaTerceirizados = process.argv[8] ?? path.join(raiz, 'data/tse_terceirizados.json');
+const entradaHorasExtras = process.argv[9] ?? path.join(raiz, 'data/tse_horas_extras.json');
 const saida = process.argv[3] ?? path.join(raiz, 'web/lib/dashboard-data.ts');
 
 async function main() {
@@ -88,20 +89,38 @@ async function main() {
     );
   }
 
+  let horasExtras = [];
+  if (existsSync(entradaHorasExtras)) {
+    // Objeto { porCompetencia, ... } de scrapeHorasExtras.js (o agregador
+    // também aceita o array cru legado).
+    horasExtras = JSON.parse(await readFile(entradaHorasExtras, 'utf8'));
+  } else {
+    console.warn(
+      `[Aviso] '${entradaHorasExtras}' não foi encontrado — seção "horasExtras" sairá vazia. ` +
+      'Rode "npm run tse:scrape-horas-extras" para gerá-lo.',
+    );
+  }
+
   const excecoes = carregarExcecoes();
-  const dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos, excecoes, movimentosTeletrabalho, arvoreUnidades, terceirizados);
+  const dados = agregarDashboard(contratos, movimentosFuncoes, agentesPublicos, excecoes, movimentosTeletrabalho, arvoreUnidades, terceirizados, horasExtras);
   dados.unidades.terceirizadosCompetencia = terceirizadosCompetencia;
   await escreverDashboardData(dados, saida);
   console.log(
     `  ${contratos.length} contratos · ${dados.evolucao.length} anos · ${dados.categorias.length} fatias de categoria`,
   );
+  console.log(
+    `  horas extras: ${dados.horasExtras.ranking.length} servidor(es) · ` +
+    `${Math.round(dados.horasExtras.totalHoras)} h estimadas · ${dados.horasExtras.ciclos.length} ciclo(s)`,
+  );
   if (dados.unidades.arvore) {
     const { naoLocalizados } = dados.unidades;
     console.log(
       `  unidades: ${dados.unidades.totalServidoresTSE} servidores na árvore · ` +
-      `${dados.unidades.arvore.consolidado.terceirizados} terceirizados na árvore · não localizados: ` +
+      `${dados.unidades.arvore.consolidado.terceirizados} terceirizados na árvore · ` +
+      `${Math.round(dados.unidades.arvore.consolidado.horasExtras)} h extras na árvore · não localizados: ` +
       `${naoLocalizados.servidores} servidor(es), ${naoLocalizados.teletrabalho} teletrabalho, ` +
-      `${naoLocalizados.terceirizados} terceirizado(s), ${naoLocalizados.ambiguos} ambíguo(s)`,
+      `${naoLocalizados.terceirizados} terceirizado(s), ${Math.round(naoLocalizados.horasExtras ?? 0)} h extras, ` +
+      `${naoLocalizados.ambiguos} ambíguo(s)`,
     );
   }
 }
@@ -214,6 +233,8 @@ export interface LinhaServidor {
   funcoesIndex: number | null;
   /** Índice em DashboardData.teletrabalho.ranking, ou null quando o servidor nunca registrou período de teletrabalho. */
   teletrabalhoIndex: number | null;
+  /** Índice em DashboardData.horasExtras.ranking, ou null quando o servidor nunca teve valor pago na rubrica "HORAS EXTRAS". */
+  horasExtrasIndex: number | null;
 }
 
 export interface ServidoresData {
@@ -309,6 +330,65 @@ export interface TeletrabalhoData {
   ranking: LinhaTeletrabalho[];
 }
 
+/**
+ * Horas extras (serviço extraordinário) ESTIMADAS. A fonte (Anexo VIII da folha
+ * de pagamento do TSE) publica só o VALOR pago na rubrica "HORAS EXTRAS"; a
+ * quantidade de horas é inferida pela fórmula da Resolução TSE nº 22.901/2008
+ * (salário-hora = remuneração mensal ÷ divisor; + 50% dia útil/sábado). Fixamos
+ * + 50% (fator 1,5), o que torna o número um LIMITE SUPERIOR — horas de
+ * domingo/feriado (+ 100%) fariam a mesma quantia valer menos horas.
+ * Nenhum valor em R$ é exposto aqui (ver PRIVACIDADE em agregarHorasExtras.js).
+ */
+export interface HorasExtrasCompetencia {
+  /** "AAAA-MM" do mês de referência do trabalho (não o da folha de pagamento). */
+  chave: string;
+  rotulo: string;
+  /** Estimativa com fator 1,5 (+50%). */
+  horas: number;
+  /** Piso: mesma quantia com fator 2,0 (+100%). */
+  horasMin: number;
+  /** Divisor do salário-hora vigente na competência (200, ou 175 entre 2017 e fev/2020). */
+  divisor: number;
+  /** Estimativa acima do teto mensal do art. 4º da Resolução — provável mês com pagamento retroativo/acumulado. */
+  acimaDoTeto: boolean;
+  /** Competência fora de qualquer janela eleitoral (art. 2º) — pagamento atípico. */
+  foraDaJanela: boolean;
+}
+
+export interface CicloHorasExtras {
+  /** Ano do ciclo eleitoral ("2022"), ou "fora". */
+  ciclo: string;
+  rotulo: string;
+  tipo: 'geral' | 'municipal' | 'fora';
+  horas: number;
+  /** Nº de meses (LinhaHorasExtras) ou de servidores (HorasExtrasData.ciclos). */
+  meses?: number;
+  servidores?: number;
+}
+
+export interface LinhaHorasExtras {
+  nome: string;
+  /** Soma das estimativas mensais (fator 1,5). */
+  horasConsolidadas: number;
+  /** Soma do piso (fator 2,0). */
+  horasConsolidadasMin: number;
+  mesesComHE: number;
+  mediaMensal: number;
+  ultimaCompetencia: string | null;
+  porCiclo: CicloHorasExtras[];
+  porCompetencia: HorasExtrasCompetencia[];
+  flags: { acimaDoTeto: number; foraDaJanela: number };
+}
+
+export interface HorasExtrasData {
+  /** Meses de referência com alguma hora extra estimada, "AAAA-MM" ascendente. */
+  competencias: string[];
+  totalHoras: number;
+  medianaHoras: number;
+  ciclos: CicloHorasExtras[];
+  ranking: LinhaHorasExtras[];
+}
+
 export interface FuncaoContagem {
   tipo: 'FC' | 'CJ';
   nivel: number;
@@ -327,6 +407,10 @@ export interface UnidadeMetricas {
   teletrabalho: number;
   /** Profissionais terceirizados (postos de contratos de cessão de mão de obra) alocados na unidade. Estimado do PDF mensal do TSE — ver naoLocalizados.terceirizados. */
   terceirizados: number;
+  /** Total de horas extras ESTIMADAS (serviço extraordinário) — soma das ocorrências mensais dos servidores lotados na unidade, casadas pelo nome da lotação de cada competência. Ver HorasExtrasData. */
+  horasExtras: number;
+  /** Mesmo total quebrado por ciclo eleitoral. */
+  horasExtrasPorCiclo: { ciclo: string; horas: number }[];
 }
 
 export interface UnidadeNode {
@@ -372,6 +456,8 @@ export interface UnidadesData {
     teletrabalho: number;
     /** Terceirizados cuja "Alocação" no PDF não casou com nenhuma sigla da árvore. */
     terceirizados: number;
+    /** Soma de horas extras estimadas cuja unidade (lotação da competência) não casou com a árvore. */
+    horasExtras: number;
     ambiguos: number;
     exemplos: { servidores: string[]; teletrabalho: string[]; terceirizados: string[] };
   };
@@ -481,6 +567,7 @@ export interface DashboardData {
   funcoes: FuncoesData;
   servidores: ServidoresData;
   teletrabalho: TeletrabalhoData;
+  horasExtras: HorasExtrasData;
   unidades: UnidadesData;
   terceirizados: TerceirizadosData;
 }
@@ -504,6 +591,11 @@ export function urlTeletrabalho(nome: string) {
     toExcel: 'false',
   });
   return \`https://transparencia.tse.jus.br/transparenciaDadosServidores/infoServidores?\${params.toString()}\`;
+}
+
+/** URL da consulta "Anexo VIII - Detalhamento da Folha de Pagamento" do TSE — onde se confere, por mês e nome, o valor pago na rubrica "HORAS EXTRAS" que embasa a estimativa de horas. A consulta é feita no próprio site (escolher mês/ano e pesquisar o nome). */
+export function urlAnexoVIII() {
+  return 'https://transparencia.tse.jus.br/transparenciaDadosServidores/infoServidores?acao=Anexo_VIII';
 }
 
 /** URL da página de detalhe (lista de agentes públicos) de uma unidade, na consulta pública do TSE — para conferir a origem dos dados de um nó. */

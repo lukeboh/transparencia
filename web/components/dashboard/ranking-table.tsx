@@ -44,6 +44,7 @@ import { inteiro, ordem } from '@/lib/url-filtros';
 import type { ColunaExport } from '@/lib/exportar-dados';
 import type {
   ContratoResumo,
+  LinhaHorasExtras,
   LinhaRanking,
   LinhaTeletrabalho,
   ServidorFuncoes,
@@ -55,6 +56,7 @@ const CAMPOS_ORD_RANKING = new Set([
   'lotacao',
   'lotacao_hier',
   'teletrabalho',
+  'horas_extras',
   'contratos',
   'valor',
   'empenhado',
@@ -121,6 +123,7 @@ type CampoOrdenavel =
   | 'lotacao'
   | 'lotacao_hier'
   | 'teletrabalho'
+  | 'horas_extras'
   | 'contratos'
   | 'valor'
   | 'empenhado'
@@ -156,6 +159,7 @@ const DIRECAO_INICIAL: Record<CampoOrdenavel, DirecaoOrdenacao> = {
   lotacao: 'asc',
   lotacao_hier: 'asc',
   teletrabalho: 'desc',
+  horas_extras: 'desc',
   contratos: 'desc',
   valor: 'desc',
   empenhado: 'desc',
@@ -286,6 +290,7 @@ export function RankingTable({
   contratos,
   funcoesPorNome,
   teletrabalhoPorNome,
+  horasExtrasPorNome,
   lotacaoPorNome,
 }: {
   ranking: LinhaRanking[];
@@ -294,6 +299,8 @@ export function RankingTable({
   funcoesPorNome: Map<string, ServidorFuncoes>;
   /** Consolidado de teletrabalho por nome — mesma string de `linha.nome`. */
   teletrabalhoPorNome: Map<string, LinhaTeletrabalho>;
+  /** Horas extras estimadas por nome — mesma string de `linha.nome`. */
+  horasExtrasPorNome: Map<string, LinhaHorasExtras>;
   /** Lotação atual por nome — `siglas` = texto exibido ("SETOT / CSELE / STI",
    *  ou o nome plano quando não resolve); `unidades` = cada nível com sigla +
    *  nome por extenso (tooltip), vazio quando não resolveu na árvore. */
@@ -384,6 +391,12 @@ export function RankingTable({
             ((teletrabalhoPorNome.get(a.linha.nome)?.diasConsolidados ?? 0) -
               (teletrabalhoPorNome.get(b.linha.nome)?.diasConsolidados ?? 0))
           );
+        case 'horas_extras':
+          return (
+            fator *
+            ((horasExtrasPorNome.get(a.linha.nome)?.horasConsolidadas ?? 0) -
+              (horasExtrasPorNome.get(b.linha.nome)?.horasConsolidadas ?? 0))
+          );
         case 'contratos':
           return fator * (a.linha.quantidadeContratos - b.linha.quantidadeContratos);
         case 'valor':
@@ -394,7 +407,7 @@ export function RankingTable({
           return fator * ((a.linha.valorPagoConsolidado || 0) - (b.linha.valorPagoConsolidado || 0));
       }
     });
-  }, [ranking, busca, filtroLotacao, lotacaoPorNome, funcoesPorNome, teletrabalhoPorNome, ordenacao]);
+  }, [ranking, busca, filtroLotacao, lotacaoPorNome, funcoesPorNome, teletrabalhoPorNome, horasExtrasPorNome, ordenacao]);
 
   const totalPaginas = Math.max(1, Math.ceil(linhasVisiveis.length / LINHAS_POR_PAGINA));
   const paginaAtual = Math.min(pagina, totalPaginas - 1);
@@ -427,6 +440,11 @@ export function RankingTable({
         valor: ({ linha }) => teletrabalhoPorNome.get(linha.nome)?.diasConsolidados ?? 0,
       },
       {
+        cabecalho: 'Horas extras estimadas',
+        valor: ({ linha }) =>
+          Math.round(horasExtrasPorNome.get(linha.nome)?.horasConsolidadas ?? 0),
+      },
+      {
         cabecalho: 'Faixas de valor',
         valor: ({ linha }) =>
           categoriasDeContratos(linha.contratos, contratos)
@@ -438,7 +456,7 @@ export function RankingTable({
       { cabecalho: 'Empenhado (R$)', valor: ({ linha }) => linha.valorEmpenhadoConsolidado || 0 },
       { cabecalho: 'Pago (R$)', valor: ({ linha }) => linha.valorPagoConsolidado || 0 },
     ],
-    [contratos, funcoesPorNome, lotacaoPorNome, teletrabalhoPorNome],
+    [contratos, funcoesPorNome, lotacaoPorNome, teletrabalhoPorNome, horasExtrasPorNome],
   );
 
   function ordenarPor(campo: CampoOrdenavel) {
@@ -475,10 +493,13 @@ export function RankingTable({
           (Pg) — o valor de um contrato conta uma única vez por pessoa; quem não é fiscal/gestor de nenhum
           contrato aparece zerado. A coluna <strong>Funções</strong> lista os níveis FC/CJ que o servidor já
           ocupou (a vigente destacada; histórico completo no modal <strong>Detalhes do Servidor</strong>);
-          a <strong>Lotação</strong> traz as 3 unidades mais específicas da hierarquia oficial. A coluna
+          a <strong>Lotação</strong> traz as 3 unidades mais específicas da hierarquia oficial. A coluna{' '}
+          <strong>Horas extras</strong> é o total <strong>estimado</strong> de serviço extraordinário desde
+          2009 (a folha do TSE publica só o valor pago — a hora é inferida pela Resolução TSE 22.901/2008;
+          limite superior, só há pagamento em período eleitoral). A coluna
           Faixas mostra os símbolos das faixas de valor presentes entre os contratos do servidor. Clique numa
           linha para abrir <strong>Detalhes do Servidor</strong> — histórico de funções, consolidado de
-          teletrabalho e histórico de contratos.
+          teletrabalho, horas extras estimadas e histórico de contratos.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -601,6 +622,26 @@ export function RankingTable({
                   </InfoDica>
                 </span>
               </TableHead>
+              <TableHead className="text-right">
+                <span className="inline-flex items-center gap-1">
+                  <CabecalhoOrdenavel
+                    rotulo="Horas extras"
+                    campo="horas_extras"
+                    ordenacao={ordenacao}
+                    onOrdenar={ordenarPor}
+                  />
+                  <InfoDica titulo="O que a coluna Horas extras mostra?" alinhamento="direita">
+                    Total de horas extras <strong>estimadas</strong> (serviço extraordinário)
+                    desde 2009. A folha de pagamento do TSE publica só o <strong>valor em
+                    R$</strong> pago — a quantidade de horas é inferida pela fórmula da{' '}
+                    <strong>Resolução TSE nº 22.901/2008</strong> (valor ÷ hora normal ÷ 1,5).
+                    É um <strong>limite superior</strong> e só há pagamento em{' '}
+                    <strong>período eleitoral</strong>. Método e quebra por eleição em{' '}
+                    <strong>Detalhes do Servidor</strong>. &ldquo;—&rdquo; quando não há
+                    registro.
+                  </InfoDica>
+                </span>
+              </TableHead>
               <TableHead>Faixas</TableHead>
               <TableHead className="text-right">
                 <CabecalhoOrdenavel
@@ -639,7 +680,7 @@ export function RankingTable({
           <TableBody>
             {linhas.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
                   Nenhum servidor encontrado para{' '}
                   &ldquo;{[busca.trim(), filtroLotacao.trim()].filter(Boolean).join('” · “')}&rdquo;
                 </TableCell>
@@ -697,6 +738,25 @@ export function RankingTable({
                     {(() => {
                       const dias = teletrabalhoPorNome.get(linha.nome)?.diasConsolidados ?? 0;
                       return dias > 0 ? numero(dias) : <span className="text-muted-foreground">—</span>;
+                    })()}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {(() => {
+                      const he = horasExtrasPorNome.get(linha.nome);
+                      if (!he || he.horasConsolidadas <= 0) {
+                        return <span className="text-muted-foreground">—</span>;
+                      }
+                      return (
+                        <span
+                          title={`Estimativa (limite superior). Faixa provável: ${numero(
+                            Math.round(he.horasConsolidadasMin),
+                          )}–${numero(Math.round(he.horasConsolidadas))} h. ${
+                            he.mesesComHE
+                          } mês(es) com pagamento.`}
+                        >
+                          {numero(Math.round(he.horasConsolidadas))}
+                        </span>
+                      );
                     })()}
                   </TableCell>
                   <TableCell>
@@ -773,6 +833,7 @@ export function RankingTable({
             linha={selecionado}
             servidorFuncoes={funcoesPorNome.get(selecionado.nome) ?? null}
             teletrabalho={teletrabalhoPorNome.get(selecionado.nome) ?? null}
+            horasExtras={horasExtrasPorNome.get(selecionado.nome) ?? null}
             lotacao={lotacaoDe(selecionado.nome)}
             contratos={contratos}
             open

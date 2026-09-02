@@ -12,6 +12,7 @@
     "tse:scrape-teletrabalho": "node src/tse/scrapeTeletrabalho.js",
     "tse:scrape-unidades": "node src/tse/scrapeUnidades.js",
     "tse:scrape-terceirizados": "node src/tse/scrapeTerceirizados.js",
+    "tse:scrape-horas-extras": "node src/tse/scrapeHorasExtras.js",
     "tse:rank": "node src/tse/cli.js",
     "tse:cruzar-siac": "node src/tse/cruzarSiac.js",
     "data": "node src/tse/buildDashboardData.js",

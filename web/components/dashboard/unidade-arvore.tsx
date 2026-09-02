@@ -89,7 +89,15 @@ const COLUNAS_EXPORT_UNIDADES: ColunaExport<LinhaUnidade>[] = [
   { cabecalho: 'Teletrabalho (consolidado)', valor: (u) => u.node.consolidado.teletrabalho },
   { cabecalho: 'Terceirizados (direto)', valor: (u) => u.node.direto.terceirizados },
   { cabecalho: 'Terceirizados (consolidado)', valor: (u) => u.node.consolidado.terceirizados },
+  { cabecalho: 'Horas extras estimadas (direto)', valor: (u) => Math.round(u.node.direto.horasExtras) },
+  { cabecalho: 'Horas extras estimadas (consolidado)', valor: (u) => Math.round(u.node.consolidado.horasExtras) },
 ];
+
+/** Rótulo curto de um ciclo eleitoral pelo id ("2022" | "fora"). */
+function rotuloCicloHE(ciclo: string): string {
+  if (ciclo === 'fora') return 'fora de período eleitoral';
+  return `Eleições ${ciclo}`;
+}
 
 interface UnidadeCardProps {
   node: UnidadeNode;
@@ -245,6 +253,41 @@ function UnidadeCard({
               </span>
             </span>
           </div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1 text-muted-foreground">
+              Horas extras estimadas <DicaTermo id="horasExtras" />
+            </span>
+            <span
+              className="font-medium tabular-nums"
+              title="Serviço extraordinário estimado (limite superior) — soma das ocorrências mensais dos servidores lotados aqui, desde 2009. Só há pagamento em período eleitoral."
+            >
+              {metricas.horasExtras > 0 ? (
+                <>
+                  {numero(Math.round(metricas.horasExtras))} h
+                  {metricas.servidores > 0 && (
+                    <span className="font-normal text-muted-foreground">
+                      {' · '}
+                      {(metricas.horasExtras / metricas.servidores).toFixed(1)} h/servidor
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="font-normal text-muted-foreground">—</span>
+              )}
+            </span>
+          </div>
+          {modoDetalhe === 'detalhado' && metricas.horasExtrasPorCiclo.length > 0 && (
+            <ul className="ml-1 space-y-0.5 text-xs text-muted-foreground">
+              {metricas.horasExtrasPorCiclo
+                .filter((c) => c.horas > 0)
+                .map((c) => (
+                  <li key={c.ciclo} className="flex items-center justify-between gap-2">
+                    <span>{rotuloCicloHE(c.ciclo)}</span>
+                    <span className="tabular-nums">{numero(Math.round(c.horas))} h</span>
+                  </li>
+                ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
 

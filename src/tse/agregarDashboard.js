@@ -7,13 +7,14 @@ import { agregarFuncoes } from './agregarFuncoes.js';
 import { agregarTeletrabalho } from './agregarTeletrabalho.js';
 import { agregarUnidades } from './agregarUnidades.js';
 import { agregarTerceirizados } from './agregarTerceirizados.js';
+import { agregarHorasExtras } from './agregarHorasExtras.js';
 import { canonicalContrato } from './nomesTerceirizados.js';
 import { anoDe, paraDataISO } from './datas.js';
 import { aplicarExcecoes } from './excecoes.js';
 
 const MAX_FATIAS = 5; // demais categorias somadas em "Outros"
 
-function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [], excecoes = [], movimentosTeletrabalho = [], arvoreUnidades = null, terceirizados = []) {
+function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [], excecoes = [], movimentosTeletrabalho = [], arvoreUnidades = null, terceirizados = [], horasExtras = []) {
   contratos = aplicarExcecoes(contratos, excecoes);
   // `terceirizados` pode chegar como o objeto novo de scrapeTerceirizados.js
   // (com histórico `porCompetencia`) ou como o array cru legado. A contagem por
@@ -98,6 +99,12 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
   const rankingVigentes = rankResponsaveis(vigentes);
   const { servidores: servidoresFuncoes, rankingComFuncao } = agregarFuncoes(agentesPublicos, movimentosFuncoes, contratos);
   const teletrabalho = agregarTeletrabalho(movimentosTeletrabalho, rankingCompleto, hoje);
+  // Horas extras (serviço extraordinário) estimadas a partir do valor pago na
+  // rubrica "HORAS EXTRAS" do Anexo VIII — ver agregarHorasExtras.js. As
+  // ocorrências (uma por servidor/mês) alimentam a contagem por unidade abaixo;
+  // não vão para o snapshot enviado ao navegador.
+  const horasExtrasAgg = agregarHorasExtras(horasExtras);
+  const { ocorrencias: horasExtrasOcorrencias, ...horasExtrasResumo } = horasExtrasAgg;
 
   // Cruza o número do contrato de cessão de mão de obra ("13/2022") com a base
   // do Comprasnet para linkar cada terceirizado ao detalhe do contrato.
@@ -109,7 +116,7 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
   }
 
   const unidades = arvoreUnidades
-    ? agregarUnidades(arvoreUnidades, agentesPublicos, teletrabalho, rankingVigentes, terceirizadosRegistros)
+    ? agregarUnidades(arvoreUnidades, agentesPublicos, teletrabalho, rankingVigentes, terceirizadosRegistros, horasExtrasOcorrencias)
     : {
         arvore: null,
         totalServidoresTSE: 0,
@@ -118,6 +125,7 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
           servidores: 0,
           teletrabalho: 0,
           terceirizados: 0,
+          horasExtras: 0,
           ambiguos: 0,
           exemplos: { servidores: [], teletrabalho: [], terceirizados: [] },
         },
@@ -176,6 +184,9 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
   const teletrabalhoIndexPorNome = new Map(
     teletrabalho.ranking.map((r, i) => [normalizeNome(r.nome), i]),
   );
+  const horasExtrasIndexPorNome = new Map(
+    horasExtrasResumo.ranking.map((r, i) => [normalizeNome(r.nome), i]),
+  );
   const servidoresLista = [];
   const vistosServidores = new Set();
   for (const ap of agentesPublicos) {
@@ -193,6 +204,7 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
       rankingIndex: indicePorNomeRanking.get(chave) ?? null,
       funcoesIndex: funcoesIndexPorNome.get(chave) ?? null,
       teletrabalhoIndex: teletrabalhoIndexPorNome.get(chave) ?? null,
+      horasExtrasIndex: horasExtrasIndexPorNome.get(chave) ?? null,
     });
   }
   for (let i = 0; i < ranking.length; i++) {
@@ -210,6 +222,7 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
       rankingIndex: i,
       funcoesIndex: fi,
       teletrabalhoIndex: teletrabalhoIndexPorNome.get(chave) ?? null,
+      horasExtrasIndex: horasExtrasIndexPorNome.get(chave) ?? null,
     });
   }
   servidoresLista.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
@@ -261,6 +274,7 @@ function agregarDashboard(contratos, movimentosFuncoes = [], agentesPublicos = [
       lista: servidoresLista,
     },
     teletrabalho,
+    horasExtras: horasExtrasResumo,
     unidades,
     terceirizados: terceirizadosAgregado,
   };

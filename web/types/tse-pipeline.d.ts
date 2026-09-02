@@ -23,6 +23,7 @@ declare module '*src/tse/agregarDashboard.js' {
     movimentosTeletrabalho?: unknown[],
     arvoreUnidades?: unknown,
     terceirizados?: unknown[],
+    horasExtras?: unknown,
   ): unknown;
 }
 

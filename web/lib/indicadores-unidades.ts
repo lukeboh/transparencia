@@ -8,7 +8,14 @@
 import type { UnidadeMetricas, UnidadeNode } from './dashboard-data';
 import { somaFiscais, somaFuncoes } from './unidades-flat';
 
-export type MetricaBaseId = 'servidores' | 'fc' | 'cj' | 'fiscais' | 'teletrabalho' | 'terceirizados';
+export type MetricaBaseId =
+  | 'servidores'
+  | 'fc'
+  | 'cj'
+  | 'fiscais'
+  | 'teletrabalho'
+  | 'terceirizados'
+  | 'horas_extras';
 export type VarianteId = 'unidade' | 'consolidada' | 'orgao_direto' | 'orgao_subarvore';
 
 interface MetricaBase {
@@ -18,6 +25,11 @@ interface MetricaBase {
   /** Frase completa, usada no menu de colunas. */
   descricao: string;
   valor: (m: UnidadeMetricas) => number;
+  /** 'pct' (padrão) = num/den × 100, exibido como "%"; 'num' = num/den cru
+   *  (ex.: horas por servidor), exibido com o sufixo. */
+  formato?: 'pct' | 'num';
+  /** Sufixo do valor quando formato === 'num'. */
+  sufixo?: string;
 }
 
 const METRICAS_BASE: MetricaBase[] = [
@@ -56,6 +68,15 @@ const METRICAS_BASE: MetricaBase[] = [
     grupo: 'Terceirizados',
     descricao: 'Terceirizados por servidor (aprox., do PDF mensal do TSE)',
     valor: (m) => m.terceirizados,
+  },
+  {
+    id: 'horas_extras',
+    grupo: 'Horas extras',
+    descricao:
+      'Horas extras estimadas por servidor (serviço extraordinário, desde 2009; valor pago ÷ hora normal ÷ 1,5, Res. TSE 22.901/2008 — limite superior, só há pagamento em período eleitoral)',
+    valor: (m) => m.horasExtras,
+    formato: 'num',
+    sufixo: ' h',
   },
 ];
 
@@ -109,14 +130,23 @@ export interface Relacao {
   rotuloVariante: string;
   /** Frase completa "Percentual de … — sobre …". */
   descricao: string;
-  /** Percentual (0–100+, pode passar de 100 em "fiscais"); null quando o
-   *  denominador é 0 (unidade sem servidor lotado direto). */
+  /** 'pct' → valor é percentual (0–100+); 'num' → valor é uma razão crua (ex.: h/servidor). */
+  formato: 'pct' | 'num';
+  /** Sufixo para formato 'num'. */
+  sufixo: string;
+  /** Percentual, ou razão crua se formato === 'num'; null quando o denominador
+   *  é 0 (unidade sem servidor lotado direto). */
   calc: (node: UnidadeNode, tseServidores: number) => number | null;
 }
 
-/** Combinações que dariam sempre 100% e não informam nada. */
-const ehDegenerada = (base: MetricaBaseId, v: VarianteId) =>
-  base === 'servidores' && (v === 'unidade' || v === 'consolidada');
+/** Combinações que não informam nada (sempre 100%) ou não fazem sentido. */
+const ehDegenerada = (base: MetricaBaseId, v: VarianteId) => {
+  if (base === 'servidores' && (v === 'unidade' || v === 'consolidada')) return true;
+  // Horas extras é uma taxa por servidor: as variantes "órgão" (sobre o total
+  // do TSE) misturariam escalas e não teriam leitura clara.
+  if (base === 'horas_extras' && (v === 'orgao_direto' || v === 'orgao_subarvore')) return true;
+  return false;
+};
 
 export const RELACOES: Relacao[] = METRICAS_BASE.flatMap((mb) =>
   VARIANTES.filter((v) => !ehDegenerada(mb.id, v.id)).map((v) => ({
@@ -126,9 +156,12 @@ export const RELACOES: Relacao[] = METRICAS_BASE.flatMap((mb) =>
     grupo: mb.grupo,
     rotuloVariante: v.rotulo,
     descricao: `${mb.descricao} — ${v.descricao}`,
+    formato: mb.formato ?? 'pct',
+    sufixo: mb.sufixo ?? '',
     calc: (node: UnidadeNode, tse: number) => {
       const { num, den } = v.calc(mb.valor, node, tse);
-      return den > 0 ? (num / den) * 100 : null;
+      if (den <= 0) return null;
+      return mb.formato === 'num' ? num / den : (num / den) * 100;
     },
   })),
 );
@@ -151,6 +184,7 @@ export const RELACOES_PADRAO: string[] = [
   'fiscais__consolidada',
   'teletrabalho__consolidada',
   'terceirizados__consolidada',
+  'horas_extras__consolidada',
 ];
 
 /** Mesma regra de `percentual()` em utils.ts: 1 casa abaixo de 10%, inteiro
@@ -158,4 +192,13 @@ export const RELACOES_PADRAO: string[] = [
 export function formatarPct(v: number): string {
   if (v > 0 && v < 10) return v.toFixed(1);
   return String(Math.round(v));
+}
+
+/** Formata o valor de uma relação para exibição, conforme o `formato`. */
+export function formatarValorRelacao(v: number, r: { formato: 'pct' | 'num'; sufixo: string }): string {
+  if (r.formato === 'num') {
+    const s = v >= 100 ? String(Math.round(v)) : v.toFixed(1);
+    return `${s}${r.sufixo}`;
+  }
+  return `${formatarPct(v)}%`;
 }

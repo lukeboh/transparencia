@@ -47,7 +47,7 @@ import {
   RELACOES,
   RELACOES_PADRAO,
   RELACOES_POR_ID,
-  formatarPct,
+  formatarValorRelacao,
   type Relacao,
 } from '@/lib/indicadores-unidades';
 
@@ -90,12 +90,21 @@ function IconeOrd({ ativo, dir }: { ativo: boolean; dir: 'asc' | 'desc' }) {
   return <Icone className={cn('h-3.5 w-3.5 shrink-0', !ativo && 'opacity-50')} aria-hidden />;
 }
 
-/** Célula percentual com barra de dados: cresce da esquerda, número por cima,
- *  trava em 100% (valores maiores acontecem em "fiscais" — pessoa com vários
- *  papéis). "—" quando não há denominador. */
-function CelulaPct({ valor }: { valor: number | null }) {
+/** Célula de valor. Para relações percentuais, uma barra de dados cresce da
+ *  esquerda e trava em 100% (valores maiores acontecem em "fiscais" — pessoa
+ *  com vários papéis). Para relações 'num' (ex.: horas extras por servidor), só
+ *  o número com sufixo, sem barra (a escala não é 0–100). "—" quando não há
+ *  denominador. */
+function CelulaPct({ valor, relacao }: { valor: number | null; relacao: Relacao }) {
   if (valor === null) {
     return <TableCell className="text-right tabular-nums text-muted-foreground">—</TableCell>;
+  }
+  if (relacao.formato === 'num') {
+    return (
+      <TableCell className="text-right tabular-nums">
+        {formatarValorRelacao(valor, relacao)}
+      </TableCell>
+    );
   }
   const largura = Math.max(0, Math.min(100, valor));
   return (
@@ -105,7 +114,7 @@ function CelulaPct({ valor }: { valor: number | null }) {
         className="pointer-events-none absolute inset-y-1 left-1 rounded-sm bg-primary/15"
         style={{ width: `calc((100% - 0.5rem) * ${largura / 100})` }}
       />
-      <span className="relative">{formatarPct(valor)}%</span>
+      <span className="relative">{formatarValorRelacao(valor, relacao)}</span>
     </TableCell>
   );
 }
@@ -361,7 +370,7 @@ export function IndicadoresTable({
       { cabecalho: 'Nível', valor: ({ linha }) => linha.nivel },
       ...colunas.map(
         (r): ColunaExport<LinhaValores> => ({
-          cabecalho: `${r.grupo} — ${r.rotuloVariante} (%)`,
+          cabecalho: `${r.grupo} — ${r.rotuloVariante} (${r.formato === 'num' ? r.sufixo.trim() || 'nº' : '%'})`,
           valor: ({ valores }) => {
             const v = valores.get(r.id);
             return v === null || v === undefined ? '' : Number(v.toFixed(2));
@@ -384,9 +393,11 @@ export function IndicadoresTable({
       <CardHeader>
         <CardTitle className="text-base font-semibold">Indicadores por unidade</CardTitle>
         <CardDescription>
-          Uma linha por unidade; cada coluna é uma relação percentual escolhida no menu{' '}
-          <strong>Colunas</strong>. Clique num cabeçalho para ordenar. A barra na célula
-          esboça o valor (trava visualmente em 100%).
+          Uma linha por unidade; cada coluna é uma relação escolhida no menu{' '}
+          <strong>Colunas</strong> — em geral um percentual (com barra que trava em 100%), mas{' '}
+          <strong>Horas extras</strong> é uma média por servidor, em horas <strong>estimadas</strong>{' '}
+          (serviço extraordinário desde 2009; valor pago ÷ hora normal ÷ 1,5, Res. TSE 22.901/2008 —
+          limite superior, só há pagamento em período eleitoral). Clique num cabeçalho para ordenar.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -549,7 +560,7 @@ export function IndicadoresTable({
                     {linha.nivel}
                   </TableCell>
                   {colunas.map((r) => (
-                    <CelulaPct key={r.id} valor={valores.get(r.id) ?? null} />
+                    <CelulaPct key={r.id} valor={valores.get(r.id) ?? null} relacao={r} />
                   ))}
                 </TableRow>
               ))

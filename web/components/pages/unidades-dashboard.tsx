@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Building2, GitBranch, HardHat, Users } from 'lucide-react';
+import { Building2, GitBranch, HardHat, Timer, Users } from 'lucide-react';
 import { AppHeader } from '@/components/app-header';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { UnidadeArvore } from '@/components/dashboard/unidade-arvore';
@@ -35,6 +35,7 @@ export function UnidadesDashboard() {
     naoLocalizados.terceirizados +
     naoLocalizados.ambiguos;
   const totalTerceirizados = unidades.arvore ? unidades.arvore.consolidado.terceirizados : 0;
+  const totalHorasExtras = unidades.arvore ? unidades.arvore.consolidado.horasExtras : 0;
 
   return (
     <main className="max-w-none px-4 py-8 sm:px-6 lg:px-8">
@@ -64,7 +65,7 @@ export function UnidadesDashboard() {
         </p>
       ) : (
         <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             <StatCard
               titulo="Servidores na estrutura"
               valor={numero(unidades.totalServidoresTSE)}
@@ -84,6 +85,16 @@ export function UnidadesDashboard() {
                   : 'estimado do PDF mensal do TSE'
               }
               icone={<HardHat className="h-4 w-4" aria-hidden />}
+            />
+            <StatCard
+              titulo={
+                <span className="inline-flex items-center gap-1">
+                  Horas extras estimadas <DicaTermo id="horasExtras" />
+                </span>
+              }
+              valor={`${numero(Math.round(totalHorasExtras))} h`}
+              detalhe="serviço extraordinário desde 2009 · limite superior"
+              icone={<Timer className="h-4 w-4" aria-hidden />}
             />
             <StatCard
               titulo={
@@ -134,7 +145,12 @@ export function UnidadesDashboard() {
         posto é ligado à unidade pela sigla da coluna &ldquo;Alocação&rdquo;; como o arquivo é um PDF escaneado,
         alguns registros não são localizados e o total por unidade é aproximado. Não são servidores públicos —
         entram numa contagem à parte, e o percentual mostrado é a parcela do total de terceirizados do TSE que
-        está naquela unidade (soma 100% na raiz).
+        está naquela unidade (soma 100% na raiz). <strong>Horas extras estimadas</strong> vem do Anexo VIII da
+        folha de pagamento do TSE (rubrica &ldquo;Horas Extras&rdquo;, mês a mês desde 2009): a fonte publica
+        só o valor em R$, e a quantidade de horas é inferida pela Resolução TSE nº 22.901/2008 (valor ÷ hora
+        normal ÷ 1,5) — é um <strong>limite superior</strong>, e a Resolução só permite pagamento em período
+        eleitoral. A soma por unidade usa a lotação de cada competência (histórico), cruzada por nome; no modo
+        &ldquo;Detalhe: detalhado&rdquo; a unidade mostra a quebra por ciclo eleitoral.
         <AppVersion />
       </footer>
     </main>

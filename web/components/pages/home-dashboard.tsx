@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowUpRight, HardHat, Laptop, Network, Percent, Users, type LucideIcon } from 'lucide-react';
+import { ArrowUpRight, HardHat, Laptop, Network, Percent, Timer, Users, type LucideIcon } from 'lucide-react';
 import { AppHeader } from '@/components/app-header';
 import { StatCards } from '@/components/dashboard/stat-cards';
 import { StatCard } from '@/components/dashboard/stat-card';
@@ -31,13 +31,21 @@ interface KpiSecao {
 
 export function HomeDashboard() {
   const estado = useDadosDashboard();
-  const { resumo, evolucao, categorias, contratos, fonte, servidores, teletrabalho, unidades, terceirizados } =
-    estado.dados;
+  const {
+    resumo, evolucao, categorias, contratos, fonte, servidores, teletrabalho,
+    horasExtras, unidades, terceirizados,
+  } = estado.dados;
 
   const totalUnidades = unidades.arvore ? contarUnidades(unidades.arvore) : 0;
   const servidoresLotados = unidades.arvore?.consolidado.servidores ?? 0;
   const terceirizadosPorServidor =
     servidores.total > 0 ? terceirizados.ativos / servidores.total : 0;
+
+  // Ciclo eleitoral mais recente com horas extras (ignora o balde "fora").
+  const ciclosOrdenados = [...horasExtras.ciclos]
+    .filter((c) => c.ciclo !== 'fora')
+    .sort((a, b) => a.ciclo.localeCompare(b.ciclo));
+  const cicloRecenteHE = ciclosOrdenados[ciclosOrdenados.length - 1];
 
   // Um KPI ilustrativo por seção, cada card levando ao detalhamento da página.
   const kpisSecao: KpiSecao[] = [
@@ -75,6 +83,17 @@ export function HomeDashboard() {
       titulo: 'Terceirizados / servidores',
       valor: `${Math.round(terceirizadosPorServidor * 100)}%`,
       detalhe: `${umDecimal.format(terceirizadosPorServidor)}× o quadro · relações comparáveis por unidade`,
+    },
+    {
+      href: '/servidores',
+      Icone: Timer,
+      titulo: 'Horas extras estimadas',
+      valor: cicloRecenteHE
+        ? `${numero(Math.round(cicloRecenteHE.horas))} h`
+        : `${numero(Math.round(horasExtras.totalHoras))} h`,
+      detalhe: cicloRecenteHE
+        ? `${cicloRecenteHE.rotulo} · ${numero(cicloRecenteHE.servidores ?? 0)} servidores · estimativa (limite superior)`
+        : 'serviço extraordinário desde 2009 · estimativa',
     },
   ];
 
@@ -119,7 +138,7 @@ export function HomeDashboard() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {kpisSecao.map(({ href, Icone, titulo, valor, detalhe }) => (
               <Link
-                key={href}
+                key={titulo}
                 href={href}
                 aria-label={`${titulo} — ver detalhamento`}
                 className="rounded-lg outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring"
