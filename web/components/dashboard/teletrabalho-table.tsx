@@ -36,7 +36,7 @@ import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
 import { inteiro, ordem } from '@/lib/url-filtros';
 import type { ColunaExport } from '@/lib/exportar-dados';
 import type { LinhaRanking, LinhaTeletrabalho, ServidorFuncoes } from '@/lib/dashboard-data';
-import type { ResolvedorLotacao } from '@/lib/lotacao-hierarquia';
+import { textoSiglas, type ResolvedorLotacao } from '@/lib/lotacao-hierarquia';
 
 const CAMPOS_ORD_TELETRAB = new Set(['nome', 'dias', 'lotacao', 'situacao']);
 
@@ -69,8 +69,8 @@ function nomeLotacao(niveis: string[] | null): string | null {
  *  plano da fonte quando a árvore não resolve. */
 function siglasLotacao(niveis: string[] | null, resolver: ResolvedorLotacao): string {
   const folha = nomeLotacao(niveis);
-  const siglas = resolver(folha);
-  return siglas.length > 0 ? siglas.join(' / ') : (folha ?? '');
+  const unidades = resolver(folha);
+  return unidades.length > 0 ? textoSiglas(unidades) : (folha ?? '');
 }
 
 function normalizar(texto: string) {

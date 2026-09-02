@@ -320,8 +320,9 @@ compacto — destaque + "+N" — segue em `/funcoes` e `/teletrabalho`). A colun
 **Lotação** traz as unidades da hierarquia oficial da mais específica para a
 mais alta (ex.: `SETOT / CSELE / STI`), resolvidas pelo mesmo
 `criarResolvedorLotacao` de `/funcoes` (no máximo 3 níveis, para no nível de
-secretaria, "Secretaria do Tribunal" nunca aparece — ver o item de changelog).
-A coluna
+secretaria, "Secretaria do Tribunal" nunca aparece — ver o item de changelog);
+**cada sigla tem o nome por extenso da sua unidade no tooltip** (não só a
+folha — o resolvedor devolve `{ sigla, nome }[]`). A coluna
 **Teletrabalho** mostra o total de dias em regime de teletrabalho
 (`teletrabalho.ranking[teletrabalhoIndex].diasConsolidados`), "—" sem registro.
 A tabela tem filtro incremental **por servidor** e **por lotação** (campo de
@@ -330,6 +331,10 @@ ordenação clicável nos cabeçalhos Servidor (alfabética), **Funções** (pel
 função vigente — quem não tem vai ao fim), **Lotação**, **Teletrabalho**,
 Contratos e Valor consolidado (1º clique ordena, 2º inverte, 3º volta à ordem
 do ranking); a coluna # sempre mostra a posição original no ranking por valor.
+A **Lotação** tem um 4º estado: além de alfabética ↑/↓, uma ordenação
+**hierárquica** (`campo` interno `lotacao_hier`) que agrupa por unidade-mãe —
+ordena pelo topo do caminho, depois desce (todos de STI juntos, dentro de STI
+por coordenadoria, etc.).
 
 Na subseção **Por papel** do filtro, além dos papéis reais há o chip sintético
 **NÃO FISCAL** (ligado por padrão): mescla os servidores que não são

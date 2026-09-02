@@ -1,7 +1,7 @@
 // Resolve o nome plano de lotação de um servidor (relação de agentes públicos,
-// ver src/tse/scrapeAgentesPublicos.js) para o caminho de siglas da árvore
-// oficial de unidades do TSE (ver src/tse/scrapeUnidades.js), da unidade mais
-// específica para a mais alta — ex.: "SETOT / CSELE / STI".
+// ver src/tse/scrapeAgentesPublicos.js) para o caminho de unidades da árvore
+// oficial do TSE (ver src/tse/scrapeUnidades.js), da unidade mais específica
+// para a mais alta — ex.: "SETOT / CSELE / STI".
 //
 // Regras de exibição do caminho:
 //  - no máximo 3 níveis;
@@ -24,6 +24,12 @@ const MAX_NIVEIS = 3;
 /** Nome normalizado da "Secretaria do Tribunal" — o guarda-chuva que não aparece. */
 const NOME_UMBRELLA = 'SECRETARIA DO TRIBUNAL';
 
+/** Uma unidade do caminho de lotação: a sigla (exibida) e o nome por extenso (tooltip). */
+export interface UnidadeLotacao {
+  sigla: string;
+  nome: string;
+}
+
 function normalizarUnidade(texto: string) {
   return texto
     .normalize('NFD')
@@ -43,14 +49,19 @@ function ehSecretaria(no: UnidadeNode): boolean {
   return /^SECRETARIA[ -]/.test(normalizarUnidade(no.nome));
 }
 
-export type ResolvedorLotacao = (lotacao: string | null) => string[];
+/** "SETOT / CSELE / STI" a partir do caminho resolvido. */
+export function textoSiglas(unidades: UnidadeLotacao[]): string {
+  return unidades.map((u) => u.sigla).join(' / ');
+}
+
+export type ResolvedorLotacao = (lotacao: string | null) => UnidadeLotacao[];
 
 /**
  * Constrói um resolvedor a partir da árvore de unidades já agregada. O
- * resultado é uma lista de até 3 siglas da menor para a maior unidade, parando
- * no nível de secretaria e pulando a "Secretaria do Tribunal" (ver regras no
- * topo do arquivo); lista vazia quando `arvore` é null, `lotacao` é vazia, ou o
- * nome não resolve para exatamente um nó.
+ * resultado é o caminho (até 3 unidades) da menor para a maior, parando no
+ * nível de secretaria e pulando a "Secretaria do Tribunal" (ver regras no topo
+ * do arquivo); lista vazia quando `arvore` é null, `lotacao` é vazia, ou o nome
+ * não resolve para exatamente um nó.
  */
 export function criarResolvedorLotacao(arvore: UnidadeNode | null): ResolvedorLotacao {
   const porId = new Map<string, UnidadeNode>();
@@ -73,11 +84,11 @@ export function criarResolvedorLotacao(arvore: UnidadeNode | null): ResolvedorLo
     const ids = idsPorNome.get(normalizarUnidade(lotacao));
     if (!ids || ids.length !== 1) return [];
 
-    const caminho: string[] = [];
+    const caminho: UnidadeLotacao[] = [];
     let atual: UnidadeNode | undefined = porId.get(ids[0]);
     while (atual && atual.parentId !== null && caminho.length < MAX_NIVEIS) {
       if (ehUmbrella(atual)) break; // "Secretaria do Tribunal" nunca aparece
-      caminho.push(atual.sigla);
+      caminho.push({ sigla: atual.sigla, nome: atual.nome });
       if (ehSecretaria(atual)) break; // a exibição para no nível de secretaria
       atual = porId.get(atual.parentId);
     }

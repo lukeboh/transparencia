@@ -10,6 +10,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  ListTree,
   MoveHorizontal,
   Network,
   Search,
@@ -53,6 +54,7 @@ const CAMPOS_ORD_RANKING = new Set([
   'nome',
   'funcoes',
   'lotacao',
+  'lotacao_hier',
   'teletrabalho',
   'contratos',
   'valor',
@@ -118,12 +120,31 @@ type CampoOrdenavel =
   | 'nome'
   | 'funcoes'
   | 'lotacao'
+  | 'lotacao_hier'
   | 'teletrabalho'
   | 'contratos'
   | 'valor'
   | 'empenhado'
   | 'pago';
 type DirecaoOrdenacao = 'asc' | 'desc';
+
+/** Caminho de lotação como chave hierárquica (do topo para a folha), para
+ *  ordenar agrupando por unidade-mãe: "SETOT / CSELE / STI" → ["STI","CSELE","SETOT"]. */
+function chaveHierarquicaLotacao(siglas: string): string[] {
+  return siglas ? siglas.split(' / ').reverse() : [];
+}
+/** Compara duas chaves hierárquicas nível a nível; a mais curta (unidade-mãe)
+ *  vem primeiro. */
+function compararHierarquico(a: string[], b: string[]): number {
+  const n = Math.max(a.length, b.length);
+  for (let i = 0; i < n; i++) {
+    if (a[i] === undefined) return -1;
+    if (b[i] === undefined) return 1;
+    const c = a[i].localeCompare(b[i], 'pt-BR');
+    if (c) return c;
+  }
+  return 0;
+}
 
 interface Ordenacao {
   campo: CampoOrdenavel;
@@ -134,6 +155,7 @@ const DIRECAO_INICIAL: Record<CampoOrdenavel, DirecaoOrdenacao> = {
   nome: 'asc',
   funcoes: 'asc',
   lotacao: 'asc',
+  lotacao_hier: 'asc',
   teletrabalho: 'desc',
   contratos: 'desc',
   valor: 'desc',
@@ -273,8 +295,10 @@ export function RankingTable({
   funcoesPorNome: Map<string, ServidorFuncoes>;
   /** Consolidado de teletrabalho por nome — mesma string de `linha.nome`. */
   teletrabalhoPorNome: Map<string, LinhaTeletrabalho>;
-  /** Lotação atual por nome — `curto` = até 3 siglas da hierarquia, `completo` = nome plano. */
-  lotacaoPorNome: Map<string, { curto: string; completo: string }>;
+  /** Lotação atual por nome — `siglas` = texto exibido ("SETOT / CSELE / STI",
+   *  ou o nome plano quando não resolve); `unidades` = cada nível com sigla +
+   *  nome por extenso (tooltip), vazio quando não resolveu na árvore. */
+  lotacaoPorNome: Map<string, { siglas: string; unidades: { sigla: string; nome: string }[] }>;
 }) {
   const [pagina, setPagina] = useState(0);
   const [busca, setBusca] = useState('');
@@ -303,10 +327,11 @@ export function RankingTable({
     },
   );
 
-  const lotacaoDe = (nome: string) => lotacaoPorNome.get(nome) ?? { curto: '', completo: '' };
+  const lotacaoDe = (nome: string) =>
+    lotacaoPorNome.get(nome) ?? { siglas: '', unidades: [] };
   const opcoesLotacao = useMemo(
     () =>
-      Array.from(new Set([...lotacaoPorNome.values()].map((v) => v.curto).filter(Boolean))).sort(
+      Array.from(new Set([...lotacaoPorNome.values()].map((v) => v.siglas).filter(Boolean))).sort(
         (a, b) => a.localeCompare(b, 'pt-BR'),
       ),
     [lotacaoPorNome],
@@ -323,7 +348,7 @@ export function RankingTable({
       // Casa só o texto EXIBIDO da lotação (siglas resolvidas, ou o nome plano
       // quando não resolve) — não o nome completo, senão "STI" pegaria
       // "logíSTIca", "inveSTImento" etc. no nome por extenso.
-      if (termoLot && !normalizar(lotacaoDe(linha.nome).curto).includes(termoLot)) {
+      if (termoLot && !normalizar(lotacaoDe(linha.nome).siglas).includes(termoLot)) {
         return false;
       }
       return true;
@@ -341,10 +366,18 @@ export function RankingTable({
           return fator * ka.localeCompare(kb, 'pt-BR');
         }
         case 'lotacao': {
-          const la = lotacaoDe(a.linha.nome).curto;
-          const lb = lotacaoDe(b.linha.nome).curto;
+          const la = lotacaoDe(a.linha.nome).siglas;
+          const lb = lotacaoDe(b.linha.nome).siglas;
           if (!la || !lb) return la ? -1 : lb ? 1 : 0; // sem lotação resolvida sempre ao fim
           return fator * la.localeCompare(lb, 'pt-BR');
+        }
+        case 'lotacao_hier': {
+          // Hierárquica: agrupa por unidade-mãe (topo), depois subdivide.
+          // Sempre crescente; sem lotação resolvida vai ao fim.
+          const la = lotacaoDe(a.linha.nome).siglas;
+          const lb = lotacaoDe(b.linha.nome).siglas;
+          if (!la || !lb) return la ? -1 : lb ? 1 : 0;
+          return compararHierarquico(chaveHierarquicaLotacao(la), chaveHierarquicaLotacao(lb));
         }
         case 'teletrabalho':
           return (
@@ -382,8 +415,14 @@ export function RankingTable({
           return s ? funcoesTexto(s) : '';
         },
       },
-      { cabecalho: 'Lotação', valor: ({ linha }) => lotacaoDe(linha.nome).curto },
-      { cabecalho: 'Lotação (nome completo)', valor: ({ linha }) => lotacaoDe(linha.nome).completo },
+      { cabecalho: 'Lotação', valor: ({ linha }) => lotacaoDe(linha.nome).siglas },
+      {
+        cabecalho: 'Lotação (nomes completos)',
+        valor: ({ linha }) => {
+          const { unidades, siglas } = lotacaoDe(linha.nome);
+          return unidades.length ? unidades.map((u) => u.nome).join(' | ') : siglas;
+        },
+      },
       {
         cabecalho: 'Dias em teletrabalho',
         valor: ({ linha }) => teletrabalhoPorNome.get(linha.nome)?.diasConsolidados ?? 0,
@@ -412,6 +451,19 @@ export function RankingTable({
         return { campo, direcao: atual.direcao === 'asc' ? 'desc' : 'asc' };
       }
       return null;
+    });
+  }
+
+  // Lotação tem 4 estados: alfabética ↑ → alfabética ↓ → hierárquica → nada.
+  function ordenarLotacao() {
+    setPagina(0);
+    setOrdenacao((atual) => {
+      const estado =
+        atual?.campo === 'lotacao' ? atual.direcao : atual?.campo === 'lotacao_hier' ? 'hier' : null;
+      if (estado === null) return { campo: 'lotacao', direcao: 'asc' };
+      if (estado === 'asc') return { campo: 'lotacao', direcao: 'desc' };
+      if (estado === 'desc') return { campo: 'lotacao_hier', direcao: 'asc' };
+      return null; // era hierárquica → limpa
     });
   }
 
@@ -501,17 +553,39 @@ export function RankingTable({
               </TableHead>
               <TableHead>
                 <span className="inline-flex items-center gap-1">
-                  <CabecalhoOrdenavel
-                    rotulo="Lotação"
-                    campo="lotacao"
-                    ordenacao={ordenacao}
-                    onOrdenar={ordenarPor}
-                  />
+                  <button
+                    type="button"
+                    onClick={ordenarLotacao}
+                    aria-pressed={ordenacao?.campo === 'lotacao' || ordenacao?.campo === 'lotacao_hier'}
+                    aria-label="Ordenar por lotação — alfabética crescente, decrescente ou hierárquica"
+                    title="Ordenar: alfabética ↑ → alfabética ↓ → hierárquica (agrupa por unidade-mãe) → sem ordenação"
+                    className={cn(
+                      '-mx-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-1 transition-colors hover:bg-accent hover:text-accent-foreground',
+                      (ordenacao?.campo === 'lotacao' || ordenacao?.campo === 'lotacao_hier') &&
+                        'text-foreground',
+                    )}
+                  >
+                    Lotação
+                    {ordenacao?.campo === 'lotacao_hier' ? (
+                      <ListTree className="h-3.5 w-3.5" aria-hidden />
+                    ) : ordenacao?.campo === 'lotacao' ? (
+                      ordenacao.direcao === 'asc' ? (
+                        <ArrowUp className="h-3.5 w-3.5" aria-hidden />
+                      ) : (
+                        <ArrowDown className="h-3.5 w-3.5" aria-hidden />
+                      )
+                    ) : (
+                      <ArrowUpDown className="h-3.5 w-3.5 opacity-50" aria-hidden />
+                    )}
+                  </button>
                   <InfoDica titulo="O que a coluna Lotação mostra?" alinhamento="esquerda">
                     A lotação atual do servidor (relação de agentes públicos), como as 3
                     unidades mais específicas da hierarquia oficial de{' '}
-                    <strong>/unidades</strong> — ex.: <em>SETOT / CSELE / STI</em>. Sem
-                    resolução confiável, mostra o nome plano da fonte.
+                    <strong>/unidades</strong> — ex.: <em>SETOT / CSELE / STI</em> (cada
+                    sigla tem o nome por extenso no tooltip). Sem resolução confiável,
+                    mostra o nome plano da fonte. Clicando no cabeçalho: ordenação
+                    alfabética (↑/↓) e uma terceira, <strong>hierárquica</strong>, que
+                    agrupa por unidade-mãe (STI, depois CSELE dentro de STI, etc.).
                   </InfoDica>
                 </span>
               </TableHead>
@@ -600,13 +674,26 @@ export function RankingTable({
                   </TableCell>
                   <TableCell>
                     {(() => {
-                      const { curto, completo } = lotacaoDe(linha.nome);
-                      return curto ? (
-                        <span className="text-xs text-muted-foreground" title={completo || undefined}>
-                          {curto}
+                      const { siglas, unidades } = lotacaoDe(linha.nome);
+                      if (!siglas) return <span className="text-muted-foreground">—</span>;
+                      if (unidades.length === 0) {
+                        // Não resolveu na árvore — nome plano da fonte, sem tooltip por nível.
+                        return <span className="text-xs text-muted-foreground">{siglas}</span>;
+                      }
+                      return (
+                        <span className="text-xs text-muted-foreground">
+                          {unidades.map((u, i) => (
+                            <span key={u.sigla + i}>
+                              {i > 0 && <span aria-hidden> / </span>}
+                              <span
+                                title={u.nome}
+                                className="underline decoration-dotted decoration-border underline-offset-2"
+                              >
+                                {u.sigla}
+                              </span>
+                            </span>
+                          ))}
                         </span>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
                       );
                     })()}
                   </TableCell>

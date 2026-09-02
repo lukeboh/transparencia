@@ -38,7 +38,7 @@ import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
 import { inteiro, ordem } from '@/lib/url-filtros';
 import type { ColunaExport } from '@/lib/exportar-dados';
 import type { ServidorFuncoes } from '@/lib/dashboard-data';
-import type { ResolvedorLotacao } from '@/lib/lotacao-hierarquia';
+import { textoSiglas, type ResolvedorLotacao } from '@/lib/lotacao-hierarquia';
 
 const CAMPOS_ORD_FUNCOES = new Set(['nome', 'funcoes', 'lotacao']);
 
@@ -327,8 +327,8 @@ export function FuncoesTable({
     for (const s of servidores) {
       const chave = s.lotacao ?? '';
       if (cache.has(chave)) continue;
-      const siglas = resolverLotacao(s.lotacao);
-      cache.set(chave, siglas.length > 0 ? siglas.join(' / ') : (s.lotacao ?? ''));
+      const unidades = resolverLotacao(s.lotacao);
+      cache.set(chave, unidades.length > 0 ? textoSiglas(unidades) : (s.lotacao ?? ''));
     }
     return cache;
   }, [servidores, resolverLotacao]);

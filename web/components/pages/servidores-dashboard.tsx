@@ -20,7 +20,7 @@ import { bool, excluidos, incluidos } from '@/lib/url-filtros';
 import { numero } from '@/lib/utils';
 import { ehSubstituto } from '@/lib/perfis-fiscalizacao';
 import { CATEGORIAS_VALOR, categoriaDoValor, type CategoriaValorId } from '@/lib/categorias-valor';
-import { criarResolvedorLotacao } from '@/lib/lotacao-hierarquia';
+import { criarResolvedorLotacao, textoSiglas } from '@/lib/lotacao-hierarquia';
 import type {
   ContratoResumo,
   LinhaRanking,
@@ -168,17 +168,20 @@ export function ServidoresDashboard() {
     return map;
   }, [servidores.lista, teletrabalho.ranking]);
 
-  // Lotação atual por servidor: as 3 unidades mais específicas da hierarquia
-  // oficial (ex.: "SETOT / CSELE / STI"), resolvidas do nome plano da relação
-  // de agentes públicos contra a árvore de /unidades; `completo` = nome plano
-  // (fallback e title).
+  // Lotação atual por servidor: o caminho de unidades (até 3 níveis) da mais
+  // específica para a mais alta, resolvido do nome plano da relação de agentes
+  // públicos contra a árvore de /unidades. `unidades[i].nome` = nome por
+  // extenso de cada nível (tooltip); `siglas` = texto exibido, com fallback no
+  // nome plano quando a árvore não resolve.
   const lotacaoPorNome = useMemo(() => {
     const resolver = criarResolvedorLotacao(unidades.arvore);
-    const map = new Map<string, { curto: string; completo: string }>();
+    const map = new Map<string, { siglas: string; unidades: { sigla: string; nome: string }[] }>();
     for (const s of servidores.lista) {
-      const completo = s.lotacao ?? '';
-      const siglas = resolver(s.lotacao);
-      map.set(s.nome, { curto: siglas.length > 0 ? siglas.join(' / ') : completo, completo });
+      const path = resolver(s.lotacao);
+      map.set(s.nome, {
+        siglas: path.length > 0 ? textoSiglas(path) : (s.lotacao ?? ''),
+        unidades: path,
+      });
     }
     return map;
   }, [servidores.lista, unidades.arvore]);
