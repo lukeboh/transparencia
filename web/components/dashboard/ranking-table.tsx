@@ -344,26 +344,17 @@ export function RankingTable({
   );
 
   // Cada linha carrega DUAS numerações: `posicao` = rank no ranking base (por
-  // valor consolidado), fixo; `ordem` = rank na ordenação ATUAL da tabela,
-  // recalculado a cada clique de cabeçalho. A coluna "#" mostra `ordem` — e
-  // clicar nela limpa a ordenação de coluna, voltando `ordem` a ser `posicao`.
+  // valor consolidado), fixo; `ordem` = rank na ordenação ATUAL sobre o ranking
+  // INTEIRO — numerado ANTES do filtro por nome/lotação, então ao filtrar cada
+  // servidor continua mostrando sua posição no ranking completo. Clicar no "#"
+  // limpa a ordenação de coluna e volta `ordem` a ser `posicao`.
   const linhasVisiveis = useMemo(() => {
     const comPosicao = ranking.map((linha, i) => ({ linha, posicao: i + 1 }));
-    const termo = normalizar(busca.trim());
-    const termoLot = normalizar(filtroLotacao.trim());
-    const filtradas = comPosicao.filter(({ linha }) => {
-      if (termo && !normalizar(linha.nome).includes(termo)) return false;
-      // Casa só o texto EXIBIDO da lotação (siglas resolvidas, ou o nome plano
-      // quando não resolve) — não o nome completo, senão "STI" pegaria
-      // "logíSTIca", "inveSTImento" etc. no nome por extenso.
-      if (termoLot && !normalizar(lotacaoDe(linha.nome).siglas).includes(termoLot)) {
-        return false;
-      }
-      return true;
-    });
-    if (!ordenacao) return filtradas.map((item, i) => ({ ...item, ordem: i + 1 }));
-    const fator = ordenacao.direcao === 'asc' ? 1 : -1;
-    const ordenadas = [...filtradas].sort((a, b) => {
+
+    let ordenadas = comPosicao;
+    if (ordenacao) {
+      const fator = ordenacao.direcao === 'asc' ? 1 : -1;
+      ordenadas = [...comPosicao].sort((a, b) => {
       switch (ordenacao.campo) {
         case 'nome':
           return fator * a.linha.nome.localeCompare(b.linha.nome, 'pt-BR');
@@ -408,8 +399,23 @@ export function RankingTable({
         case 'pago':
           return fator * ((a.linha.valorPagoConsolidado || 0) - (b.linha.valorPagoConsolidado || 0));
       }
+      });
+    }
+
+    const comOrdem = ordenadas.map((item, i) => ({ ...item, ordem: i + 1 }));
+
+    // Filtro textual por servidor / lotação — depois de numerar, para não
+    // renumerar o ranking ao filtrar.
+    const termo = normalizar(busca.trim());
+    const termoLot = normalizar(filtroLotacao.trim());
+    return comOrdem.filter(({ linha }) => {
+      if (termo && !normalizar(linha.nome).includes(termo)) return false;
+      // Casa só o texto EXIBIDO da lotação (siglas resolvidas, ou o nome plano
+      // quando não resolve) — não o nome completo, senão "STI" pegaria
+      // "logíSTIca", "inveSTImento" etc. no nome por extenso.
+      if (termoLot && !normalizar(lotacaoDe(linha.nome).siglas).includes(termoLot)) return false;
+      return true;
     });
-    return ordenadas.map((item, i) => ({ ...item, ordem: i + 1 }));
   }, [ranking, busca, filtroLotacao, lotacaoPorNome, funcoesPorNome, teletrabalhoPorNome, horasExtrasPorNome, ordenacao]);
 
   const totalPaginas = Math.max(1, Math.ceil(linhasVisiveis.length / LINHAS_POR_PAGINA));

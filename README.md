@@ -364,11 +364,12 @@ texto com `datalist` das lotações presentes, sem distinção de acentos/caixa)
 ordenação clicável nos cabeçalhos Servidor (alfabética), **Funções** (pela
 função vigente — quem não tem vai ao fim), **Lotação**, **Teletrabalho**,
 Contratos e Valor consolidado (1º clique ordena, 2º inverte, 3º volta à ordem
-do ranking). A coluna **#** renumera 1..N conforme a ordenação atual da tabela
-(dá para ver o "top N" de qualquer coluna); clicar no cabeçalho **#** limpa a
-ordenação de coluna e volta o # a ser o ranking base por valor consolidado — a
-posição no ranking base fica no `title` da célula e numa coluna própria do
-export.
+do ranking). A coluna **#** mostra a posição no **ranking inteiro sob a
+ordenação atual** — numerada antes do filtro por nome/lotação, então ao filtrar
+cada servidor continua exibindo seu lugar no ranking completo (não renumera para
+1..N do subconjunto). Clicar no cabeçalho **#** limpa a ordenação de coluna e
+volta o # a ser o ranking base por valor consolidado; a posição no ranking base
+fica no `title` da célula e numa coluna própria do export.
 A **Lotação** tem um 4º estado: além de alfabética ↑/↓, uma ordenação
 **hierárquica** (`campo` interno `lotacao_hier`) que agrupa por unidade-mãe —
 ordena pelo topo do caminho, depois desce (todos de STI juntos, dentro de STI

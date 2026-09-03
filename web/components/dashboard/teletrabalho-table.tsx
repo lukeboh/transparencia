@@ -172,40 +172,44 @@ export function TeletrabalhoTable({
     },
   );
 
-  // Cada linha carrega DUAS numerações: `posicao` = rank no ranking base (por
-  // dias consolidados), fixo; `ordem` = rank na ordenação ATUAL da tabela. A
-  // coluna "#" mostra `ordem`; clicar nela limpa a ordenação de coluna e volta
-  // `ordem` a ser `posicao` (mesmo padrão de ranking-table.tsx).
+  // `posicao` = rank no ranking base (por dias), fixo; `ordem` = rank na
+  // ordenação ATUAL sobre o ranking INTEIRO — numerado ANTES do filtro por
+  // nome/lotação, então ao filtrar cada servidor mantém sua posição. Clicar no
+  // "#" limpa a ordenação de coluna e volta `ordem` a ser `posicao`.
   const linhasVisiveis = useMemo(() => {
     const comPosicao = ranking.map((linha, i) => ({ linha, posicao: i + 1 }));
+
+    let ordenadas = comPosicao;
+    if (ordenacao) {
+      const fator = ordenacao.direcao === 'asc' ? 1 : -1;
+      ordenadas = [...comPosicao].sort((a, b) => {
+        switch (ordenacao.campo) {
+          case 'nome':
+            return fator * a.linha.nome.localeCompare(b.linha.nome, 'pt-BR');
+          case 'dias':
+            return fator * (a.linha.diasConsolidados - b.linha.diasConsolidados);
+          case 'lotacao': {
+            // Sem lotação resolvida sempre ao fim, independente da direção.
+            const la = siglasLotacao(lotacaoDe(a.linha), resolverLotacao);
+            const lb = siglasLotacao(lotacaoDe(b.linha), resolverLotacao);
+            if (!la || !lb) return la ? -1 : lb ? 1 : 0;
+            return fator * la.localeCompare(lb, 'pt-BR');
+          }
+          case 'situacao':
+            return fator * (Number(vigenteDe(a.linha)) - Number(vigenteDe(b.linha)));
+        }
+      });
+    }
+
+    const comOrdem = ordenadas.map((item, i) => ({ ...item, ordem: i + 1 }));
     const termoNome = normalizar(busca.trim());
     const termoLotacao = normalizar(buscaLotacao.trim());
-    const filtradas = comPosicao.filter(({ linha }) => {
+    return comOrdem.filter(({ linha }) => {
       if (termoNome && !normalizar(linha.nome).includes(termoNome)) return false;
       if (termoLotacao && !normalizar(siglasLotacao(lotacaoDe(linha), resolverLotacao)).includes(termoLotacao))
         return false;
       return true;
     });
-    if (!ordenacao) return filtradas.map((item, i) => ({ ...item, ordem: i + 1 }));
-    const fator = ordenacao.direcao === 'asc' ? 1 : -1;
-    const ordenadas = [...filtradas].sort((a, b) => {
-      switch (ordenacao.campo) {
-        case 'nome':
-          return fator * a.linha.nome.localeCompare(b.linha.nome, 'pt-BR');
-        case 'dias':
-          return fator * (a.linha.diasConsolidados - b.linha.diasConsolidados);
-        case 'lotacao': {
-          // Sem lotação resolvida sempre ao fim, independente da direção.
-          const la = siglasLotacao(lotacaoDe(a.linha), resolverLotacao);
-          const lb = siglasLotacao(lotacaoDe(b.linha), resolverLotacao);
-          if (!la || !lb) return la ? -1 : lb ? 1 : 0;
-          return fator * la.localeCompare(lb, 'pt-BR');
-        }
-        case 'situacao':
-          return fator * (Number(vigenteDe(a.linha)) - Number(vigenteDe(b.linha)));
-      }
-    });
-    return ordenadas.map((item, i) => ({ ...item, ordem: i + 1 }));
   }, [ranking, busca, buscaLotacao, ordenacao, lotacaoDe, resolverLotacao, vigenteDe]);
 
   const totalPaginas = Math.max(1, Math.ceil(linhasVisiveis.length / LINHAS_POR_PAGINA));
