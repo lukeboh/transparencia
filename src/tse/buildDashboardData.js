@@ -340,16 +340,11 @@ export interface TeletrabalhoData {
  * Nenhum valor em R$ é exposto aqui (ver PRIVACIDADE em agregarHorasExtras.js).
  */
 export interface HorasExtrasCompetencia {
-  /** "AAAA-MM" do mês de referência do trabalho (não o da folha de pagamento). */
+  /** "AAAA-MM" do mês de referência do trabalho (não o da folha de pagamento). Rótulo: mesAnoCurto(chave). */
   chave: string;
-  rotulo: string;
-  /** Estimativa com fator 1,5 (+50%). */
+  /** Estimativa de horas com fator 1,5 (+50%). */
   horas: number;
-  /** Piso: mesma quantia com fator 2,0 (+100%). */
-  horasMin: number;
-  /** Divisor do salário-hora vigente na competência (200, ou 175 entre 2017 e fev/2020). */
-  divisor: number;
-  /** Estimativa acima do teto mensal do art. 4º da Resolução — provável mês com pagamento retroativo/acumulado. */
+  /** Estimativa acima do teto mensal do art. 4º da Resolução — provável mês com pagamento retroativo/acumulado ou base subestimada. */
   acimaDoTeto: boolean;
 }
 

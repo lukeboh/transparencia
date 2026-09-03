@@ -131,8 +131,7 @@ function agregarHorasExtras(entrada) {
         const ec = pessoa.porCompetencia.get(chaveRef) ?? {
           chave: chaveRef,
           horas: 0,
-          horasMin: 0,
-          divisor: est.divisor,
+          horasMin: 0, // só somado no consolidado; não vai por competência no snapshot
           acimaDoTeto: false,
         };
         ec.horas += est.horas;
@@ -175,12 +174,11 @@ function agregarHorasExtras(entrada) {
         porCiclo: [...p.porCiclo.values()]
           .map((c) => ({ ciclo: c.ciclo, rotulo: c.rotulo, tipo: c.tipo, horas: c.horas, meses: c.meses.size }))
           .sort((a, b) => a.ciclo.localeCompare(b.ciclo)),
+        // Enxuto: `rotulo` sai de `chave` no cliente (mesAnoCurto); `horasMin`
+        // e `divisor` por mês não são exibidos — só a faixa consolidada.
         porCompetencia: comps.map((c) => ({
           chave: c.chave,
-          rotulo: rotuloCompetencia(c.chave),
           horas: c.horas,
-          horasMin: c.horasMin,
-          divisor: c.divisor,
           acimaDoTeto: c.acimaDoTeto,
         })),
         flags: {
