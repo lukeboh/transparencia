@@ -81,6 +81,32 @@ test('array cru legado é aceito', () => {
   assert.equal(r.totalHoras, 0);
 });
 
+test('meses cuja estimativa arredonda para 0 não são apresentados nem somados', () => {
+  const r = agregarHorasExtras({
+    porCompetencia: {
+      '2022-10': [
+        { nome: 'ZE NINGUEM', unidade: 'SEÇÃO X', base: 20000, valorRubrica: 4500, rubricas: [{ ref: '10/2022', valor: 4500 }] },
+      ],
+      // R$ 30 → 30 / (20000/200 × 1,5) = 0,2 h → some
+      '2023-06': [
+        { nome: 'ZE NINGUEM', unidade: 'SEÇÃO X', base: 20000, valorRubrica: 30, rubricas: [{ ref: '06/2023', valor: 30 }] },
+      ],
+    },
+  });
+  const ze = r.ranking.find((x) => x.nome === 'ZE NINGUEM');
+  assert.equal(ze.porCompetencia.length, 1); // só out/2022
+  assert.equal(ze.porCompetencia[0].chave, '2022-10');
+  assert.equal(ze.mesesComHE, 1);
+  assert.ok(Math.abs(ze.horasConsolidadas - 30) < 1e-6); // 4500/150, sem os 0,2 h
+  // pessoa cujo total inteiro arredonda para 0 some do ranking
+  const r2 = agregarHorasExtras({
+    porCompetencia: {
+      '2023-06': [{ nome: 'SO POEIRA', unidade: 'X', base: 20000, valorRubrica: 30, rubricas: [{ ref: '06/2023', valor: 30 }] }],
+    },
+  });
+  assert.equal(r2.ranking.length, 0);
+});
+
 test('base parcial na folha de pagamento é substituída pela base do mês de referência', () => {
   const r = agregarHorasExtras({
     porCompetencia: {

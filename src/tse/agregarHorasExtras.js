@@ -10,7 +10,7 @@
 // flags). Nenhum valor em R$ (nem a rubrica, nem a base de cálculo) é exposto:
 // a conferência dos reais é feita direto no Anexo VIII do TSE (link na UI).
 import { normalizeNome } from './rankResponsaveis.js';
-import { estimarHorasExtras, chaveCompetencia } from './horasExtras.js';
+import { estimarHorasExtras, cicloEleitoralDe, chaveCompetencia } from './horasExtras.js';
 
 const MESES_ROTULO = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -91,11 +91,15 @@ function agregarHorasExtras(entrada) {
     return med > 0 ? med : doRef || baseDaFolha;
   }
 
-  // pessoa (nome normalizado) -> acumulador
+  // Um mês-pessoa só entra na apresentação (e nos totais) se a estimativa
+  // daquele mês arredonda para ≥ 1 h. Abaixo disso são alguns reais de acerto
+  // de folha / rubrica residual — fica no arquivo cru para controle, mas não é
+  // mostrado nem somado, para o total bater com o que se vê.
+  const LIMIAR_EXIBICAO = 0.5;
+
+  // pessoa (nome normalizado) -> { nome, porCompetencia: Map<chaveRef, ec> }
+  //   ec = { chave, horas, horasMin, acimaDoTeto, unidades: Set }
   const pessoas = new Map();
-  // cicloId -> { rotulo, tipo, horas, servidores:Set<nomeNorm> }
-  const ciclos = new Map();
-  const ocorrencias = [];
   const competenciasRef = new Set();
 
   for (const chaveFolha of Object.keys(porCompetencia)) {
@@ -108,7 +112,7 @@ function agregarHorasExtras(entrada) {
 
       let pessoa = pessoas.get(nomeNorm);
       if (!pessoa) {
-        pessoa = { nome: reg.nome, porCompetencia: new Map(), porCiclo: new Map() };
+        pessoa = { nome: reg.nome, porCompetencia: new Map() };
         pessoas.set(nomeNorm, pessoa);
       }
 
@@ -126,44 +130,59 @@ function agregarHorasExtras(entrada) {
         });
         if (est.horas == null) continue; // base ausente/zerada — não dá para estimar
 
-        competenciasRef.add(chaveRef);
-
         const ec = pessoa.porCompetencia.get(chaveRef) ?? {
           chave: chaveRef,
           horas: 0,
-          horasMin: 0, // só somado no consolidado; não vai por competência no snapshot
+          horasMin: 0,
           acimaDoTeto: false,
+          unidades: new Set(),
         };
         ec.horas += est.horas;
         ec.horasMin += est.horasMin ?? 0;
         ec.acimaDoTeto = ec.acimaDoTeto || est.acimaDoTeto;
+        if (reg.unidade) ec.unidades.add(reg.unidade);
         pessoa.porCompetencia.set(chaveRef, ec);
-
-        const cicloId = est.ciclo?.ciclo ?? 'outros';
-        const rotuloCiclo = est.ciclo?.rotulo ?? 'Outros meses';
-        const tipoCiclo = est.ciclo?.tipo ?? 'outros';
-
-        const pc = pessoa.porCiclo.get(cicloId) ?? { ciclo: cicloId, rotulo: rotuloCiclo, tipo: tipoCiclo, horas: 0, meses: new Set() };
-        pc.horas += est.horas;
-        pc.meses.add(chaveRef);
-        pessoa.porCiclo.set(cicloId, pc);
-
-        const gc = ciclos.get(cicloId) ?? { ciclo: cicloId, rotulo: rotuloCiclo, tipo: tipoCiclo, horas: 0, servidores: new Set() };
-        gc.horas += est.horas;
-        gc.servidores.add(nomeNorm);
-        ciclos.set(cicloId, gc);
-
-        ocorrencias.push({ nomeNorm, nome: reg.nome, unidade: reg.unidade ?? '', chave: chaveRef, cicloId: est.ciclo?.ciclo ?? null, horas: est.horas });
       }
     }
   }
 
+  // --- Pós-processamento: aplica o limiar e monta as saídas ---
+  const ciclos = new Map(); // cicloId -> { rotulo, tipo, horas, servidores:Set }
+  const ocorrencias = [];
+
   const ranking = [...pessoas.values()]
     .map((p) => {
-      const comps = [...p.porCompetencia.values()].sort((a, b) => a.chave.localeCompare(b.chave));
+      const comps = [...p.porCompetencia.values()]
+        .filter((c) => c.horas >= LIMIAR_EXIBICAO)
+        .sort((a, b) => a.chave.localeCompare(b.chave));
       const horasConsolidadas = comps.reduce((s, c) => s + c.horas, 0);
       const horasConsolidadasMin = comps.reduce((s, c) => s + c.horasMin, 0);
-      const mesesComHE = comps.filter((c) => c.horas > 0).length;
+      const mesesComHE = comps.length;
+
+      const nomeNorm = normalizeNome(p.nome);
+      const porCicloMap = new Map();
+      for (const c of comps) {
+        const ci = cicloEleitoralDe(c.chave);
+        const cicloId = ci?.ciclo ?? 'outros';
+        const rotulo = ci?.rotulo ?? 'Outros meses';
+        const tipo = ci?.tipo ?? 'outros';
+
+        const pc = porCicloMap.get(cicloId) ?? { ciclo: cicloId, rotulo, tipo, horas: 0, meses: 0 };
+        pc.horas += c.horas;
+        pc.meses += 1;
+        porCicloMap.set(cicloId, pc);
+
+        const gc = ciclos.get(cicloId) ?? { ciclo: cicloId, rotulo, tipo, horas: 0, servidores: new Set() };
+        gc.horas += c.horas;
+        gc.servidores.add(nomeNorm);
+        ciclos.set(cicloId, gc);
+
+        for (const unidade of c.unidades) {
+          ocorrencias.push({ nomeNorm, nome: p.nome, unidade, chave: c.chave, cicloId: ci?.ciclo ?? null, horas: c.horas / c.unidades.size });
+        }
+        competenciasRef.add(c.chave);
+      }
+
       return {
         nome: p.nome,
         horasConsolidadas,
@@ -171,9 +190,7 @@ function agregarHorasExtras(entrada) {
         mesesComHE,
         mediaMensal: mesesComHE ? horasConsolidadas / mesesComHE : 0,
         ultimaCompetencia: comps.length ? comps[comps.length - 1].chave : null,
-        porCiclo: [...p.porCiclo.values()]
-          .map((c) => ({ ciclo: c.ciclo, rotulo: c.rotulo, tipo: c.tipo, horas: c.horas, meses: c.meses.size }))
-          .sort((a, b) => a.ciclo.localeCompare(b.ciclo)),
+        porCiclo: [...porCicloMap.values()].sort((a, b) => a.ciclo.localeCompare(b.ciclo)),
         // Enxuto: `rotulo` sai de `chave` no cliente (mesAnoCurto); `horasMin`
         // e `divisor` por mês não são exibidos — só a faixa consolidada.
         porCompetencia: comps.map((c) => ({
@@ -186,7 +203,7 @@ function agregarHorasExtras(entrada) {
         },
       };
     })
-    .filter((r) => r.horasConsolidadas > 0)
+    .filter((r) => r.horasConsolidadas >= LIMIAR_EXIBICAO)
     .sort((a, b) => b.horasConsolidadas - a.horasConsolidadas);
 
   return {

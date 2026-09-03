@@ -872,6 +872,12 @@ Anexo VIII do TSE (link no modal).
 - **Retroativos** viram o ciclo do ano de referência: HE de 2018/2020 paga em
   2022 conta no ciclo 2018/2020. HE referente a ano sem eleição ordinária
   (ex.: 2021, ano de suplementares) cai em "Outros meses".
+- **Limiar de exibição.** Um mês-pessoa só entra na apresentação (e nos totais
+  consolidados/por ciclo/por unidade) se a estimativa daquele mês arredonda
+  para **≥ 1 h**. Abaixo disso são alguns reais de acerto de folha / rubrica
+  residual — ficam no `data/tse_horas_extras.json` cru para controle, mas não
+  são mostrados nem somados. Isso tira ~150 servidores (só meses-poeira) e
+  ~0,4 % do total de horas de `DashboardData.horasExtras`.
 - A estimativa é **estimativa** — `base` aproximada, `divisor` legal por época,
   mix 50/100 % desconhecido. Toda a UI rotula assim e mostra a faixa
   min–máx.
