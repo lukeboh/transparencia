@@ -172,9 +172,10 @@ export function TeletrabalhoTable({
     },
   );
 
-  // A posição (#) é sempre a do ranking original por dias consolidados,
-  // para que filtro e reordenação não escondam o rank real de ninguém
-  // (mesmo padrão de ranking-table.tsx).
+  // Cada linha carrega DUAS numerações: `posicao` = rank no ranking base (por
+  // dias consolidados), fixo; `ordem` = rank na ordenação ATUAL da tabela. A
+  // coluna "#" mostra `ordem`; clicar nela limpa a ordenação de coluna e volta
+  // `ordem` a ser `posicao` (mesmo padrão de ranking-table.tsx).
   const linhasVisiveis = useMemo(() => {
     const comPosicao = ranking.map((linha, i) => ({ linha, posicao: i + 1 }));
     const termoNome = normalizar(busca.trim());
@@ -185,9 +186,9 @@ export function TeletrabalhoTable({
         return false;
       return true;
     });
-    if (!ordenacao) return filtradas;
+    if (!ordenacao) return filtradas.map((item, i) => ({ ...item, ordem: i + 1 }));
     const fator = ordenacao.direcao === 'asc' ? 1 : -1;
-    return [...filtradas].sort((a, b) => {
+    const ordenadas = [...filtradas].sort((a, b) => {
       switch (ordenacao.campo) {
         case 'nome':
           return fator * a.linha.nome.localeCompare(b.linha.nome, 'pt-BR');
@@ -204,6 +205,7 @@ export function TeletrabalhoTable({
           return fator * (Number(vigenteDe(a.linha)) - Number(vigenteDe(b.linha)));
       }
     });
+    return ordenadas.map((item, i) => ({ ...item, ordem: i + 1 }));
   }, [ranking, busca, buscaLotacao, ordenacao, lotacaoDe, resolverLotacao, vigenteDe]);
 
   const totalPaginas = Math.max(1, Math.ceil(linhasVisiveis.length / LINHAS_POR_PAGINA));
@@ -212,9 +214,10 @@ export function TeletrabalhoTable({
   const linhas = linhasVisiveis.slice(inicio, inicio + LINHAS_POR_PAGINA);
 
   // Exporta o ranking inteiro no filtro/ordenação atuais (não só a página).
-  const colunasExport = useMemo<ColunaExport<{ linha: LinhaTeletrabalho; posicao: number }>[]>(
+  const colunasExport = useMemo<ColunaExport<{ linha: LinhaTeletrabalho; posicao: number; ordem: number }>[]>(
     () => [
-      { cabecalho: '#', valor: ({ posicao }) => posicao },
+      { cabecalho: '#', valor: ({ ordem }) => ordem },
+      { cabecalho: '# (ranking base)', valor: ({ posicao }) => posicao },
       { cabecalho: 'Servidor', valor: ({ linha }) => nomeProprio(linha.nome) },
       { cabecalho: 'Vigente', valor: ({ linha }) => vigenteDe(linha) },
       {
@@ -349,7 +352,24 @@ export function TeletrabalhoTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-10 text-right">#</TableHead>
+              <TableHead className="w-10 text-right">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPagina(0);
+                    setOrdenacao(null);
+                  }}
+                  aria-pressed={ordenacao === null}
+                  aria-label="Renumerar: voltar à ordenação padrão do ranking"
+                  title="Clique para limpar a ordenação de coluna e renumerar o # pela ordem atual"
+                  className={cn(
+                    '-mx-1.5 inline-flex items-center rounded-md px-1.5 py-1 transition-colors hover:bg-accent hover:text-accent-foreground',
+                    ordenacao === null && 'text-foreground',
+                  )}
+                >
+                  #
+                </button>
+              </TableHead>
               <TableHead>
                 <CabecalhoOrdenavel rotulo="Servidor" campo="nome" ordenacao={ordenacao} onOrdenar={ordenarPor} />
               </TableHead>
@@ -375,7 +395,7 @@ export function TeletrabalhoTable({
                 </TableCell>
               </TableRow>
             ) : (
-              linhas.map(({ linha, posicao }) => {
+              linhas.map(({ linha, posicao, ordem }) => {
                 const linhaResponsavel =
                   linha.responsavelRankingIndex !== null
                     ? responsaveisRanking[linha.responsavelRankingIndex]
@@ -386,7 +406,12 @@ export function TeletrabalhoTable({
                 const vigente = vigenteDe(linha);
                 return (
                   <TableRow key={linha.nome} onClick={() => onVerDetalhe(linha)} className="cursor-pointer">
-                    <TableCell className="text-right text-muted-foreground tabular-nums">{posicao}</TableCell>
+                    <TableCell
+                      className="text-right text-muted-foreground tabular-nums"
+                      title={ordem !== posicao ? `Posição no ranking base (por dias): ${posicao}` : undefined}
+                    >
+                      {ordem}
+                    </TableCell>
                     <TableCell className="font-medium">{nomeProprio(linha.nome)}</TableCell>
                     <TableCell>
                       {vigente ? (
