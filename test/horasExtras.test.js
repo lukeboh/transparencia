@@ -32,6 +32,20 @@ test('horasMin usa o fator 2,0 (piso) — sempre ≤ horas', () => {
   assert.ok(r.horasMin <= r.horas);
 });
 
+test('tipo conhecido → fator exato (domingos ×2, úteis ×1,5) e piso = estimativa', () => {
+  // base 20.000 / 200 = 100/h
+  const dom = estimarHorasExtras({ valorRubrica: 6000, base: 20000, chaveCompetencia: '2018-10', tipo: 'domingos' });
+  assert.equal(dom.divisor, 175); // 2018 está na faixa do divisor 175
+  // 6000 / (20000/175 × 2) = 6000 / 228,57… = 26,25
+  assert.ok(Math.abs(dom.horas - 26.25) < 1e-9);
+  assert.equal(dom.horasMin, dom.horas); // exato
+  const uteis = estimarHorasExtras({ valorRubrica: 6000, base: 20000, chaveCompetencia: '2018-10', tipo: 'uteis' });
+  // 6000 / (20000/175 × 1,5) = 35
+  assert.ok(Math.abs(uteis.horas - 35) < 1e-9);
+  assert.equal(uteis.horasMin, uteis.horas);
+  assert.ok(dom.horas < uteis.horas); // domingo rende menos horas p/ o mesmo R$
+});
+
 test('divisor 175 no ciclo eleitoral de 2018', () => {
   // 20.000 / 175 = 114,2857.../h; × 1,5 = 171,4285...; 6.000 / 171,4285... = 35
   const r = estimarHorasExtras({ valorRubrica: 6000, base: 20000, chaveCompetencia: '2018-10' });

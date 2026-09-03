@@ -60,7 +60,7 @@ test('efetivo: base = VENCIMENTOS E VANTAGENS + EXERCÍCIO FC/CJ (órgão origem
   assert.equal(cc.componentes.origem, 0);
   assert.ok(Math.abs(cc.base - 22695.6) < 1e-6);
   assert.equal(cc.valorRubrica, 9968.79);
-  assert.deepEqual(cc.rubricas, [{ ref: '10/2022', valor: 9968.79 }]);
+  assert.deepEqual(cc.rubricas, [{ ref: '10/2022', valor: 9968.79, tipo: null }]);
 });
 
 test('requisitado: REMUNERAÇÃO ÓRGÃO ORIGEM entra na base', () => {
@@ -72,6 +72,26 @@ test('requisitado: REMUNERAÇÃO ÓRGÃO ORIGEM entra na base', () => {
   // sem o órgão origem a base seria só 1.379,07 e as horas ~14x maiores
   assert.ok(Math.abs(cc.base - 20178.94) < 1e-6);
   assert.equal(cc.valorRubrica, 3881.08);
+});
+
+test('formato antigo (até ~2020): 3 linhas por tipo — DOMINGOS, DIAS ÚTEIS, resíduo', () => {
+  const cc = parseContracheque(
+    'VENCIMENTOS E VANTAGENS 19.410,76 EXERCÍCIO FC/CJ 0,00 AUXÍLIOS E BENEFÍCIOS 910,08 ' +
+      'HORAS EXTRAS - DOMINGOS E FERIADOS - 10/2018 3.977,15 ' +
+      'HORAS EXTRAS - DIAS ÚTEIS E SÁBADOS - 10/2018 6.107,67 ' +
+      'HORAS EXTRAS - 10/2018 115,16 ' +
+      'TOTAL BRUTO 40.477,44 REMUNERAÇÃO ÓRGÃO ORIGEM 0,00',
+  );
+  assert.equal(cc.rubricas.length, 3);
+  assert.deepEqual(
+    cc.rubricas.map((r) => [r.tipo, r.ref, r.valor]),
+    [
+      ['domingos', '10/2018', 3977.15],
+      ['uteis', '10/2018', 6107.67],
+      [null, '10/2018', 115.16],
+    ],
+  );
+  assert.ok(Math.abs(cc.valorRubrica - 10199.98) < 1e-6);
 });
 
 test('múltiplas linhas HORAS EXTRAS (retroativo) somam e mantêm o mês de referência', () => {

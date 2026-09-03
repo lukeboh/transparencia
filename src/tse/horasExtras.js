@@ -102,27 +102,39 @@ export function cicloEleitoralDe(chave) {
  * @param {object} p
  * @param {number} p.valorRubrica  R$ pagos na rubrica "HORAS EXTRAS" no mês.
  * @param {number} p.base          R$ da "remuneração mensal" (aprox.: VENCIMENTOS
- *                                 E VANTAGENS + EXERCÍCIO FC/CJ).
- * @param {string} p.chaveCompetencia  "AAAA-MM".
- * @param {number} [p.fator=1.5]   1 + adicional (1,5 = +50%).
+ *                                 E VANTAGENS + EXERCÍCIO FC/CJ + ÓRGÃO ORIGEM).
+ * @param {string} p.chaveCompetencia  "AAAA-MM" (mês de referência).
+ * @param {'domingos'|'uteis'|null} [p.tipo]  Quando o contracheque separa a hora
+ *   extra por tipo (comum até ~2020): 'domingos' → +100 %, 'uteis' → +50 %; a
+ *   estimativa fica EXATA. Sem tipo (linha única, 2022+): usa +50 % como
+ *   LIMITE SUPERIOR — o mix dia-útil/domingo é desconhecido.
+ * @param {number} [p.fator]  Sobrescreve o fator (para testes). 1 + adicional.
  * @returns {{
  *   horas: number|null, horasMin: number|null, divisor: number,
- *   valorHoraNormal: number|null, acimaDoTeto: boolean,
+ *   valorHoraNormal: number|null, tipo: string|null, acimaDoTeto: boolean,
  *   ciclo: {ciclo:string,rotulo:string,tipo:string}|null
  * }}
  */
-export function estimarHorasExtras({ valorRubrica, base, chaveCompetencia: chave, fator = 1.5 }) {
+export function estimarHorasExtras({ valorRubrica, base, chaveCompetencia: chave, tipo = null, fator }) {
   const divisor = divisorPorCompetencia(chave);
   const valorHoraNormal = base > 0 ? base / divisor : null;
+  const fatorAplicado = fator ?? (tipo === 'domingos' ? 2.0 : 1.5);
   const horas =
-    valorHoraNormal && valorHoraNormal > 0 ? valorRubrica / (valorHoraNormal * fator) : null;
+    valorHoraNormal && valorHoraNormal > 0 ? valorRubrica / (valorHoraNormal * fatorAplicado) : null;
+  // Piso: com o tipo conhecido a estimativa É exata (piso = estimativa); sem
+  // tipo, "e se tudo fosse domingo/feriado" (× 2,0).
   const horasMin =
-    valorHoraNormal && valorHoraNormal > 0 ? valorRubrica / (valorHoraNormal * 2.0) : null;
+    valorHoraNormal && valorHoraNormal > 0
+      ? tipo
+        ? horas
+        : valorRubrica / (valorHoraNormal * 2.0)
+      : null;
   return {
     horas,
     horasMin,
     divisor,
     valorHoraNormal,
+    tipo,
     acimaDoTeto: horas != null && horas > tetoMensalPorCompetencia(chave),
     ciclo: cicloEleitoralDe(chave),
   };

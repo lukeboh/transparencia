@@ -10,7 +10,7 @@
 // flags). Nenhum valor em R$ (nem a rubrica, nem a base de cálculo) é exposto:
 // a conferência dos reais é feita direto no Anexo VIII do TSE (link na UI).
 import { normalizeNome } from './rankResponsaveis.js';
-import { estimarHorasExtras, cicloEleitoralDe, chaveCompetencia } from './horasExtras.js';
+import { estimarHorasExtras, cicloEleitoralDe, tetoMensalPorCompetencia, chaveCompetencia } from './horasExtras.js';
 
 const MESES_ROTULO = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -127,6 +127,7 @@ function agregarHorasExtras(entrada) {
           valorRubrica: rub.valor,
           base: baseParaRef(nomeNorm, chaveRef, reg.base ?? 0),
           chaveCompetencia: chaveRef,
+          tipo: rub.tipo ?? null,
         });
         if (est.horas == null) continue; // base ausente/zerada — não dá para estimar
 
@@ -134,12 +135,10 @@ function agregarHorasExtras(entrada) {
           chave: chaveRef,
           horas: 0,
           horasMin: 0,
-          acimaDoTeto: false,
           unidades: new Set(),
         };
         ec.horas += est.horas;
         ec.horasMin += est.horasMin ?? 0;
-        ec.acimaDoTeto = ec.acimaDoTeto || est.acimaDoTeto;
         if (reg.unidade) ec.unidades.add(reg.unidade);
         pessoa.porCompetencia.set(chaveRef, ec);
       }
@@ -193,13 +192,15 @@ function agregarHorasExtras(entrada) {
         porCiclo: [...porCicloMap.values()].sort((a, b) => a.ciclo.localeCompare(b.ciclo)),
         // Enxuto: `rotulo` sai de `chave` no cliente (mesAnoCurto); `horasMin`
         // e `divisor` por mês não são exibidos — só a faixa consolidada.
+        // `acimaDoTeto` é sobre o TOTAL do mês (não por rubrica) vs. o limite
+        // do art. 4º vigente na competência.
         porCompetencia: comps.map((c) => ({
           chave: c.chave,
           horas: c.horas,
-          acimaDoTeto: c.acimaDoTeto,
+          acimaDoTeto: c.horas > tetoMensalPorCompetencia(c.chave),
         })),
         flags: {
-          acimaDoTeto: comps.filter((c) => c.acimaDoTeto).length,
+          acimaDoTeto: comps.filter((c) => c.horas > tetoMensalPorCompetencia(c.chave)).length,
         },
       };
     })

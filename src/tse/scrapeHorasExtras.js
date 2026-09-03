@@ -68,7 +68,16 @@ export function numeroBR(bruto) {
  * então essa linha PRECISA entrar na base (ex.: MAURO SANS JUNIOR, ago/2022:
  * VV 0,00 + FC/CJ 1.379,07 + órgão origem 18.799,87).
  *
- * @returns {{ base:number, valorRubrica:number, rubricas:{ref:string|null,valor:number}[],
+ * Até ~2020 a hora extra vinha separada por tipo, em até 3 linhas por mês:
+ *   "HORAS EXTRAS - DOMINGOS E FERIADOS - MM/AAAA"  (+100 %)
+ *   "HORAS EXTRAS - DIAS ÚTEIS E SÁBADOS - MM/AAAA" (+50 %)
+ *   "HORAS EXTRAS [- MM/AAAA]"                       (resíduo / linha única)
+ * De 2022 em diante é só a linha única. Cada linha vira uma rubrica com o
+ * `tipo` ('domingos' | 'uteis' | null) — quando conhecido, a estimativa de
+ * horas fica exata (ver src/tse/horasExtras.js).
+ *
+ * @returns {{ base:number, valorRubrica:number,
+ *            rubricas:{ref:string|null,valor:number,tipo:('domingos'|'uteis'|null)}[],
  *            componentes:{vv:number,fccj:number,origem:number} } | null}
  *   null quando a base fica <= 0 (contracheque não renderizado, ou requisitado
  *   sem remuneração de origem legível — não dá para estimar).
@@ -84,10 +93,13 @@ export function parseContracheque(innerText) {
   const origem = valorDe(/REMUNERA[ÇC][ÃA]O [ÓO]RG[ÃA]O ORIGEM\s+(-?[\d.,]+)/i);
   const base = vv + fccj + origem;
 
-  const rubricas = [...t.matchAll(/HORAS EXTRAS(?:\s*-\s*(\d{2}\/\d{4}))?\s+(-?[\d.,]+)/gi)].map((m) => ({
-    ref: m[1] || null,
-    valor: numeroBR(m[2]),
-  }));
+  const rubricas = [
+    ...t.matchAll(/HORAS EXTRAS(?:\s*-\s*([A-ZÀ-Ú][^\d-]*?))??(?:\s*-\s*(\d{2}\/\d{4}))?\s+(-?[\d.,]+)/gi),
+  ].map((m) => {
+    const descr = (m[1] || '').toUpperCase();
+    const tipo = /DOMINGO/.test(descr) ? 'domingos' : /[UÚ]TE/.test(descr) ? 'uteis' : null;
+    return { ref: m[2] || null, valor: numeroBR(m[3]), tipo };
+  });
   const valorRubrica = rubricas.reduce((s, r) => s + r.valor, 0);
   if (base <= 0) return null;
   return { base, valorRubrica, rubricas, componentes: { vv, fccj, origem } };
