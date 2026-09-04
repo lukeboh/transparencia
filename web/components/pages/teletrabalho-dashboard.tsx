@@ -19,7 +19,7 @@ import { AppVersion } from '@/components/app-version';
 import { useDadosDashboard } from '@/lib/use-dados';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
 import { bool } from '@/lib/url-filtros';
-import { criarResolvedorLotacao } from '@/lib/lotacao-hierarquia';
+import { criarResolvedorLotacao, textoSiglas, type ResolvedorLotacao } from '@/lib/lotacao-hierarquia';
 import { cn, nomeProprio, numero } from '@/lib/utils';
 import type { LinhaRanking, LinhaTeletrabalho, PeriodoTeletrabalho, ServidorFuncoes } from '@/lib/dashboard-data';
 
@@ -59,6 +59,22 @@ function lotacaoDe(linha: LinhaTeletrabalho): string[] | null {
   return p.unidade ? [p.unidade] : null;
 }
 
+function textoNormalizado(texto: string) {
+  return texto
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase();
+}
+
+/** Caminho de siglas ("SEVIN / COTEL / STI") da lotação da pessoa — mesmo texto
+ *  usado na coluna Lotação da tabela; cai no nome plano quando a árvore não resolve. */
+function siglasDaLinha(linha: LinhaTeletrabalho, resolver: ResolvedorLotacao): string {
+  const niveis = lotacaoDe(linha);
+  const folha = niveis && niveis.length > 0 ? niveis[0] : null;
+  const u = resolver(folha);
+  return u.length > 0 ? textoSiglas(u) : (folha ?? '');
+}
+
 const MAX_UNIDADES = 5;
 
 function contarPorUnidadeTopo(ranking: LinhaTeletrabalho[]): FatiaContagem[] {
@@ -85,7 +101,7 @@ function calcMediana(valores: number[]) {
 
 export function TeletrabalhoDashboard() {
   const estado = useDadosDashboard();
-  const { teletrabalho, funcoes, responsaveis, contratos, resumo, unidades } = estado.dados;
+  const { teletrabalho, funcoes, responsaveis, contratos, resumo, unidades, servidores } = estado.dados;
 
   const resolverLotacao = useMemo(
     () => criarResolvedorLotacao(unidades.arvore),
@@ -116,18 +132,53 @@ export function TeletrabalhoDashboard() {
   // Regra do projeto: filtro Vigente começa LIGADO (ver README, "Regra: filtro
   // Vigente sempre ligado por padrão"). O usuário desliga para ver o histórico.
   const [somenteVigentes, setSomenteVigentes] = useState(true);
+  // Filtro de lotação: vive na página (não mais só na tabela) para que o gráfico
+  // "mês a mês" e seu denominador também respondam a ele.
+  const [filtroLotacao, setFiltroLotacao] = useState('');
 
-  // Filtro compartilhável pela URL (a busca/lotação/ordenação da tabela ficam
-  // por conta do próprio TeletrabalhoTable).
+  // Filtros compartilháveis pela URL (a busca/ordenação da tabela ficam por
+  // conta do próprio TeletrabalhoTable).
   useSincronizarUrl(
-    { vig: bool.escrever(somenteVigentes, true) },
-    (sp) => setSomenteVigentes(bool.ler(sp.get('vig'), true)),
+    {
+      vig: bool.escrever(somenteVigentes, true),
+      lot: filtroLotacao || undefined,
+    },
+    (sp) => {
+      setSomenteVigentes(bool.ler(sp.get('vig'), true));
+      const lot = sp.get('lot');
+      if (lot) setFiltroLotacao(lot);
+    },
   );
 
   const rankingFiltrado = useMemo(
     () => (somenteVigentes ? teletrabalho.ranking.filter(estaVigente) : teletrabalho.ranking),
     [teletrabalho.ranking, somenteVigentes],
   );
+
+  const termoLotacao = filtroLotacao.trim();
+
+  // Recorte adicional por lotação, só para o gráfico (a tabela aplica o mesmo
+  // termo internamente, mantendo a numeração do ranking antes do filtro-texto).
+  const rankingGrafico = useMemo(() => {
+    const t = textoNormalizado(termoLotacao);
+    if (!t) return rankingFiltrado;
+    return rankingFiltrado.filter((l) => textoNormalizado(siglasDaLinha(l, resolverLotacao)).includes(t));
+  }, [rankingFiltrado, termoLotacao, resolverLotacao]);
+
+  // Denominador do gráfico: TSE inteiro, ou só os agentes públicos da lotação
+  // filtrada (mesma resolução de siglas da coluna Lotação).
+  const denominadorGrafico = useMemo(() => {
+    const t = textoNormalizado(termoLotacao);
+    if (!t) return resumo.totalAgentesPublicos;
+    let n = 0;
+    for (const s of servidores.lista) {
+      if (!s.naRelacaoAtual) continue;
+      const u = resolverLotacao(s.lotacao);
+      const sig = u.length > 0 ? textoSiglas(u) : (s.lotacao ?? '');
+      if (textoNormalizado(sig).includes(t)) n += 1;
+    }
+    return n;
+  }, [termoLotacao, servidores.lista, resolverLotacao, resumo.totalAgentesPublicos]);
 
   const medianaFiltrada = useMemo(
     () => calcMediana(rankingFiltrado.map((r) => r.diasConsolidados)),
@@ -240,10 +291,11 @@ export function TeletrabalhoDashboard() {
         </div>
 
         <TeletrabalhoEvolucaoChart
-          ranking={rankingFiltrado}
-          totalOrgao={resumo.totalAgentesPublicos}
+          ranking={rankingGrafico}
+          totalOrgao={denominadorGrafico}
           mesReferencia={estado.dados.geradoEm.slice(0, 7)}
           somenteVigentes={somenteVigentes}
+          escopoLotacao={termoLotacao || null}
         />
 
         <TeletrabalhoTable
@@ -253,6 +305,8 @@ export function TeletrabalhoDashboard() {
           resolverLotacao={resolverLotacao}
           vigenteDe={estaVigente}
           responsaveisRanking={responsaveis.ranking}
+          filtroLotacao={filtroLotacao}
+          onFiltroLotacao={setFiltroLotacao}
           onVerDetalhe={setDetalheAberto}
           onVerContratos={setContratosDe}
         />
@@ -263,10 +317,13 @@ export function TeletrabalhoDashboard() {
         início e fim (ou hoje, quando segue em aberto); períodos sobrepostos da mesma pessoa não são mesclados, então
         dias sobrepostos podem ser contados mais de uma vez. Cruzamento com fiscais/gestores e com função
         comissionada é feito pelo nome do servidor — nenhuma das fontes expõe CPF nem matrícula em comum — então
-        homônimos podem gerar vínculos incorretos. O gráfico <strong>Teletrabalho no TSE, mês a mês</strong> conta,
-        para cada mês, os servidores do recorte atual com um período ativo naquele mês, sobre o quadro de agentes
-        públicos de <strong>hoje</strong> (não há série histórica de quadro de pessoal, então o denominador é fixo —
-        os meses antigos ficam ligeiramente subestimados se o TSE tinha menos gente na época).
+        homônimos podem gerar vínculos incorretos. O gráfico <strong>Teletrabalho mês a mês</strong> conta, para cada
+        mês, os servidores do recorte atual (inclusive o filtro de lotação) com um período ativo naquele mês, sobre o
+        quadro de agentes públicos de <strong>hoje</strong> — do TSE inteiro ou, quando há filtro de lotação, só o
+        dessa unidade (não há série histórica de quadro de pessoal, então o denominador é fixo — os meses antigos
+        ficam ligeiramente subestimados se o TSE tinha menos gente na época). Só entra aqui o <strong>regime formal
+        de teletrabalho</strong>; o trabalho remoto emergencial da pandemia (2020–2021) foi outra modalidade e não
+        consta nesta fonte.
         <AppVersion />
       </footer>
 

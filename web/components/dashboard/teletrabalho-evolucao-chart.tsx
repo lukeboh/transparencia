@@ -46,8 +46,9 @@ function mesesEntre(de: string, ate: string): string[] {
 
 /**
  * Série mês a mês: quantos servidores do `ranking` tinham um período de
- * teletrabalho ativo naquele mês, e a fração sobre o total de agentes públicos
- * do TSE (denominador FIXO — não há quadro histórico; ver nota no card).
+ * teletrabalho ativo naquele mês, e a fração sobre `totalOrgao` — o quadro de
+ * hoje do TSE inteiro ou, quando há filtro de lotação, só o dessa unidade.
+ * Denominador FIXO — não há quadro histórico; ver nota no card.
  */
 function serieMensal(
   ranking: LinhaTeletrabalho[],
@@ -82,7 +83,8 @@ function EvolucaoTooltip({
   active,
   payload,
   totalOrgao,
-}: TooltipProps<number, string> & { totalOrgao: number }) {
+  escopoLotacao,
+}: TooltipProps<number, string> & { totalOrgao: number; escopoLotacao?: string | null }) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload as PontoMes;
   return (
@@ -93,7 +95,8 @@ function EvolucaoTooltip({
         <span className="font-semibold">{fmtPct(p.pct)}%</span>
       </p>
       <p className="text-muted-foreground">
-        {numero(p.count)} de {numero(totalOrgao)} agentes públicos
+        {numero(p.count)} de {numero(totalOrgao)}{' '}
+        {escopoLotacao ? 'servidores da lotação' : 'agentes públicos'}
       </p>
     </div>
   );
@@ -104,13 +107,17 @@ export function TeletrabalhoEvolucaoChart({
   totalOrgao,
   mesReferencia,
   somenteVigentes,
+  escopoLotacao,
 }: {
-  /** O ranking já recortado pelos filtros da página. */
+  /** O ranking já recortado pelos filtros da página (vigência + lotação). */
   ranking: LinhaTeletrabalho[];
+  /** Denominador: agentes públicos do TSE hoje, ou só os da lotação filtrada. */
   totalOrgao: number;
   /** "AAAA-MM" usado como "hoje" (mês do snapshot) — evita depender do relógio do cliente. */
   mesReferencia: string;
   somenteVigentes: boolean;
+  /** Texto do filtro de lotação ativo, ou null — muda denominador e rótulos. */
+  escopoLotacao?: string | null;
 }) {
   const dados = useMemo(
     () => serieMensal(ranking, totalOrgao, mesReferencia),
@@ -125,19 +132,36 @@ export function TeletrabalhoEvolucaoChart({
   return (
     <Card className="min-w-0">
       <CardHeader>
-        <CardTitle className="text-base font-semibold">Teletrabalho no TSE, mês a mês</CardTitle>
+        <CardTitle className="text-base font-semibold">
+          {escopoLotacao ? `Teletrabalho em “${escopoLotacao}”, mês a mês` : 'Teletrabalho no TSE, mês a mês'}
+        </CardTitle>
         <CardDescription>
-          Percentual de agentes públicos do TSE com período de teletrabalho ativo em cada mês, sobre o
-          total de hoje ({numero(totalOrgao)} — não há quadro histórico, o denominador é fixo).
+          {escopoLotacao ? (
+            <>
+              Percentual de servidores <strong>lotados em “{escopoLotacao}”</strong> com período de
+              teletrabalho ativo em cada mês, sobre os {numero(totalOrgao)} agentes públicos dessa
+              lotação hoje (não há quadro histórico, o denominador é fixo).
+            </>
+          ) : (
+            <>
+              Percentual de agentes públicos do TSE com período de teletrabalho ativo em cada mês, sobre
+              o total de hoje ({numero(totalOrgao)} — não há quadro histórico, o denominador é fixo).
+            </>
+          )}
           {somenteVigentes
             ? ' Com “Somente vigentes hoje” ligado, conta só o histórico de quem está em teletrabalho agora — desligue para o quadro completo.'
-            : ''}
+            : ''}{' '}
+          Considera apenas o <strong>regime formal de teletrabalho</strong> — não inclui o trabalho
+          remoto emergencial da pandemia (2020–2021), que foi outra modalidade administrativa e não
+          consta nesta fonte.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {dados.length === 0 ? (
+        {dados.length === 0 || totalOrgao === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            Nenhum período de teletrabalho no recorte atual.
+            {totalOrgao === 0 && escopoLotacao
+              ? `Nenhum agente público na relação atual para a lotação “${escopoLotacao}”.`
+              : 'Nenhum período de teletrabalho no recorte atual.'}
           </p>
         ) : (
           <>
@@ -165,7 +189,7 @@ export function TeletrabalhoEvolucaoChart({
                     />
                     <Tooltip
                       cursor={{ fill: 'var(--muted-foreground)', fillOpacity: 0.08 }}
-                      content={<EvolucaoTooltip totalOrgao={totalOrgao} />}
+                      content={<EvolucaoTooltip totalOrgao={totalOrgao} escopoLotacao={escopoLotacao} />}
                     />
                     <Bar
                       dataKey="pct"

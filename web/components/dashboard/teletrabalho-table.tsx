@@ -131,6 +131,8 @@ export function TeletrabalhoTable({
   resolverLotacao,
   vigenteDe,
   responsaveisRanking,
+  filtroLotacao,
+  onFiltroLotacao,
   onVerDetalhe,
   onVerContratos,
 }: {
@@ -143,26 +145,27 @@ export function TeletrabalhoTable({
   /** true = tem período em aberto hoje (vigente). */
   vigenteDe: (linha: LinhaTeletrabalho) => boolean;
   responsaveisRanking: LinhaRanking[];
+  /** Filtro de lotação — vive na página (o gráfico acima também reage a ele). */
+  filtroLotacao: string;
+  onFiltroLotacao: (valor: string) => void;
   onVerDetalhe: (linha: LinhaTeletrabalho) => void;
   onVerContratos: (linha: LinhaRanking) => void;
 }) {
   const [pagina, setPagina] = useState(0);
   const [busca, setBusca] = useState('');
-  const [buscaLotacao, setBuscaLotacao] = useState('');
+  const buscaLotacao = filtroLotacao;
+  const setBuscaLotacao = (valor: string) => onFiltroLotacao(valor);
   const [ordenacao, setOrdenacao] = useState<Ordenacao | null>(null);
 
   useSincronizarUrl(
     {
       q: busca || undefined,
-      lot: buscaLotacao || undefined,
       ord: ordem.escrever(ordenacao?.campo, ordenacao?.direcao),
       pg: inteiro.escrever(pagina, 0),
     },
     (sp) => {
       const q = sp.get('q');
       if (q) setBusca(q);
-      const lot = sp.get('lot');
-      if (lot) setBuscaLotacao(lot);
       const o = ordem.ler(sp.get('ord'));
       if (o && CAMPOS_ORD_TELETRAB.has(o.campo)) {
         setOrdenacao({ campo: o.campo as CampoOrdenavel, direcao: o.direcao });
@@ -449,7 +452,7 @@ export function TeletrabalhoTable({
                           </button>
                         </span>
                       ) : (
-                        <span className="rounded-sm bg-destructive/10 px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-destructive">
+                        <span className="rounded-sm bg-danger-bg px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-danger">
                           Não-Fiscal
                         </span>
                       )}
