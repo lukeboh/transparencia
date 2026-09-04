@@ -3,6 +3,7 @@
 // unidades entre si em vez de navegar a hierarquia.
 
 import type { UnidadeMetricas, UnidadeNode } from './dashboard-data';
+import { caminhoAcimaDe, textoSiglas, type UnidadeLotacao } from './lotacao-hierarquia';
 
 export interface LinhaUnidade {
   id: string;
@@ -12,6 +13,13 @@ export interface LinhaUnidade {
   nome: string;
   /** Profundidade na árvore — 0 = raiz. */
   nivel: number;
+  /** Caminho de exibição: a própria unidade + até 2 ancestrais (mesma regra
+   *  de /servidores — para no nível de secretaria, pula a "Secretaria do
+   *  Tribunal"), da mais específica para a mais alta, ex.: "SETOT / CSELE / STI". */
+  caminhoCurto: string;
+  /** Mesmo caminho de `caminhoCurto`, com o nome por extenso de cada nível
+   *  (para tooltip por sigla). */
+  unidadesCurto: UnidadeLotacao[];
   node: UnidadeNode;
 }
 
@@ -35,10 +43,24 @@ export function achatarUnidades(
   visiveis: Set<string> | null = null,
 ): LinhaUnidade[] {
   const acc: LinhaUnidade[] = [];
+  // Pré-ordem: cada nó é indexado antes dos filhos, então `caminhoAcimaDe`
+  // sempre encontra os ancestrais já no mapa.
+  const porId = new Map<string, UnidadeNode>();
   const visita = (no: UnidadeNode, prefixo: string[], nivel: number) => {
+    porId.set(no.id, no);
     const caminho = [...prefixo, no.sigla];
     if (!visiveis || visiveis.has(no.id)) {
-      acc.push({ id: no.id, caminho: caminho.join(' / '), sigla: no.sigla, nome: no.nome, nivel, node: no });
+      const unidadesCurto = caminhoAcimaDe(no, porId);
+      acc.push({
+        id: no.id,
+        caminho: caminho.join(' / '),
+        sigla: no.sigla,
+        nome: no.nome,
+        nivel,
+        caminhoCurto: textoSiglas(unidadesCurto),
+        unidadesCurto,
+        node: no,
+      });
     }
     for (const filho of no.children) visita(filho, caminho, nivel + 1);
   };

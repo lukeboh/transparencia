@@ -41,6 +41,7 @@ import { categoriasDeContratos, descricaoFaixa } from '@/lib/categorias-valor';
 import { rotuloPerfil } from '@/lib/perfis-fiscalizacao';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
 import { inteiro, ordem } from '@/lib/url-filtros';
+import { chaveHierarquicaLotacao, compararHierarquico } from '@/lib/lotacao-hierarquia';
 import type { ColunaExport } from '@/lib/exportar-dados';
 import type {
   ContratoResumo,
@@ -129,24 +130,6 @@ type CampoOrdenavel =
   | 'empenhado'
   | 'pago';
 type DirecaoOrdenacao = 'asc' | 'desc';
-
-/** Caminho de lotação como chave hierárquica (do topo para a folha), para
- *  ordenar agrupando por unidade-mãe: "SETOT / CSELE / STI" → ["STI","CSELE","SETOT"]. */
-function chaveHierarquicaLotacao(siglas: string): string[] {
-  return siglas ? siglas.split(' / ').reverse() : [];
-}
-/** Compara duas chaves hierárquicas nível a nível; a mais curta (unidade-mãe)
- *  vem primeiro. */
-function compararHierarquico(a: string[], b: string[]): number {
-  const n = Math.max(a.length, b.length);
-  for (let i = 0; i < n; i++) {
-    if (a[i] === undefined) return -1;
-    if (b[i] === undefined) return 1;
-    const c = a[i].localeCompare(b[i], 'pt-BR');
-    if (c) return c;
-  }
-  return 0;
-}
 
 interface Ordenacao {
   campo: CampoOrdenavel;

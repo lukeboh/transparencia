@@ -1,12 +1,17 @@
-// Catálogo de "relações" (indicadores percentuais) para a tela /indicadores.
+// Catálogo de "relações" (indicadores) para a tela /indicadores.
 //
-// Uma relação = uma MÉTRICA BASE (numerador) × uma VARIANTE (que define o
-// denominador e se o numerador é o valor direto do nó ou o consolidado da
-// subárvore). O catálogo é o produto cartesiano das duas listas — acrescentar
-// uma métrica no futuro é uma linha em METRICAS_BASE, sem tocar na tela.
+// Uma relação = uma MÉTRICA BASE (o que está sendo contado) × uma VARIANTE
+// (Qtd./% × Unidade/Consolidado). O catálogo é o produto cartesiano das duas
+// listas — acrescentar uma métrica no futuro é uma linha em METRICAS_BASE, sem
+// tocar na tela. As 4 variantes são sempre as mesmas para toda métrica:
+//  - Qtd. Unidade      → valor bruto, só quem está lotado exatamente no nó.
+//  - Qtd. Consolidado  → valor bruto, o nó + toda a subárvore.
+//  - % Unidade         → Qtd. Unidade dividido pelo total de servidores do TSE.
+//  - % Consolidado     → Qtd. Consolidado dividido pelo total de servidores do TSE.
 
 import type { UnidadeMetricas, UnidadeNode } from './dashboard-data';
 import { somaFiscais, somaFuncoes } from './unidades-flat';
+import { numero } from './utils';
 
 export type MetricaBaseId =
   | 'servidores'
@@ -16,19 +21,16 @@ export type MetricaBaseId =
   | 'teletrabalho'
   | 'terceirizados'
   | 'horas_extras';
-export type VarianteId = 'unidade' | 'consolidada' | 'orgao_direto' | 'orgao_subarvore';
+export type VarianteId = 'qtd_unidade' | 'qtd_consolidado' | 'pct_unidade' | 'pct_consolidado';
 
 interface MetricaBase {
   id: MetricaBaseId;
-  /** Rótulo curto, vira a 1ª linha do cabeçalho da coluna. */
+  /** Rótulo curto, vira a 1ª linha do cabeçalho da coluna e o título da seção no menu de colunas. */
   grupo: string;
-  /** Frase completa, usada no menu de colunas. */
+  /** Frase (substantivo), usada para compor a descrição de cada variante no menu/tooltip. */
   descricao: string;
   valor: (m: UnidadeMetricas) => number;
-  /** 'pct' (padrão) = num/den × 100, exibido como "%"; 'num' = num/den cru
-   *  (ex.: horas por servidor), exibido com o sufixo. */
-  formato?: 'pct' | 'num';
-  /** Sufixo do valor quando formato === 'num'. */
+  /** Sufixo do valor bruto (Qtd.) — '' para contagem de pessoas, ' h' para horas. */
   sufixo?: string;
 }
 
@@ -36,87 +38,88 @@ const METRICAS_BASE: MetricaBase[] = [
   {
     id: 'servidores',
     grupo: 'Servidores',
-    descricao: 'Percentual de servidores',
+    descricao: 'Servidores',
     valor: (m) => m.servidores,
   },
   {
     id: 'fc',
     grupo: 'Com FC',
-    descricao: 'Percentual de servidores com FC',
+    descricao: 'Servidores com função comissionada (FC)',
     valor: (m) => somaFuncoes(m, 'FC'),
   },
   {
     id: 'cj',
     grupo: 'Com CJ',
-    descricao: 'Percentual de servidores com CJ',
+    descricao: 'Servidores com cargo em comissão (CJ)',
     valor: (m) => somaFuncoes(m, 'CJ'),
   },
   {
     id: 'fiscais',
     grupo: 'Fiscais',
-    descricao: 'Percentual de servidores que são fiscais',
+    descricao: 'Servidores que são fiscais/gestores de contrato',
     valor: (m) => somaFiscais(m),
   },
   {
     id: 'teletrabalho',
     grupo: 'Teletrabalho',
-    descricao: 'Percentual de servidores em teletrabalho',
+    descricao: 'Servidores em teletrabalho',
     valor: (m) => m.teletrabalho,
   },
   {
     id: 'terceirizados',
     grupo: 'Terceirizados',
-    descricao: 'Terceirizados por servidor (aprox., do PDF mensal do TSE)',
+    descricao: 'Terceirizados (estimado do PDF mensal do TSE)',
     valor: (m) => m.terceirizados,
   },
   {
     id: 'horas_extras',
     grupo: 'Horas extras',
     descricao:
-      'Horas extras estimadas por servidor (serviço extraordinário, desde 2009; valor pago ÷ hora normal ÷ 1,5, Res. TSE 22.901/2008 — limite superior)',
+      'Horas extras estimadas (serviço extraordinário desde 2009; valor pago ÷ hora normal ÷ 1,5, Res. TSE 22.901/2008 — limite superior)',
     valor: (m) => m.horasExtras,
-    formato: 'num',
     sufixo: ' h',
   },
 ];
 
 interface Variante {
   id: VarianteId;
-  /** 2ª linha do cabeçalho da coluna. */
+  /** 2ª linha do cabeçalho da coluna e rótulo no menu. */
   rotulo: string;
-  /** Texto completo, para o menu e o tooltip. */
+  /** 'contagem' = valor bruto (inteiro, com sufixo); 'pct' = percentual sobre o total de servidores do TSE. */
+  formato: 'contagem' | 'pct';
+  /** Fecha a frase iniciada pelo `descricao` da métrica, ex.: "Servidores — quantidade, só nesta unidade". */
   descricao: string;
-  calc: (
-    base: (m: UnidadeMetricas) => number,
-    node: UnidadeNode,
-    tseServidores: number,
-  ) => { num: number; den: number };
+  calc: (base: (m: UnidadeMetricas) => number, node: UnidadeNode, tseServidores: number) => number | null;
 }
 
 const VARIANTES: Variante[] = [
   {
-    id: 'unidade',
-    rotulo: 'unidade',
-    descricao: 'sobre os servidores lotados exatamente nesta unidade',
-    calc: (base, n) => ({ num: base(n.direto), den: n.direto.servidores }),
+    id: 'qtd_unidade',
+    rotulo: 'Qtd. Unidade',
+    formato: 'contagem',
+    descricao: 'quantidade, só quem está lotado exatamente nesta unidade',
+    calc: (base, node) => base(node.direto),
   },
   {
-    id: 'consolidada',
-    rotulo: 'consolidada',
-    descricao: 'sobre os servidores desta unidade e de toda a subárvore',
-    calc: (base, n) => ({ num: base(n.consolidado), den: n.consolidado.servidores }),
+    id: 'qtd_consolidado',
+    rotulo: 'Qtd. Consolidado',
+    formato: 'contagem',
+    descricao: 'quantidade, somando esta unidade e toda a subárvore',
+    calc: (base, node) => base(node.consolidado),
   },
   {
-    id: 'orgao_direto',
-    rotulo: 'órgão · direto',
-    descricao: 'valor lotado exatamente nesta unidade, sobre o total do TSE',
-    calc: (base, n, tse) => ({ num: base(n.direto), den: tse }),
+    id: 'pct_unidade',
+    rotulo: '% Unidade',
+    formato: 'pct',
+    descricao: 'percentual sobre o total de servidores do TSE, só quem está lotado exatamente nesta unidade',
+    calc: (base, node, tse) => (tse > 0 ? (base(node.direto) / tse) * 100 : null),
   },
   {
-    id: 'orgao_subarvore',
-    rotulo: 'órgão · subárvore',
-    descricao: 'valor consolidado desta unidade e subárvore, sobre o total do TSE',
-    calc: (base, n, tse) => ({ num: base(n.consolidado), den: tse }),
+    id: 'pct_consolidado',
+    rotulo: '% Consolidado',
+    formato: 'pct',
+    descricao: 'percentual sobre o total de servidores do TSE, somando esta unidade e toda a subárvore',
+    calc: (base, node, tse) => (tse > 0 ? (base(node.consolidado) / tse) * 100 : null),
   },
 ];
 
@@ -126,43 +129,29 @@ export interface Relacao {
   variante: VarianteId;
   /** 1ª linha do cabeçalho (nome da métrica). */
   grupo: string;
-  /** 2ª linha do cabeçalho (variante). */
+  /** 2ª linha do cabeçalho (variante: Qtd./% × Unidade/Consolidado). */
   rotuloVariante: string;
-  /** Frase completa "Percentual de … — sobre …". */
+  /** Frase completa "Métrica — variante", para o menu e o tooltip do cabeçalho. */
   descricao: string;
-  /** 'pct' → valor é percentual (0–100+); 'num' → valor é uma razão crua (ex.: h/servidor). */
-  formato: 'pct' | 'num';
-  /** Sufixo para formato 'num'. */
+  /** 'contagem' → valor bruto (inteiro, com sufixo); 'pct' → percentual (0–100+). */
+  formato: 'contagem' | 'pct';
+  /** Sufixo para formato 'contagem' (ex.: " h"); '' para os demais. */
   sufixo: string;
-  /** Percentual, ou razão crua se formato === 'num'; null quando o denominador
-   *  é 0 (unidade sem servidor lotado direto). */
+  /** Valor calculado; null quando o denominador é 0 (sem servidor algum no TSE — só em base vazia). */
   calc: (node: UnidadeNode, tseServidores: number) => number | null;
 }
 
-/** Combinações que não informam nada (sempre 100%) ou não fazem sentido. */
-const ehDegenerada = (base: MetricaBaseId, v: VarianteId) => {
-  if (base === 'servidores' && (v === 'unidade' || v === 'consolidada')) return true;
-  // Horas extras é uma taxa por servidor: as variantes "órgão" (sobre o total
-  // do TSE) misturariam escalas e não teriam leitura clara.
-  if (base === 'horas_extras' && (v === 'orgao_direto' || v === 'orgao_subarvore')) return true;
-  return false;
-};
-
 export const RELACOES: Relacao[] = METRICAS_BASE.flatMap((mb) =>
-  VARIANTES.filter((v) => !ehDegenerada(mb.id, v.id)).map((v) => ({
+  VARIANTES.map((v) => ({
     id: `${mb.id}__${v.id}`,
     base: mb.id,
     variante: v.id,
     grupo: mb.grupo,
     rotuloVariante: v.rotulo,
     descricao: `${mb.descricao} — ${v.descricao}`,
-    formato: mb.formato ?? 'pct',
-    sufixo: mb.sufixo ?? '',
-    calc: (node: UnidadeNode, tse: number) => {
-      const { num, den } = v.calc(mb.valor, node, tse);
-      if (den <= 0) return null;
-      return mb.formato === 'num' ? num / den : (num / den) * 100;
-    },
+    formato: v.formato,
+    sufixo: v.formato === 'contagem' ? (mb.sufixo ?? '') : '',
+    calc: (node: UnidadeNode, tse: number) => v.calc(mb.valor, node, tse),
   })),
 );
 
@@ -172,19 +161,18 @@ export const RELACOES_POR_ID = new Map(RELACOES.map((r) => [r.id, r]));
 export const GRUPOS_RELACOES = METRICAS_BASE.map((mb) => ({
   base: mb.id,
   grupo: mb.grupo,
-  descricao: mb.descricao,
   relacoes: RELACOES.filter((r) => r.base === mb.id),
 }));
 
 /** Colunas mostradas na primeira visita. */
 export const RELACOES_PADRAO: string[] = [
-  'servidores__orgao_subarvore',
-  'fc__consolidada',
-  'cj__consolidada',
-  'fiscais__consolidada',
-  'teletrabalho__consolidada',
-  'terceirizados__consolidada',
-  'horas_extras__consolidada',
+  'servidores__qtd_consolidado',
+  'fc__pct_consolidado',
+  'cj__pct_consolidado',
+  'fiscais__pct_consolidado',
+  'teletrabalho__pct_consolidado',
+  'terceirizados__pct_consolidado',
+  'horas_extras__qtd_consolidado',
 ];
 
 /** Mesma regra de `percentual()` em utils.ts: 1 casa abaixo de 10%, inteiro
@@ -195,10 +183,9 @@ export function formatarPct(v: number): string {
 }
 
 /** Formata o valor de uma relação para exibição, conforme o `formato`. */
-export function formatarValorRelacao(v: number, r: { formato: 'pct' | 'num'; sufixo: string }): string {
-  if (r.formato === 'num') {
-    const s = v >= 100 ? String(Math.round(v)) : v.toFixed(1);
-    return `${s}${r.sufixo}`;
+export function formatarValorRelacao(v: number, r: { formato: 'contagem' | 'pct'; sufixo: string }): string {
+  if (r.formato === 'contagem') {
+    return `${numero(Math.round(v))}${r.sufixo}`;
   }
   return `${formatarPct(v)}%`;
 }

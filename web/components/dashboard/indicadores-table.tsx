@@ -11,6 +11,7 @@ import {
   ChevronsRight,
   Columns3,
   Info,
+  ListTree,
   MoveHorizontal,
   RotateCcw,
   Search,
@@ -42,6 +43,7 @@ import type { LinhaUnidade } from '@/lib/unidades-flat';
 import { CATEGORIAS_UNIDADE, IDS_CATEGORIA, type CategoriaUnidade } from '@/lib/unidades-categoria';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
 import { csv, excluidos, inteiro, ordem } from '@/lib/url-filtros';
+import { chaveHierarquicaLotacao, compararHierarquico } from '@/lib/lotacao-hierarquia';
 import {
   GRUPOS_RELACOES,
   RELACOES,
@@ -53,6 +55,11 @@ import {
 
 const LINHAS_POR_PAGINA = 50;
 const LS_COLUNAS = 'indicadores-colunas';
+/** "Nível" é opcional como as relações, mas não faz parte do catálogo de
+ *  RELACOES — id sintético tratado à parte no menu de Colunas. */
+const COLUNA_NIVEL_ID = 'nivel';
+const COLUNAS_PADRAO = [COLUNA_NIVEL_ID, ...RELACOES_PADRAO];
+const colunaValida = (id: string) => id === COLUNA_NIVEL_ID || RELACOES_POR_ID.has(id);
 
 type ChaveOrd = 'unidade' | 'nivel' | (string & {});
 interface Ordenacao {
@@ -69,6 +76,16 @@ function normalizar(texto: string) {
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase();
+}
+
+/** true se `termo` é prefixo de alguma palavra de `texto` — evita falso
+ *  positivo de substring no meio da palavra (ex.: buscar "STI" batendo em
+ *  "JUSTIÇA" ou "LOGÍSTICA", que contêm "sti" soltos no meio). */
+function contemPalavraComecandoCom(texto: string, termo: string): boolean {
+  if (!termo) return true;
+  return normalizar(texto)
+    .split(/[^a-z0-9]+/)
+    .some((palavra) => palavra.startsWith(termo));
 }
 
 function BotaoPagina({ className, ...props }: React.ComponentProps<'button'>) {
@@ -92,14 +109,13 @@ function IconeOrd({ ativo, dir }: { ativo: boolean; dir: 'asc' | 'desc' }) {
 
 /** Célula de valor. Para relações percentuais, uma barra de dados cresce da
  *  esquerda e trava em 100% (valores maiores acontecem em "fiscais" — pessoa
- *  com vários papéis). Para relações 'num' (ex.: horas extras por servidor), só
- *  o número com sufixo, sem barra (a escala não é 0–100). "—" quando não há
- *  denominador. */
+ *  com vários papéis). Para relações 'contagem' (Qtd.), só o número com
+ *  sufixo, sem barra (a escala não é 0–100). "—" quando não há denominador. */
 function CelulaPct({ valor, relacao }: { valor: number | null; relacao: Relacao }) {
   if (valor === null) {
     return <TableCell className="text-right tabular-nums text-muted-foreground">—</TableCell>;
   }
-  if (relacao.formato === 'num') {
+  if (relacao.formato === 'contagem') {
     return (
       <TableCell className="text-right tabular-nums">
         {formatarValorRelacao(valor, relacao)}
@@ -156,10 +172,27 @@ function MenuColunas({
           role="menu"
           className="absolute left-0 top-full z-50 mt-2 max-h-[70vh] w-72 overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-lg"
         >
+          <div className="py-1">
+            <p className="px-2 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Estrutura
+            </p>
+            <label
+              className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors hover:bg-accent"
+              title="Profundidade do nó na árvore de unidades — 0 é a raiz (TSE)"
+            >
+              <input
+                type="checkbox"
+                checked={visiveis.has(COLUNA_NIVEL_ID)}
+                onChange={() => onToggle(COLUNA_NIVEL_ID)}
+                className="h-3.5 w-3.5 rounded border-border accent-primary"
+              />
+              <span>Nível</span>
+            </label>
+          </div>
           {GRUPOS_RELACOES.map((g) => (
             <div key={g.base} className="py-1">
               <p className="px-2 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {g.descricao}
+                {g.grupo}
               </p>
               {g.relacoes.map((r) => (
                 <label
@@ -196,7 +229,7 @@ export function IndicadoresTable({
 }) {
   const [busca, setBusca] = useState('');
   const [pagina, setPagina] = useState(0);
-  const [colunasVisiveis, setColunasVisiveis] = useState<Set<string>>(() => new Set(RELACOES_PADRAO));
+  const [colunasVisiveis, setColunasVisiveis] = useState<Set<string>>(() => new Set(COLUNAS_PADRAO));
   const [ordenacao, setOrdenacao] = useState<Ordenacao | null>(null);
   const [carregou, setCarregou] = useState(false);
   // Primeiro nível de detalhamento da unidade — modal interno (id da linha).
@@ -229,7 +262,7 @@ export function IndicadoresTable({
     try {
       const bruto = localStorage.getItem(LS_COLUNAS);
       if (bruto) {
-        const ids = (JSON.parse(bruto) as string[]).filter((id) => RELACOES_POR_ID.has(id));
+        const ids = (JSON.parse(bruto) as string[]).filter(colunaValida);
         if (ids.length > 0) setColunasVisiveis(new Set(ids));
       }
     } catch {
@@ -255,8 +288,8 @@ export function IndicadoresTable({
     });
 
   const colunasNoPadrao =
-    colunasVisiveis.size === RELACOES_PADRAO.length &&
-    RELACOES_PADRAO.every((id) => colunasVisiveis.has(id));
+    colunasVisiveis.size === COLUNAS_PADRAO.length &&
+    COLUNAS_PADRAO.every((id) => colunasVisiveis.has(id));
 
   // Filtros compartilháveis pela URL (busca, tipos, colunas, ordenação, página).
   useSincronizarUrl(
@@ -278,12 +311,18 @@ export function IndicadoresTable({
 
       const cols = csv.ler(sp.get('cols'));
       if (cols) {
-        const validas = cols.filter((id) => RELACOES_POR_ID.has(id));
+        const validas = cols.filter(colunaValida);
         if (validas.length > 0) setColunasVisiveis(new Set(validas));
       }
 
       const o = ordem.ler(sp.get('ord'));
-      if (o && (o.campo === 'unidade' || o.campo === 'nivel' || RELACOES_POR_ID.has(o.campo))) {
+      if (
+        o &&
+        (o.campo === 'unidade' ||
+          o.campo === 'unidade_hier' ||
+          o.campo === 'nivel' ||
+          RELACOES_POR_ID.has(o.campo))
+      ) {
         setOrdenacao({ chave: o.campo, dir: o.direcao });
       }
 
@@ -318,8 +357,8 @@ export function IndicadoresTable({
       arr = arr.filter(
         ({ linha }) =>
           normalizar(linha.sigla).includes(termo) ||
-          normalizar(linha.nome).includes(termo) ||
-          normalizar(linha.caminho).includes(termo),
+          contemPalavraComecandoCom(linha.nome, termo) ||
+          contemPalavraComecandoCom(linha.caminho, termo),
       );
     }
     if (!todasCategoriasAtivas) {
@@ -329,6 +368,16 @@ export function IndicadoresTable({
       });
     }
     if (!ordEfetiva) return arr;
+    if (ordEfetiva.chave === 'unidade_hier') {
+      // Hierárquica: agrupa por unidade-mãe (topo), depois subdivide — mesma
+      // lógica de /servidores (ord=lotacao_hier). Sempre crescente.
+      return [...arr].sort((a, b) =>
+        compararHierarquico(
+          chaveHierarquicaLotacao(a.linha.caminhoCurto),
+          chaveHierarquicaLotacao(b.linha.caminhoCurto),
+        ),
+      );
+    }
     const fator = ordEfetiva.dir === 'asc' ? 1 : -1;
     const valor = (x: LinhaValores): string | number | null => {
       if (ordEfetiva.chave === 'unidade') return x.linha.caminho;
@@ -362,15 +411,33 @@ export function IndicadoresTable({
     });
   }
 
+  // Unidade tem 4 estados: alfabética ↑ → alfabética ↓ → hierárquica → nada
+  // (mesmo padrão da coluna Lotação em /servidores).
+  function ordenarUnidade() {
+    setPagina(0);
+    setOrdenacao((atual) => {
+      const estado =
+        atual?.chave === 'unidade' ? atual.dir : atual?.chave === 'unidade_hier' ? 'hier' : null;
+      if (estado === null) return { chave: 'unidade', dir: 'asc' };
+      if (estado === 'asc') return { chave: 'unidade', dir: 'desc' };
+      if (estado === 'desc') return { chave: 'unidade_hier', dir: 'asc' };
+      return null; // era hierárquica → limpa
+    });
+  }
+
+  const nivelVisivel = colunasVisiveis.has(COLUNA_NIVEL_ID);
+
   const colunasExport = useMemo<ColunaExport<LinhaValores>[]>(
     () => [
       { cabecalho: 'Caminho', valor: ({ linha }) => linha.caminho },
       { cabecalho: 'Sigla', valor: ({ linha }) => linha.sigla },
       { cabecalho: 'Unidade', valor: ({ linha }) => linha.nome },
-      { cabecalho: 'Nível', valor: ({ linha }) => linha.nivel },
+      ...(nivelVisivel
+        ? [{ cabecalho: 'Nível', valor: ({ linha }: LinhaValores) => linha.nivel }]
+        : []),
       ...colunas.map(
         (r): ColunaExport<LinhaValores> => ({
-          cabecalho: `${r.grupo} — ${r.rotuloVariante} (${r.formato === 'num' ? r.sufixo.trim() || 'nº' : '%'})`,
+          cabecalho: `${r.grupo} — ${r.rotuloVariante} (${r.formato === 'contagem' ? r.sufixo.trim() || 'nº' : '%'})`,
           valor: ({ valores }) => {
             const v = valores.get(r.id);
             return v === null || v === undefined ? '' : Number(v.toFixed(2));
@@ -378,10 +445,10 @@ export function IndicadoresTable({
         }),
       ),
     ],
-    [colunas],
+    [colunas, nivelVisivel],
   );
 
-  const colSpan = 2 + colunas.length;
+  const colSpan = 1 + (nivelVisivel ? 1 : 0) + colunas.length;
 
   const detalheLinha = detalheId ? linhas.find((l) => l.id === detalheId) ?? null : null;
   const detalheCaminho = detalheLinha ? detalheLinha.caminho.split(' / ').slice(0, -1) : [];
@@ -394,8 +461,9 @@ export function IndicadoresTable({
         <CardTitle className="text-base font-semibold">Indicadores por unidade</CardTitle>
         <CardDescription>
           Uma linha por unidade; cada coluna é uma relação escolhida no menu{' '}
-          <strong>Colunas</strong> — em geral um percentual (com barra que trava em 100%), mas{' '}
-          <strong>Horas extras</strong> é uma média por servidor, em horas <strong>estimadas</strong>{' '}
+          <strong>Colunas</strong> — <strong>Qtd.</strong> é o valor bruto (nesta unidade ou nesta unidade
+          + subárvore) e <strong>%</strong> é esse mesmo valor sobre o total de servidores do TSE, com
+          barra que trava em 100%. <strong>Horas extras</strong> soma horas <strong>estimadas</strong>{' '}
           (serviço extraordinário desde 2009; valor pago ÷ hora normal ÷ 1,5, Res. TSE 22.901/2008 —
           limite superior). Clique num cabeçalho para ordenar.
         </CardDescription>
@@ -481,31 +549,49 @@ export function IndicadoresTable({
           <TableHeader>
             <TableRow>
               <TableHead className="sticky left-0 z-20 bg-card">
-                <button
-                  type="button"
-                  onClick={() => ordenarPor('unidade')}
-                  className="-mx-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-1 transition-colors hover:bg-accent hover:text-accent-foreground"
-                >
-                  Unidade
-                  <IconeOrd
-                    ativo={ordEfetiva?.chave === 'unidade'}
-                    dir={ordEfetiva?.chave === 'unidade' ? ordEfetiva.dir : 'asc'}
-                  />
-                </button>
+                <span className="inline-flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={ordenarUnidade}
+                    aria-pressed={ordEfetiva?.chave === 'unidade' || ordEfetiva?.chave === 'unidade_hier'}
+                    aria-label="Ordenar por unidade — alfabética crescente, decrescente ou hierárquica"
+                    title="Ordenar: alfabética ↑ → alfabética ↓ → hierárquica (agrupa por unidade-mãe) → sem ordenação"
+                    className="-mx-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-1 transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    Unidade
+                    {ordEfetiva?.chave === 'unidade_hier' ? (
+                      <ListTree className="h-3.5 w-3.5" aria-hidden />
+                    ) : (
+                      <IconeOrd
+                        ativo={ordEfetiva?.chave === 'unidade'}
+                        dir={ordEfetiva?.chave === 'unidade' ? ordEfetiva.dir : 'asc'}
+                      />
+                    )}
+                  </button>
+                  <InfoDica titulo="O que a coluna Unidade mostra?" alinhamento="esquerda">
+                    As até 3 unidades mais específicas da hierarquia oficial, da própria
+                    unidade para a unidade-mãe — ex.: <em>SETOT / CSELE / STI</em> — parando
+                    no nível de secretaria. Clicando no cabeçalho: ordenação alfabética (↑/↓)
+                    e uma terceira, <strong>hierárquica</strong>, que agrupa por unidade-mãe
+                    (STI, depois CSELE dentro de STI, etc.).
+                  </InfoDica>
+                </span>
               </TableHead>
-              <TableHead className="text-right">
-                <button
-                  type="button"
-                  onClick={() => ordenarPor('nivel')}
-                  className="-mx-1.5 ml-auto inline-flex items-center gap-1 rounded-md px-1.5 py-1 transition-colors hover:bg-accent hover:text-accent-foreground"
-                >
-                  Nível
-                  <IconeOrd
-                    ativo={ordEfetiva?.chave === 'nivel'}
-                    dir={ordEfetiva?.chave === 'nivel' ? ordEfetiva.dir : 'desc'}
-                  />
-                </button>
-              </TableHead>
+              {nivelVisivel && (
+                <TableHead className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => ordenarPor('nivel')}
+                    className="-mx-1.5 ml-auto inline-flex items-center gap-1 rounded-md px-1.5 py-1 transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    Nível
+                    <IconeOrd
+                      ativo={ordEfetiva?.chave === 'nivel'}
+                      dir={ordEfetiva?.chave === 'nivel' ? ordEfetiva.dir : 'desc'}
+                    />
+                  </button>
+                </TableHead>
+              )}
               {colunas.map((r) => {
                 const ativo = ordEfetiva?.chave === r.id;
                 return (
@@ -540,8 +626,22 @@ export function IndicadoresTable({
               pageRows.map(({ linha, valores }) => (
                 <TableRow key={linha.id}>
                   <TableCell className="sticky left-0 z-10 bg-card">
-                    <span className="flex items-center gap-1.5 font-medium" title={linha.caminho}>
-                      {linha.sigla}
+                    <span className="flex flex-wrap items-center gap-1 font-medium">
+                      {linha.unidadesCurto.length > 0 ? (
+                        linha.unidadesCurto.map((u, i) => (
+                          <span key={u.sigla + i} className="flex items-center gap-1">
+                            {i > 0 && <span aria-hidden className="text-muted-foreground">/</span>}
+                            <span
+                              title={u.nome}
+                              className="underline decoration-dotted decoration-border underline-offset-2"
+                            >
+                              {u.sigla}
+                            </span>
+                          </span>
+                        ))
+                      ) : (
+                        <span title={linha.nome}>{linha.sigla}</span>
+                      )}
                       <button
                         type="button"
                         onClick={() => setDetalheId(linha.id)}
@@ -552,13 +652,12 @@ export function IndicadoresTable({
                         <Info className="h-3.5 w-3.5" aria-hidden />
                       </button>
                     </span>
-                    <span className="block max-w-[15rem] truncate text-xs text-muted-foreground">
-                      {linha.nome}
-                    </span>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
-                    {linha.nivel}
-                  </TableCell>
+                  {nivelVisivel && (
+                    <TableCell className="text-right tabular-nums text-muted-foreground">
+                      {linha.nivel}
+                    </TableCell>
+                  )}
                   {colunas.map((r) => (
                     <CelulaPct key={r.id} valor={valores.get(r.id) ?? null} relacao={r} />
                   ))}

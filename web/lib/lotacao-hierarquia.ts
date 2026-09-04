@@ -57,6 +57,28 @@ export function textoSiglas(unidades: UnidadeLotacao[]): string {
 export type ResolvedorLotacao = (lotacao: string | null) => UnidadeLotacao[];
 
 /**
+ * Caminho de um nó (inclusive) até 3 unidades, da menor para a maior, parando
+ * no nível de secretaria e pulando a "Secretaria do Tribunal" (ver regras no
+ * topo do arquivo). Núcleo comum entre `criarResolvedorLotacao` (resolve um
+ * nome plano de servidor até um nó) e a listagem de /indicadores (que já parte
+ * do próprio nó).
+ */
+export function caminhoAcimaDe(
+  no: UnidadeNode,
+  porId: Map<string, UnidadeNode>,
+): UnidadeLotacao[] {
+  const caminho: UnidadeLotacao[] = [];
+  let atual: UnidadeNode | undefined = no;
+  while (atual && atual.parentId !== null && caminho.length < MAX_NIVEIS) {
+    if (ehUmbrella(atual)) break; // "Secretaria do Tribunal" nunca aparece
+    caminho.push({ sigla: atual.sigla, nome: atual.nome });
+    if (ehSecretaria(atual)) break; // a exibição para no nível de secretaria
+    atual = porId.get(atual.parentId);
+  }
+  return caminho;
+}
+
+/**
  * Constrói um resolvedor a partir da árvore de unidades já agregada. O
  * resultado é o caminho (até 3 unidades) da menor para a maior, parando no
  * nível de secretaria e pulando a "Secretaria do Tribunal" (ver regras no topo
@@ -83,15 +105,26 @@ export function criarResolvedorLotacao(arvore: UnidadeNode | null): ResolvedorLo
     if (!lotacao) return [];
     const ids = idsPorNome.get(normalizarUnidade(lotacao));
     if (!ids || ids.length !== 1) return [];
-
-    const caminho: UnidadeLotacao[] = [];
-    let atual: UnidadeNode | undefined = porId.get(ids[0]);
-    while (atual && atual.parentId !== null && caminho.length < MAX_NIVEIS) {
-      if (ehUmbrella(atual)) break; // "Secretaria do Tribunal" nunca aparece
-      caminho.push({ sigla: atual.sigla, nome: atual.nome });
-      if (ehSecretaria(atual)) break; // a exibição para no nível de secretaria
-      atual = porId.get(atual.parentId);
-    }
-    return caminho;
+    const no = porId.get(ids[0]);
+    return no ? caminhoAcimaDe(no, porId) : [];
   };
+}
+
+/** Caminho de lotação como chave hierárquica (do topo para a folha), para
+ *  ordenar agrupando por unidade-mãe: "SETOT / CSELE / STI" → ["STI","CSELE","SETOT"]. */
+export function chaveHierarquicaLotacao(siglas: string): string[] {
+  return siglas ? siglas.split(' / ').reverse() : [];
+}
+
+/** Compara duas chaves hierárquicas nível a nível; a mais curta (unidade-mãe)
+ *  vem primeiro. */
+export function compararHierarquico(a: string[], b: string[]): number {
+  const n = Math.max(a.length, b.length);
+  for (let i = 0; i < n; i++) {
+    if (a[i] === undefined) return -1;
+    if (b[i] === undefined) return 1;
+    const c = a[i].localeCompare(b[i], 'pt-BR');
+    if (c) return c;
+  }
+  return 0;
 }

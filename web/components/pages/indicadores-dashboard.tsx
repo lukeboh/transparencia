@@ -61,19 +61,18 @@ export function IndicadoresDashboard() {
       )}
 
       <footer className="mt-8 text-xs text-muted-foreground">
-        Cada coluna é uma relação: em geral um percentual — uma métrica (servidores, com FC, com CJ, fiscais,
-        teletrabalho, terceirizados) sobre um denominador —, exceto <strong>Horas extras</strong>, que é a
-        média de horas extras <strong>estimadas</strong> por servidor (serviço extraordinário desde 2009: o
-        valor pago na folha ÷ valor da hora normal ÷ 1,5, conforme a Resolução TSE nº 22.901/2008; é um limite
-        superior). Variantes: <strong>unidade</strong>{' '}
-        (só quem está lotado exatamente no nó),{' '}
-        <strong>consolidada</strong> (o nó e toda a subárvore), <strong>órgão · direto</strong> (valor do nó
-        sobre o total de servidores do TSE) e <strong>órgão · subárvore</strong> (valor consolidado sobre o
-        total do TSE). &ldquo;—&rdquo; aparece quando o denominador é zero (unidade sem servidor lotado
-        direto). &ldquo;Fiscais&rdquo; soma papéis: quem tem mais de um papel conta em cada um, então o
-        percentual pode passar de 100% e a barra trava em 100%. Tudo reflete só o momento atual (relação de
-        agentes públicos vigente, contratos vigentes, teletrabalho em aberto). &ldquo;Terceirizados&rdquo; é
-        a razão terceirizados/servidores, estimada do PDF mensal do TSE de postos de cessão de mão de obra
+        Cada métrica (servidores, com FC, com CJ, fiscais, teletrabalho, terceirizados, horas extras) tem 4
+        colunas: <strong>Qtd. Unidade</strong> (valor bruto, só quem está lotado exatamente no nó),{' '}
+        <strong>Qtd. Consolidado</strong> (o nó e toda a subárvore), <strong>% Unidade</strong> e{' '}
+        <strong>% Consolidado</strong> (o mesmo valor bruto de Qtd., dividido pelo total de servidores do
+        TSE). &ldquo;Horas extras&rdquo; traz a soma de horas extras <strong>estimadas</strong> (serviço
+        extraordinário desde 2009: o valor pago na folha ÷ valor da hora normal ÷ 1,5, conforme a Resolução
+        TSE nº 22.901/2008; é um limite superior). &ldquo;—&rdquo; aparece quando o TSE não tem nenhum
+        servidor cadastrado (só em base vazia). &ldquo;Fiscais&rdquo; soma papéis: quem tem mais de um papel
+        conta em cada um, então o percentual pode passar de 100% e a barra trava em 100%. Tudo reflete só o
+        momento atual (relação de agentes públicos vigente, contratos vigentes, teletrabalho em aberto).
+        &ldquo;Terceirizados&rdquo; é uma contagem estimada do PDF mensal do TSE de postos de cessão de mão
+        de obra
         {estado.dados.unidades.terceirizadosCompetencia
           ? ` (competência ${estado.dados.unidades.terceirizadosCompetencia})`
           : ''}
