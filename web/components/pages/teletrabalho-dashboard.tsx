@@ -9,6 +9,7 @@ import { contarPorFuncaoAtual } from '@/components/dashboard/funcao-donut';
 import { ContagemStatCard } from '@/components/dashboard/contagem-stat-card';
 import type { FatiaContagem } from '@/components/dashboard/contagem-donut';
 import { TeletrabalhoTable } from '@/components/dashboard/teletrabalho-table';
+import { TeletrabalhoEvolucaoChart } from '@/components/dashboard/teletrabalho-evolucao-chart';
 import { TeletrabalhoDetalheDialog } from '@/components/dashboard/teletrabalho-detalhe-dialog';
 import { ContratosDialog } from '@/components/dashboard/contratos-dialog';
 import { contratosDoResponsavel } from '@/components/dashboard/ranking-table';
@@ -238,6 +239,13 @@ export function TeletrabalhoDashboard() {
           />
         </div>
 
+        <TeletrabalhoEvolucaoChart
+          ranking={rankingFiltrado}
+          totalOrgao={resumo.totalAgentesPublicos}
+          mesReferencia={estado.dados.geradoEm.slice(0, 7)}
+          somenteVigentes={somenteVigentes}
+        />
+
         <TeletrabalhoTable
           ranking={rankingFiltrado}
           funcaoDe={funcaoDe}
@@ -255,7 +263,10 @@ export function TeletrabalhoDashboard() {
         início e fim (ou hoje, quando segue em aberto); períodos sobrepostos da mesma pessoa não são mesclados, então
         dias sobrepostos podem ser contados mais de uma vez. Cruzamento com fiscais/gestores e com função
         comissionada é feito pelo nome do servidor — nenhuma das fontes expõe CPF nem matrícula em comum — então
-        homônimos podem gerar vínculos incorretos.
+        homônimos podem gerar vínculos incorretos. O gráfico <strong>Teletrabalho no TSE, mês a mês</strong> conta,
+        para cada mês, os servidores do recorte atual com um período ativo naquele mês, sobre o quadro de agentes
+        públicos de <strong>hoje</strong> (não há série histórica de quadro de pessoal, então o denominador é fixo —
+        os meses antigos ficam ligeiramente subestimados se o TSE tinha menos gente na época).
         <AppVersion />
       </footer>
 

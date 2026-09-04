@@ -32,7 +32,14 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   de homônimos das outras fontes sem CPF/matrícula em comum. A fonte também
   tem um botão "Detalhar" por período que aponta para um suposto
   detalhamento dia-a-dia — testado manualmente contra vários registros reais
-  e ele nunca retornou dado nenhum, então não é usado aqui.
+  e ele nunca retornou dado nenhum, então não é usado aqui. Abaixo dos KPIs,
+  o gráfico de barras **"Teletrabalho no TSE, mês a mês"**
+  (`teletrabalho-evolucao-chart.tsx`): para cada mês, o percentual de agentes
+  públicos do TSE com um período de teletrabalho ativo, sobre o quadro atual
+  (denominador fixo — não há série histórica de pessoal). Sensível ao toggle
+  "Somente vigentes hoje" — ligado, mostra só o histórico de quem está em
+  teletrabalho agora; desligado, o quadro completo (pico de ~36 % em
+  mar/2023).
 - ✅ A antiga página `/responsaveis` foi renomeada para `/fiscais` (rota e
   label) — nome interno de dados (`DashboardData.responsaveis`) não mudou.
 - ✅ `/fiscais` renomeada para `/servidores` — título **Servidores (Agentes
