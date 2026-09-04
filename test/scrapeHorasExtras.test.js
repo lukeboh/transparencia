@@ -94,6 +94,19 @@ test('formato antigo (até ~2020): 3 linhas por tipo — DOMINGOS, DIAS ÚTEIS, 
   assert.ok(Math.abs(cc.valorRubrica - 10199.98) < 1e-6);
 });
 
+test('bloco lido em dobro (concorrência) → rubricas idênticas são colapsadas', () => {
+  const cc = parseContracheque(
+    'VENCIMENTOS E VANTAGENS 14.358,40 EXERCÍCIO FC/CJ 0,00 REMUNERAÇÃO ÓRGÃO ORIGEM 0,00 ' +
+      // bloco duplicado: cada linha aparece 2×, idêntica
+      'HORAS EXTRAS - DOMINGOS E FERIADOS - 09/2016 1.980,09 ' +
+      'HORAS EXTRAS - DIAS ÚTEIS E SÁBADOS - 09/2016 12.668,21 ' +
+      'HORAS EXTRAS - DOMINGOS E FERIADOS - 09/2016 1.980,09 ' +
+      'HORAS EXTRAS - DIAS ÚTEIS E SÁBADOS - 09/2016 12.668,21 ',
+  );
+  assert.equal(cc.rubricas.length, 2);
+  assert.ok(Math.abs(cc.valorRubrica - 14648.3) < 1e-6);
+});
+
 test('múltiplas linhas HORAS EXTRAS (retroativo) somam e mantêm o mês de referência', () => {
   const cc = parseContracheque(
     'VENCIMENTOS E VANTAGENS 10.000,00 HORAS EXTRAS - 09/2022 758,61 HORAS EXTRAS - 10/2022 6.976,33 TOTAL BRUTO 17.734,94 REMUNERAÇÃO ÓRGÃO ORIGEM 0,00',

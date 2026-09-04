@@ -93,12 +93,21 @@ export function parseContracheque(innerText) {
   const origem = valorDe(/REMUNERA[ÇC][ÃA]O [ÓO]RG[ÃA]O ORIGEM\s+(-?[\d.,]+)/i);
   const base = vv + fccj + origem;
 
-  const rubricas = [
+  const rubricasBrutas = [
     ...t.matchAll(/HORAS EXTRAS(?:\s*-\s*([A-ZÀ-Ú][^\d-]*?))??(?:\s*-\s*(\d{2}\/\d{4}))?\s+(-?[\d.,]+)/gi),
   ].map((m) => {
     const descr = (m[1] || '').toUpperCase();
     const tipo = /DOMINGO/.test(descr) ? 'domingos' : /[UÚ]TE/.test(descr) ? 'uteis' : null;
     return { ref: m[2] || null, valor: numeroBR(m[3]), tipo };
+  });
+  // Sob concorrência alta o bloco do contracheque às vezes é renderizado/lido
+  // duas vezes — cada rubrica sai repetida idêntica (ref+valor+tipo). Colapsa
+  // linhas EXATAMENTE iguais (uma correção retroativa nunca repõe o mesmo
+  // centavo, mesmo tipo e mesmo mês de referência).
+  const vistas = new Set();
+  const rubricas = rubricasBrutas.filter((r) => {
+    const k = `${r.ref}|${r.valor}|${r.tipo}`;
+    return vistas.has(k) ? false : (vistas.add(k), true);
   });
   const valorRubrica = rubricas.reduce((s, r) => s + r.valor, 0);
   if (base <= 0) return null;
@@ -242,16 +251,19 @@ async function processarLinha(page, l) {
 
 /**
  * Uma competência: lista todos os servidores e expande cada contracheque com
- * um pool de `concorrencia` páginas (cada uma reabre a listagem e processa uma
- * fatia intercalada das linhas). Devolve só as linhas com HORAS EXTRAS > 0.
+ * `concorrencia` workers. Cada worker tem seu PRÓPRIO contexto (cookies/sessão
+ * isolados) — os detalhes do Anexo VIII compartilham estado por sessão no
+ * servidor, então N páginas na mesma sessão embaralhavam/duplicavam blocos.
+ * Devolve só as linhas com HORAS EXTRAS > 0.
  *
  * `amostra` (> 0) limita quantas linhas são visitadas — para uma prévia rápida;
  * `onProgresso(feitas, total)` é chamado a cada linha processada.
  */
-async function rasparCompetencia(context, comp, { concorrencia = 3, amostra = 0, onProgresso } = {}) {
-  const lead = await context.newPage();
-  lead.setDefaultNavigationTimeout(60_000);
-  const { total, linhas: todas } = await abrirListagem(lead, comp);
+async function rasparCompetencia(browser, comp, { concorrencia = 3, amostra = 0, onProgresso } = {}) {
+  const lead = await browser.newContext({ ignoreHTTPSErrors: true });
+  const leadPage = await lead.newPage();
+  leadPage.setDefaultNavigationTimeout(60_000);
+  const { total, linhas: todas } = await abrirListagem(leadPage, comp);
   const linhas = amostra > 0 ? todas.slice(0, amostra) : todas;
   if (linhas.length === 0) {
     await lead.close();
@@ -259,18 +271,19 @@ async function rasparCompetencia(context, comp, { concorrencia = 3, amostra = 0,
   }
 
   const n = Math.max(1, Math.min(concorrencia, linhas.length));
-  const pages = [lead];
+  const workers = [{ context: lead, page: leadPage }];
   for (let i = 1; i < n; i++) {
-    const p = await context.newPage();
-    p.setDefaultNavigationTimeout(60_000);
-    await abrirListagem(p, comp);
-    pages.push(p);
+    const context = await browser.newContext({ ignoreHTTPSErrors: true });
+    const page = await context.newPage();
+    page.setDefaultNavigationTimeout(60_000);
+    await abrirListagem(page, comp);
+    workers.push({ context, page });
   }
 
   const registros = [];
   let feitas = 0;
   await Promise.all(
-    pages.map(async (page, w) => {
+    workers.map(async ({ page }, w) => {
       for (let i = w; i < linhas.length; i += n) {
         const l = linhas[i];
         try {
@@ -285,8 +298,7 @@ async function rasparCompetencia(context, comp, { concorrencia = 3, amostra = 0,
     }),
   );
 
-  for (const p of pages.slice(1)) await p.close();
-  await lead.close();
+  for (const { context } of workers) await context.close();
   registros.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
   return { registros, total };
 }
@@ -334,13 +346,12 @@ async function main() {
   if (pendentes.length === 0) return;
 
   const browser = await chromium.launch(proxy ? { headless: true, proxy: { server: proxy } } : { headless: true });
-  const context = await browser.newContext({ ignoreHTTPSErrors: true });
 
   try {
     for (const comp of pendentes) {
       const t0 = Date.now();
       process.stdout.write(`  ${comp.rotulo}: `);
-      const { registros, total } = await rasparCompetencia(context, comp, {
+      const { registros, total } = await rasparCompetencia(browser, comp, {
         concorrencia,
         amostra,
         onProgresso: (feitas, tot) => {

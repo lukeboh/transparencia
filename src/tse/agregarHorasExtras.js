@@ -75,20 +75,28 @@ function agregarHorasExtras(entrada) {
       basesPorPessoa.set(nomeNorm, arr);
     }
   }
-  const medianaBasePorPessoa = new Map(
-    [...basesPorPessoa].map(([k, v]) => [k, mediana(v)]),
+  // "Base normal" da pessoa = mediana das bases que chegam a pelo menos 60 % da
+  // MAIOR base observada. Isso descarta meses de folha parcial (recesso,
+  // licença, entrada/saída) antes de tirar a mediana — a mediana pura falhava
+  // para quem tem 1 mês cheio e vários parciais (ela caía num parcial).
+  const baseNormalPorPessoa = new Map(
+    [...basesPorPessoa].map(([k, v]) => {
+      const max = Math.max(...v);
+      const cheias = v.filter((b) => b >= 0.6 * max);
+      return [k, mediana(cheias)];
+    }),
   );
   /** Base a usar para a rubrica de `nomeNorm` referente a `chaveRef`.
    *  Preferência: base do próprio mês de referência → base da folha de
-   *  pagamento → mediana das bases da pessoa. Uma base < 60% da mediana da
-   *  pessoa é tida como PARCIAL (mês de licença/saída de função) e pulada. */
+   *  pagamento → base normal da pessoa. Uma base < 60 % da base normal é tida
+   *  como PARCIAL (mês de licença/saída de função) e pulada. */
   function baseParaRef(nomeNorm, chaveRef, baseDaFolha) {
-    const med = medianaBasePorPessoa.get(nomeNorm) ?? 0;
-    const parcial = (b) => med > 0 && b > 0 && b < med * 0.6;
+    const normal = baseNormalPorPessoa.get(nomeNorm) ?? 0;
+    const parcial = (b) => normal > 0 && b > 0 && b < normal * 0.6;
     const doRef = basePorPessoaComp.get(`${nomeNorm}|${chaveRef}`) ?? 0;
     if (doRef > 0 && !parcial(doRef)) return doRef;
     if (baseDaFolha > 0 && !parcial(baseDaFolha)) return baseDaFolha;
-    return med > 0 ? med : doRef || baseDaFolha;
+    return normal > 0 ? normal : doRef || baseDaFolha;
   }
 
   // Um mês-pessoa só entra na apresentação (e nos totais) se a estimativa
