@@ -473,11 +473,18 @@ JSON no formato padrão do DataTables (`draw`, `recordsTotal`,
 `recordsFiltered`, `data`), onde cada célula é um fragmento HTML igual ao
 renderizado na tabela.
 
-A coluna de índice 33 ("Responsáveis") traz uma tabela aninhada com
-CPF (mascarado) / Nome / Tipo para cada fiscal/gestor do contrato — é dessa
-coluna que vem a informação de responsabilidade. `scrapeContratos.js` pagina
-esse endpoint (200 registros por página — pedir tudo de uma vez em `length`
-alto causa timeout no servidor) e converte cada linha para o schema abaixo.
+A coluna **"Responsáveis"** traz uma tabela aninhada com CPF (mascarado) /
+Nome / Tipo para cada fiscal/gestor do contrato — é dessa coluna que vem a
+informação de responsabilidade. O índice dela na resposta **já mudou uma vez**
+(o site inseriu colunas como "Situação", "PNCP", "Subcategoria" e tudo de ~21
+em diante andou +1: "Valor Global" 21→22, "Empenhos" 28→29, "Responsáveis"
+33→34, "Ações" 38→39). Por isso `scrapeContratos.js` **deriva os índices dos
+rótulos do `<thead>` em tempo de execução** (`mapearColunas`) — o mapa fixo é
+só fallback com aviso. Um `validarAmostra` aborta a raspagem se os papéis/nomes
+saírem com cara de coluna deslocada (papel com dígito, nome com CPF grudado),
+para não gravar lixo no cache. `scrapeContratos.js` pagina esse endpoint (200
+registros por página — pedir tudo de uma vez em `length` alto causa timeout no
+servidor) e converte cada linha para o schema abaixo.
 
 Não é necessário navegador (Playwright) para isso — é uma chamada HTTP direta
 com `fetch`, mais rápida e simples. `discover.js` (Playwright) fica como

@@ -14,8 +14,30 @@ import { fileURLToPath } from 'node:url';
 
 const BASE = 'https://contratos.comprasnet.gov.br/transparencia';
 
-// Índices de coluna na resposta do DataTables (ver data/discovery/page-*.html,
-// bloco <thead>, e README para como foram descobertos).
+// Rótulo do <th> de cada campo que consumimos, no cabeçalho da tabela. Os
+// índices na resposta do DataTables JÁ mudaram uma vez (o site inseriu colunas
+// tipo "Situação", "PNCP", "Subcategoria" e tudo de ~21 em diante andou +1), por
+// isso o mapa é derivado do <thead> em tempo de execução (mapearColunas) — o
+// COL abaixo é só o fallback com o layout conhecido em 2026-09.
+const COL_ROTULO = {
+  ORGAO: 'Órgão',
+  UNIDADE: 'Unidade da Prestação do Serviço',
+  NUMERO: 'Número Contrato',
+  UNIDADE_REALIZADORA: 'Unidade Realizadora da Compra',
+  MODALIDADE: 'Modalidade da Compra',
+  TIPO: 'Tipo',
+  CATEGORIA: 'Categoria',
+  FORNECEDOR: 'Fornecedor',
+  PROCESSO: 'Processo',
+  OBJETO: 'Objeto',
+  VIG_INICIO: 'Vig. Início',
+  VIG_FIM: 'Vig. Fim',
+  VALOR_GLOBAL: 'Valor Global',
+  EMPENHOS: 'Empenhos',
+  RESPONSAVEIS: 'Responsáveis',
+  ACOES: 'Ações',
+};
+
 const COL = {
   ORGAO: 0,
   UNIDADE: 1,
@@ -29,11 +51,38 @@ const COL = {
   OBJETO: 17,
   VIG_INICIO: 19,
   VIG_FIM: 20,
-  VALOR_GLOBAL: 21,
-  EMPENHOS: 28,
-  RESPONSAVEIS: 33,
-  ACOES: 38,
+  VALOR_GLOBAL: 22,
+  EMPENHOS: 29,
+  RESPONSAVEIS: 34,
+  ACOES: 39,
 };
+
+/**
+ * Deriva os índices de coluna do <thead> da página. O primeiro <thead> tem os
+ * ~40 rótulos "de verdade" (um segundo <thead> clonado repete tudo). Se algum
+ * rótulo esperado não for encontrado, cai no COL fixo com um aviso — melhor um
+ * palpite do que quebrar, mas o aviso sinaliza que o layout mudou de novo.
+ */
+function mapearColunas(html) {
+  const ths = [...html.matchAll(/<th[^>]*>([\s\S]*?)<\/th>/gi)].map((m) =>
+    m[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(),
+  );
+  const col = {};
+  const faltando = [];
+  for (const [campo, rotulo] of Object.entries(COL_ROTULO)) {
+    const i = ths.indexOf(rotulo);
+    if (i === -1) faltando.push(rotulo);
+    else col[campo] = i;
+  }
+  if (faltando.length) {
+    console.warn(
+      `[scrapeContratos] rótulos não achados no <thead> (${faltando.join(', ')}); ` +
+      `usando índices fixos de 2026-09. Cabeçalho atual: ${ths.slice(0, 45).join(' | ')}`,
+    );
+    return COL;
+  }
+  return col;
+}
 
 function stripHtml(html) {
   return (html || '')
@@ -87,26 +136,50 @@ function idDoContrato(acoesHtml) {
   return m ? m[1] : undefined;
 }
 
-function linhaParaContrato(row) {
-  const { valorEmpenhado, valorPago } = parseEmpenhos(row[COL.EMPENHOS]);
+function linhaParaContrato(row, col = COL) {
+  const { valorEmpenhado, valorPago } = parseEmpenhos(row[col.EMPENHOS]);
   return {
-    id: idDoContrato(row[COL.ACOES]),
-    numero: stripHtml(row[COL.NUMERO]),
-    processo: stripHtml(row[COL.PROCESSO]),
-    objeto: stripHtml(row[COL.OBJETO]),
-    modalidade: stripHtml(row[COL.MODALIDADE]),
-    tipo: stripHtml(row[COL.TIPO]),
-    categoria: stripHtml(row[COL.CATEGORIA]),
-    fornecedor: stripHtml(row[COL.FORNECEDOR]),
-    valorGlobal: parseValorBRL(stripHtml(row[COL.VALOR_GLOBAL])),
+    id: idDoContrato(row[col.ACOES]),
+    numero: stripHtml(row[col.NUMERO]),
+    processo: stripHtml(row[col.PROCESSO]),
+    objeto: stripHtml(row[col.OBJETO]),
+    modalidade: stripHtml(row[col.MODALIDADE]),
+    tipo: stripHtml(row[col.TIPO]),
+    categoria: stripHtml(row[col.CATEGORIA]),
+    fornecedor: stripHtml(row[col.FORNECEDOR]),
+    valorGlobal: parseValorBRL(stripHtml(row[col.VALOR_GLOBAL])),
     valorEmpenhado,
     valorPago,
-    vigenciaInicio: stripHtml(row[COL.VIG_INICIO]),
-    vigenciaFim: stripHtml(row[COL.VIG_FIM]),
-    orgao: stripHtml(row[COL.ORGAO]),
-    unidade: stripHtml(row[COL.UNIDADE]),
-    responsaveis: parseResponsaveis(row[COL.RESPONSAVEIS]),
+    vigenciaInicio: stripHtml(row[col.VIG_INICIO]),
+    vigenciaFim: stripHtml(row[col.VIG_FIM]),
+    orgao: stripHtml(row[col.ORGAO]),
+    unidade: stripHtml(row[col.UNIDADE]),
+    responsaveis: parseResponsaveis(row[col.RESPONSAVEIS]),
   };
+}
+
+/**
+ * Sanidade pós-parse: se a coluna deslocar de novo, os valores saem "quase
+ * plausíveis" (nome com CPF grudado, papel virando nome). Aborta em vez de
+ * gravar lixo no cache.
+ */
+function validarAmostra(contratos) {
+  const amostra = contratos.slice(0, 30);
+  if (amostra.length === 0) return;
+  const semId = amostra.filter((c) => !c.id).length;
+  if (semId > amostra.length / 2) throw new Error('coluna "Ações" não trouxe id do contrato — layout mudou.');
+  // Papel real nunca tem dígito nem CPF; nome nunca tem CPF grudado. Quando a
+  // coluna "Responsáveis" desloca, é isso que aparece.
+  const respRuins = amostra
+    .flatMap((c) => c.responsaveis)
+    .filter((r) => /\d/.test(r.papel || '') || /\*\*\*/.test(r.papel || '') || /\*\*\*/.test(r.nome || ''));
+  if (respRuins.length) {
+    throw new Error(
+      `coluna "Responsáveis" parece ter deslocado — ex.: ${JSON.stringify(respRuins[0])}`,
+    );
+  }
+  const comValor = amostra.filter((c) => c.valorGlobal > 0).length;
+  if (comValor === 0) throw new Error('nenhum contrato da amostra tem Valor Global > 0 — coluna pode ter deslocado.');
 }
 
 async function obterSessao() {
@@ -117,7 +190,7 @@ async function obterSessao() {
   if (!csrfMatch) throw new Error('Token CSRF não encontrado na página — layout pode ter mudado.');
   const setCookie = res.headers.getSetCookie ? res.headers.getSetCookie() : [];
   const cookieHeader = setCookie.map((c) => c.split(';')[0]).join('; ');
-  return { csrf: csrfMatch[1], cookieHeader };
+  return { csrf: csrfMatch[1], cookieHeader, col: mapearColunas(html) };
 }
 
 async function buscarPagina({ csrf, cookieHeader }, unidade, start, length) {
@@ -144,7 +217,8 @@ async function scrapeContratos(
   const sessao = await obterSessao();
   const primeira = await buscarPagina(sessao, unidade, 0, pageSize);
   const total = primeira.recordsFiltered;
-  const primeiraContratos = primeira.data.map(linhaParaContrato);
+  const primeiraContratos = primeira.data.map((row) => linhaParaContrato(row, sessao.col));
+  validarAmostra(primeiraContratos);
 
   // Verificação incremental: se já temos cache com a mesma quantidade total
   // e todos os contratos mais recentes da página 0 batem, reutilizamos o cache
@@ -196,7 +270,7 @@ async function scrapeContratos(
     if (data) ordenados.push(...data);
   }
 
-  const novosContratos = ordenados.map(linhaParaContrato);
+  const novosContratos = ordenados.map((row) => linhaParaContrato(row, sessao.col));
 
   if (Array.isArray(cacheContratos) && cacheContratos.length > 0) {
     const mapa = new Map(cacheContratos.map((c) => [c.id, c]));
@@ -245,4 +319,15 @@ if (isMain) {
   });
 }
 
-export { scrapeContratos, linhaParaContrato, parseValorBRL, parseEmpenhos, parseResponsaveis, stripHtml };
+export {
+  scrapeContratos,
+  linhaParaContrato,
+  parseValorBRL,
+  parseEmpenhos,
+  parseResponsaveis,
+  stripHtml,
+  mapearColunas,
+  validarAmostra,
+  COL,
+  COL_ROTULO,
+};
