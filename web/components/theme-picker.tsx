@@ -47,6 +47,12 @@ const TEMAS = [
     descricao: 'Azul e dourado oficiais',
     amostra: ['#10203a', '#6fa8f5', '#103a74'],
   },
+  {
+    id: 'tse-xt',
+    nome: 'TSE XT',
+    descricao: 'Vidro, gradiente azul→ciano',
+    amostra: ['#0077ff', '#00c6ff', '#ec4899'],
+  },
 ] as const;
 
 type TemaId = (typeof TEMAS)[number]['id'];

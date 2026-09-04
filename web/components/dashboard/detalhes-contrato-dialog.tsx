@@ -62,7 +62,7 @@ export function DetalhesContratoDialog({
           )}
           {contrato?.correcoes && contrato.correcoes.length > 0 && (
             <span
-              className="inline-flex items-center gap-0.5 rounded-sm bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400"
+              className="inline-flex items-center gap-0.5 rounded-sm bg-warning-bg px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-warning"
               title={contrato.correcoes.map((c) => `${c.motivo}\n\nFonte: ${c.fonte}`).join('\n\n---\n\n')}
             >
               <PencilLine className="h-3 w-3" aria-hidden />

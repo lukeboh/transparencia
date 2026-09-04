@@ -84,7 +84,7 @@ export function TerceirizadosFalhasCard({
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-base font-semibold">
-            <AlertTriangle className="h-4 w-4 text-amber-500" aria-hidden />
+            <AlertTriangle className="h-4 w-4 text-warning" aria-hidden />
             Registro de falhas <DicaTermo id="terceirizadoFalhas" />
             <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
               {numero(falhas.length)}
@@ -153,7 +153,7 @@ export function TerceirizadosFalhasCard({
                       <TableCell>
                         <span
                           title={DESCRICAO[f.tipo]}
-                          className="cursor-help rounded-sm bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400"
+                          className="cursor-help rounded-sm bg-warning-bg px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-warning"
                         >
                           {ROTULO[f.tipo]}
                         </span>

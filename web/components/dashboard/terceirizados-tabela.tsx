@@ -435,7 +435,7 @@ export function TerceirizadosTabela({
                           </span>
                         ) : (
                           <span
-                            className="text-xs text-amber-600 dark:text-amber-500"
+                            className="text-xs text-warning"
                             title={p.lotacaoAlocacao ? `Alocação no PDF: ${p.lotacaoAlocacao}` : 'Sem alocação no PDF'}
                           >
                             não identificada

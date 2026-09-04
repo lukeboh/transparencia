@@ -395,28 +395,47 @@ todo mundo.
 ### Temas
 
 Além do modo claro/escuro, o seletor de paleta (ícone 🎨 no header) oferece
-sete temas: **Neutro** (cinzas clássicos), **Institucional** (azul-marinho
+oito temas: **Neutro** (cinzas clássicos), **Institucional** (azul-marinho
 sóbrio, cantos mais retos), **Esmeralda** (verdes suaves, cantos mais
 arredondados), **Violeta** (gradiente índigo com cartões navy), **Lagoa**
-(gradiente turquesa→verde), **Ardósia** (flat carvão + teal, cantos retos) e
+(gradiente turquesa→verde), **Ardósia** (flat carvão + teal, cantos retos),
 **TSE** (azul institucional + dourado do brasão, nas cores do site oficial
 [tse.jus.br](https://www.tse.jus.br) — acento dourado em vez do teal/verde
-dos demais temas de acento). Os temas mudam apenas o chrome (superfícies,
-acentos, bordas, raio e, nos gradientes, o fundo da página) — os slots de
-cor dos gráficos (`--chart-*`) são os mesmos em todos, porque são a paleta
-de dados validada para daltonismo, com uma exceção deliberada: o tema TSE
-também sobrescreve `--chart-2` (verde → amarelo-gema, `#fad43d` claro /
+dos demais temas de acento) e **TSE XT** (ver abaixo). Os temas mudam apenas
+o chrome (superfícies, acentos, bordas, raio e, nos gradientes, o fundo da
+página) — os slots de cor dos gráficos (`--chart-*`) são os mesmos em todos,
+porque são a paleta de dados validada para daltonismo, com duas exceções
+deliberadas: o tema TSE também sobrescreve `--chart-2` (verde → amarelo-gema, `#fad43d` claro /
 `#f3c920` escuro), porque o próprio sentido do tema é replicar a identidade
 visual real do TSE, que não tem verde. Essa troca reduz a distância
 perceptível sob daltonismo (protanopia/deuteranopia, simulação
 Coblis-style) entre `--chart-2` e `--chart-3` (que já é um âmbar) de
 ~185-210 (verde original) para ~70-86 — ainda perceptível, mas bem menor;
 o tom foi escolhido testando várias combinações de matiz/luminosidade para
-maximizar essa distância sem descaracterizar o amarelo-gema. Nos demais
-temas, o contraste de cada `--chart-*` contra o `--card` escuro é conferido
-(razão WCAG) antes de entrar, sem alterar os valores em si. Escolhas
-persistem em `localStorage` e são aplicadas antes do primeiro paint por um
-script no `<head>`.
+maximizar essa distância sem descaracterizar o amarelo-gema. A segunda
+exceção é o **TSE XT**, que leva `--chart-1` ao azul da própria identidade
+(`#0077ff` claro / `#3b9bff` escuro) — troca pequena e segura para CVD, o
+slot já era azul. Nos demais temas, o contraste de cada `--chart-*` contra
+o `--card` escuro é conferido (razão WCAG) antes de entrar, sem alterar os
+valores em si. Escolhas persistem em `localStorage` e são aplicadas antes do
+primeiro paint por um script no `<head>`.
+
+**TSE XT** não é só uma paleta: é uma linguagem visual completa, inspirada
+no guia de estilo "Auditoria Eleitoral". Aplica superfícies de **vidro**
+(cartões, navegação e cabeçalho com `backdrop-filter: blur(20px)
+saturate(180%)` sobre branco/navy translúcido, `rgba(255,255,255,0.92)`),
+**fundo da página em gradiente** azul-claro (radial + linear; profundidade
+navy no escuro), **botões primários com gradiente** azul→ciano (`#0077ff →
+#00c6ff`) e sombra colorida, **raio maior** (`--radius: 1rem`), sombras mais
+difusas e cor de seleção de texto ciana. Traz também a paleta semântica do
+guia — **alerta** (âmbar), **erro** (rosa `#ec4899`) e **sucesso** (verde
+`#059669`) — via tokens reutilizáveis `--warning` / `--success` / `--danger`
+(+ variantes `-bg` de fundo tênue) que existem em todos os temas com um
+padrão seguro e que o TSE XT re-tinge; os utilitários `text-warning`,
+`bg-warning-bg`, `border-warning-soft`, `text-danger`, `bg-danger-bg` etc.
+são definidos explicitamente em `@layer utilities` (não dependem do rastreio
+de classes) e substituíram os usos avulsos de `amber-*` / `destructive`
+espalhados pelos componentes.
 
 Nota de implementação: valores compactos ("R$ 17,3 bi") são formatados à mão
 em vez de `Intl … notation: 'compact'` — versões diferentes de ICU (Node do

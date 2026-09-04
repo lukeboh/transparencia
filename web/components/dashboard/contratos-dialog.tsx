@@ -86,7 +86,7 @@ export function ContratosDialog({
                   )}
                   {c.correcoes.length > 0 && (
                     <span
-                      className="shrink-0 flex items-center gap-0.5 rounded-sm bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400"
+                      className="shrink-0 flex items-center gap-0.5 rounded-sm bg-warning-bg px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-warning"
                       title={c.correcoes.map((cor) => `${cor.motivo}\n\nFonte: ${cor.fonte}`).join('\n\n---\n\n')}
                     >
                       <PencilLine className="h-3 w-3" aria-hidden />

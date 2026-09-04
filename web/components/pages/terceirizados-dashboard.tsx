@@ -139,7 +139,7 @@ export function TerceirizadosDashboard() {
   );
   const fatiasFalhas = useMemo<FatiaContagem[]>(
     () => [
-      { rotulo: 'Com falha', quantidade: terceirizadosComFalha, cor: 'var(--destructive)', meta: 'falhas' },
+      { rotulo: 'Com falha', quantidade: terceirizadosComFalha, cor: 'var(--danger)', meta: 'falhas' },
       {
         rotulo: 'Sem falha',
         quantidade: Math.max(0, t.totalPessoas - terceirizadosComFalha),
@@ -303,10 +303,10 @@ export function TerceirizadosDashboard() {
         </div>
 
         {semHistoricoUtil && (
-          <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+          <p className="rounded-lg border border-warning-soft bg-warning-bg px-3 py-2 text-xs text-warning">
             Só há uma competência ({rotuloCompetencia}) no histórico local. O <strong>mês de início</strong>{' '}
             aparece como essa competência e o <strong>mês de fim</strong> fica em branco para todos até que
-            haja pelo menos dois meses — rode <code className="rounded-sm bg-amber-500/15 px-1 py-0.5">npm run tse:scrape-terceirizados</code>{' '}
+            haja pelo menos dois meses — rode <code className="rounded-sm bg-warning-bg px-1 py-0.5">npm run tse:scrape-terceirizados</code>{' '}
             para baixar o histórico completo.
           </p>
         )}

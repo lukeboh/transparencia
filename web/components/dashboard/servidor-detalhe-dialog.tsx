@@ -131,7 +131,7 @@ function HistoricoFuncoes({ servidor }: { servidor: ServidorFuncoes | null }) {
       </div>
 
       {servidor.observacoes.length > 0 && (
-        <div className="flex gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+        <div className="flex gap-2 rounded-md bg-warning-bg px-3 py-2 text-xs text-warning">
           <AlertTriangle className="h-3.5 w-3.5 shrink-0 translate-y-0.5" aria-hidden />
           <ul className="space-y-1">
             {servidor.observacoes.map((obs, i) => (
@@ -327,7 +327,7 @@ function HorasExtrasEstimadas({ nome, linha }: { nome: string; linha: LinhaHoras
               </span>
               {m.acimaDoTeto && (
                 <span
-                  className="rounded-sm bg-amber-500/15 px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400"
+                  className="rounded-sm bg-warning-bg px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-warning"
                   title="A estimativa passa do limite mensal de serviço extraordinário (art. 4º da Resolução) — provável mês com pagamento retroativo ou acumulado, ou base de cálculo subestimada."
                 >
                   acima do teto
@@ -424,7 +424,7 @@ function HistoricoContratos({
                   )}
                   {c.correcoes.length > 0 && (
                     <span
-                      className="shrink-0 flex items-center gap-0.5 rounded-sm bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400"
+                      className="shrink-0 flex items-center gap-0.5 rounded-sm bg-warning-bg px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-warning"
                       title={c.correcoes.map((cor) => `${cor.motivo}\n\nFonte: ${cor.fonte}`).join('\n\n---\n\n')}
                     >
                       <PencilLine className="h-3 w-3" aria-hidden />

@@ -33,6 +33,20 @@
   --chart-5: #4a3aa7;
   --chart-6: #e34948;
   --radius: 0.625rem;
+
+  /*
+   * Tokens semânticos de estado (texto + fundo tênue) e de superfície "vidro".
+   * Existem em TODOS os temas com um padrão seguro; alguns temas (ex.: TSE XT)
+   * os re-tingem. Consumo via utilitários Tailwind: text-warning, bg-danger-bg…
+   */
+  --warning: #a16207;
+  --warning-bg: rgba(234, 179, 8, 0.12);
+  --success: #059669;
+  --success-bg: rgba(16, 185, 129, 0.12);
+  --danger: #b42318;
+  --danger-bg: rgba(228, 73, 72, 0.12);
+  --glass: var(--card);
+  --glass-border: var(--border);
 }
 
 .dark {
@@ -59,6 +73,13 @@
   --chart-4: #008300;
   --chart-5: #9085e9;
   --chart-6: #e66767;
+
+  --warning: #fbbf24;
+  --warning-bg: rgba(234, 179, 8, 0.15);
+  --success: #34d399;
+  --success-bg: rgba(16, 185, 129, 0.15);
+  --danger: #f87171;
+  --danger-bg: rgba(230, 103, 103, 0.16);
 }
 
 /*
@@ -314,6 +335,131 @@ html.dark[data-theme='lagoa'] body {
   --chart-2: #f3c920;
 }
 
+/*
+ * ── TSE XT ──────────────────────────────────────────────────────────────────
+ * Não é só uma paleta: é uma linguagem visual completa (superfícies de vidro,
+ * fundo em gradiente, botões primários com gradiente azul→ciano, raio maior,
+ * sombras difusas, estados semânticos re-tingidos). Referência: guia de estilo
+ * "Auditoria Eleitoral" (azul #0056b3/#0077ff, ciano #00c6ff, rosa de erro
+ * #ec4899, verde de sucesso #059669, vidro rgba(255,255,255,0.92) com
+ * backdrop-filter blur(20px) saturate(180%)).
+ *
+ * Exceção deliberada à regra "temas não mexem em --chart-*": aqui --chart-1
+ * passa a #0077ff (o mesmo azul da identidade) — troca pequena e segura para
+ * CVD (o slot já era azul). Os demais slots ficam como estão.
+ */
+[data-theme='tse-xt'] {
+  --background: #eaf2fc;
+  --foreground: #0a2540;
+  --card: rgba(255, 255, 255, 0.82);
+  --card-foreground: #0a2540;
+  --popover: #ffffff;
+  --popover-foreground: #0a2540;
+  --primary: #0077ff;
+  --primary-foreground: #ffffff;
+  --secondary: #dcebfd;
+  --secondary-foreground: #0a2540;
+  --muted: #e2edfb;
+  --muted-foreground: #536781;
+  --accent: #d6f3ff;
+  --accent-foreground: #065986;
+  --border: rgba(10, 37, 64, 0.12);
+  --ring: #0077ff;
+  --grid: #d5e4f5;
+  --radius: 1rem;
+  --chart-1: #0077ff;
+
+  --warning: #a16207;
+  --warning-bg: rgba(250, 204, 21, 0.12);
+  --success: #059669;
+  --success-bg: rgba(16, 185, 129, 0.12);
+  --danger: #ec4899;
+  --danger-bg: rgba(236, 72, 153, 0.12);
+  --glass: rgba(255, 255, 255, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.65);
+}
+
+.dark[data-theme='tse-xt'] {
+  --background: #071426;
+  --foreground: #e9f2ff;
+  --card: rgba(15, 32, 56, 0.66);
+  --card-foreground: #e9f2ff;
+  --popover: #0f2340;
+  --popover-foreground: #e9f2ff;
+  --primary: #3b9bff;
+  --primary-foreground: #04101f;
+  --secondary: #14284a;
+  --secondary-foreground: #dbe9fb;
+  --muted: #14284a;
+  --muted-foreground: #92a8c6;
+  --accent: #0c3550;
+  --accent-foreground: #8fe3ff;
+  --border: rgba(120, 170, 240, 0.16);
+  --ring: #3b9bff;
+  --grid: #1a3358;
+  --chart-1: #3b9bff;
+
+  --warning: #fbbf24;
+  --warning-bg: rgba(250, 204, 21, 0.14);
+  --success: #34d399;
+  --success-bg: rgba(16, 185, 129, 0.16);
+  --danger: #f472b6;
+  --danger-bg: rgba(236, 72, 153, 0.18);
+  --glass: rgba(15, 32, 56, 0.72);
+  --glass-border: rgba(120, 170, 240, 0.22);
+}
+
+/* Fundo do app: gradiente suave (claro) / profundidade navy (escuro). */
+html[data-theme='tse-xt'] body {
+  background-image: radial-gradient(1200px 600px at 12% -8%, #ffffff 0%, rgba(255, 255, 255, 0) 60%),
+    linear-gradient(160deg, #f2f8ff 0%, #e4f0fd 48%, #dcedfb 100%);
+  background-attachment: fixed;
+}
+
+html.dark[data-theme='tse-xt'] body {
+  background-image: radial-gradient(1100px 560px at 10% -10%, #103a63 0%, rgba(16, 58, 99, 0) 62%),
+    linear-gradient(160deg, #0a1f38 0%, #081627 52%, #060f1c 100%);
+  background-attachment: fixed;
+}
+
+/* Superfícies de vidro: cards, navegação e cabeçalho ganham blur + translucidez. */
+[data-theme='tse-xt'] [data-slot='card'] {
+  background-color: var(--glass);
+  border-color: var(--glass-border);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 1px 2px rgba(10, 37, 64, 0.06), 0 18px 40px -22px rgba(10, 37, 64, 0.28);
+}
+
+.dark[data-theme='tse-xt'] [data-slot='card'] {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 20px 44px -24px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme='tse-xt'] header > div,
+[data-theme='tse-xt'] header nav {
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+}
+
+[data-theme='tse-xt'] header nav {
+  background-color: var(--glass);
+}
+
+/* Botões/realces primários: gradiente azul→ciano da identidade + sombra colorida. */
+[data-theme='tse-xt'] .bg-primary {
+  background-image: linear-gradient(135deg, #0077ff 0%, #00c6ff 100%);
+  box-shadow: 0 8px 20px -8px rgba(0, 119, 255, 0.55);
+}
+
+.dark[data-theme='tse-xt'] .bg-primary {
+  background-image: linear-gradient(135deg, #2f7bff 0%, #35c6ff 100%);
+  box-shadow: 0 8px 20px -8px rgba(59, 155, 255, 0.5);
+}
+
+[data-theme='tse-xt'] ::selection {
+  background-color: rgba(0, 198, 255, 0.28);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -332,6 +478,13 @@ html.dark[data-theme='lagoa'] body {
   --color-border: var(--border);
   --color-ring: var(--ring);
   --color-grid: var(--grid);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-glass: var(--glass);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -349,4 +502,34 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Utilitários de estado semântico — definidos explicitamente (não só via
+ * @theme inline) para não dependerem do rastreio de classes do Tailwind e
+ * funcionarem já na 1ª compilação. Cada tema define os tokens; estas classes
+ * apenas os consomem.
+ */
+@layer utilities {
+  .text-warning {
+    color: var(--warning);
+  }
+  .text-success {
+    color: var(--success);
+  }
+  .text-danger {
+    color: var(--danger);
+  }
+  .bg-warning-bg {
+    background-color: var(--warning-bg);
+  }
+  .bg-success-bg {
+    background-color: var(--success-bg);
+  }
+  .bg-danger-bg {
+    background-color: var(--danger-bg);
+  }
+  .border-warning-soft {
+    border-color: color-mix(in oklab, var(--warning) 40%, transparent);
+  }
 }
