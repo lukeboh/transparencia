@@ -11,12 +11,12 @@ import {
   ChevronsLeft,
   ChevronsRight,
   MapPin,
-  MoveHorizontal,
   Search,
   X,
   type LucideIcon,
 } from 'lucide-react';
 import {
+  CampoCard,
   Card,
   CardContent,
   CardDescription,
@@ -399,6 +399,7 @@ export function TerceirizadosTabela({
               </datalist>
             </div>
 
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -498,10 +499,87 @@ export function TerceirizadosTabela({
                 )}
               </TableBody>
             </Table>
-            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground md:hidden">
-              <MoveHorizontal className="h-3 w-3 shrink-0" aria-hidden />
-              Deslize a tabela para o lado para ver mais colunas
-            </p>
+            </div>
+
+            <div className="space-y-3 md:hidden">
+              {linhas.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  Nenhum terceirizado encontrado{busca ? ` para “${busca}”` : ''}
+                </p>
+              ) : (
+                linhas.map((p, i) => (
+                  <Card key={`${p.nome}-${p.contrato}-${inicio + i}`} className="p-3">
+                    <p className="mb-2 font-medium">{p.nome}</p>
+                    <dl className="divide-y divide-border/50">
+                      <CampoCard rotulo="Lotação">
+                        {lotacaoTexto(p) ? (
+                          <span className="text-xs text-muted-foreground" title={p.lotacaoAlocacao || undefined}>
+                            {lotacaoTexto(p)}
+                          </span>
+                        ) : (
+                          <span
+                            className="text-xs text-warning"
+                            title={p.lotacaoAlocacao ? `Alocação no PDF: ${p.lotacaoAlocacao}` : 'Sem alocação no PDF'}
+                          >
+                            não identificada
+                          </span>
+                        )}
+                      </CampoCard>
+                      <CampoCard rotulo="Contratos">
+                        {p.contratosHistorico.length === 0 ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : (
+                          <ul className="space-y-0.5">
+                            {p.contratosHistorico.map((num) => {
+                              const emp = empresaPorContrato.get(num) ?? '';
+                              const atual = num === p.contrato;
+                              return (
+                                <li key={num} className="flex flex-wrap items-baseline justify-end gap-x-1.5 text-xs">
+                                  {emp && (
+                                    <span className="max-w-[10rem] truncate text-muted-foreground/80" title={emp}>
+                                      {emp}
+                                    </span>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => onVerContrato(num)}
+                                    className={cn(
+                                      'font-medium tabular-nums hover:underline',
+                                      atual ? 'text-primary' : 'text-muted-foreground',
+                                    )}
+                                    title={
+                                      atual
+                                        ? 'Contrato atual — ver detalhes'
+                                        : 'Contrato anterior — ver detalhes'
+                                    }
+                                  >
+                                    {num}
+                                  </button>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </CampoCard>
+                      <CampoCard rotulo="Início">
+                        <span className="text-xs tabular-nums text-muted-foreground">
+                          {p.mesInicio ? mesAnoCurto(p.mesInicio) : '—'}
+                        </span>
+                      </CampoCard>
+                      <CampoCard rotulo="Fim">
+                        {p.mesFim ? (
+                          <span className="text-xs tabular-nums text-muted-foreground">{mesAnoCurto(p.mesFim)}</span>
+                        ) : (
+                          <span className="rounded-sm bg-secondary px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-secondary-foreground">
+                            contratado
+                          </span>
+                        )}
+                      </CampoCard>
+                    </dl>
+                  </Card>
+                ))
+              )}
+            </div>
 
             <div className="mt-4 flex items-center justify-between gap-4">
               <p className="text-xs text-muted-foreground">

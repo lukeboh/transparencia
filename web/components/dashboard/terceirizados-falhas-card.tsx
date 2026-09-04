@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CampoCard, Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ColapsarBotao } from '@/components/dashboard/card-controles';
 import {
   Table,
@@ -127,6 +127,7 @@ export function TerceirizadosFalhasCard({
 
         {aberto && falhas.length > 0 && (
           <div className="mt-4">
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -181,6 +182,57 @@ export function TerceirizadosFalhasCard({
                 })}
               </TableBody>
             </Table>
+            </div>
+
+            <div className="space-y-3 md:hidden">
+              {falhas.map((f, i) => {
+                const pdf = pdfPorCompetencia.get(f.competenciaMaisRecente);
+                return (
+                  <Card key={`${f.nome}-${f.tipo}-${i}`} className="p-3">
+                    <div className="mb-2 flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-medium">{f.nome}</p>
+                        {f.nomeSugerido && (
+                          <p className="mt-0.5 text-xs text-primary">→ {f.nomeSugerido}</p>
+                        )}
+                      </div>
+                      <span
+                        title={DESCRICAO[f.tipo]}
+                        className="shrink-0 cursor-help rounded-sm bg-warning-bg px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-warning"
+                      >
+                        {ROTULO[f.tipo]}
+                      </span>
+                    </div>
+                    <dl className="divide-y divide-border/50">
+                      <CampoCard rotulo="Alocação (PDF)">
+                        <span className="text-xs text-muted-foreground">{f.alocacao || '—'}</span>
+                      </CampoCard>
+                      <CampoCard rotulo="Contrato">
+                        <span className="text-xs tabular-nums text-muted-foreground">{f.contrato || '—'}</span>
+                      </CampoCard>
+                      <CampoCard rotulo="Competência">
+                        {pdf ? (
+                          <a
+                            href={pdf}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs tabular-nums text-primary hover:underline"
+                            title="Abrir o PDF mensal do TSE dessa competência, em nova aba"
+                          >
+                            {mesAnoCurto(f.competenciaMaisRecente)}
+                            <ExternalLink className="h-3 w-3" aria-hidden />
+                          </a>
+                        ) : (
+                          <span className="text-xs tabular-nums text-muted-foreground">
+                            {mesAnoCurto(f.competenciaMaisRecente)}
+                          </span>
+                        )}
+                      </CampoCard>
+                    </dl>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
         )}
       </CardContent>

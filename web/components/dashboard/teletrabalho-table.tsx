@@ -9,11 +9,11 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  MoveHorizontal,
   Search,
   X,
 } from 'lucide-react';
 import {
+  CampoCard,
   Card,
   CardContent,
   CardDescription,
@@ -356,6 +356,7 @@ export function TeletrabalhoTable({
           />
         </div>
 
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -478,10 +479,85 @@ export function TeletrabalhoTable({
             )}
           </TableBody>
         </Table>
-        <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground md:hidden">
-          <MoveHorizontal className="h-3 w-3 shrink-0" aria-hidden />
-          Deslize a tabela para o lado para ver mais colunas
-        </p>
+        </div>
+
+        <div className="space-y-3 md:hidden">
+          {linhas.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Nenhum servidor encontrado{busca ? ` para "${busca}"` : ''}
+              {buscaLotacao ? ` na lotação "${buscaLotacao}"` : ''}
+            </p>
+          ) : (
+            linhas.map(({ linha, posicao, ordem }) => {
+              const linhaResponsavel =
+                linha.responsavelRankingIndex !== null
+                  ? responsaveisRanking[linha.responsavelRankingIndex]
+                  : null;
+              const servidor = funcaoDe(linha);
+              const niveis = lotacaoDe(linha);
+              const siglas = siglasLotacao(niveis, resolverLotacao);
+              const vigente = vigenteDe(linha);
+              return (
+                <Card
+                  key={linha.nome}
+                  onClick={() => onVerDetalhe(linha)}
+                  className="cursor-pointer p-3 transition-colors hover:bg-accent/40"
+                >
+                  <div className="mb-2 flex items-start justify-between gap-2">
+                    <p className="min-w-0 font-medium">{nomeProprio(linha.nome)}</p>
+                    {vigente ? (
+                      <span className="shrink-0 rounded-sm bg-secondary px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-secondary-foreground">
+                        Vigente
+                      </span>
+                    ) : (
+                      <span className="shrink-0 text-xs text-muted-foreground">Finalizado</span>
+                    )}
+                  </div>
+                  <dl className="divide-y divide-border/50">
+                    <CampoCard rotulo="Função">
+                      {servidor ? (
+                        <FuncoesBadges servidor={servidor} />
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </CampoCard>
+                    <CampoCard rotulo="Fiscal">
+                      {linhaResponsavel ? (
+                        <span className="inline-flex flex-wrap items-center justify-end gap-1.5">
+                          <Papeis papeis={linhaResponsavel.papeis} />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onVerContratos(linhaResponsavel);
+                            }}
+                            className="text-xs font-medium text-primary hover:underline"
+                          >
+                            ver contratos →
+                          </button>
+                        </span>
+                      ) : (
+                        <span className="rounded-sm bg-danger-bg px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-danger">
+                          Não-Fiscal
+                        </span>
+                      )}
+                    </CampoCard>
+                    <CampoCard rotulo="Lotação">
+                      {siglas ? (
+                        <span className="text-xs text-muted-foreground">{siglas}</span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </CampoCard>
+                    <CampoCard rotulo="Dias em teletrabalho">
+                      <span className="text-base">{numero(linha.diasConsolidados)}</span>
+                    </CampoCard>
+                  </dl>
+                </Card>
+              );
+            })
+          )}
+        </div>
 
         <div className="mt-4 flex items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">

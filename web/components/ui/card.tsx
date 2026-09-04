@@ -50,4 +50,23 @@ function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
   );
 }
 
-export { Card, CardHeader, CardTitle, CardDescription, CardContent };
+/** Par rótulo/valor para dentro de um `<dl>` — usado nos cards de linha das
+ *  tabelas em telas mobile (rótulo à esquerda, valor à direita). */
+function CampoCard({
+  rotulo,
+  children,
+  className,
+}: {
+  rotulo: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn('flex items-baseline justify-between gap-3 py-1.5', className)}>
+      <dt className="shrink-0 text-xs text-muted-foreground">{rotulo}</dt>
+      <dd className="min-w-0 text-right text-sm font-medium">{children}</dd>
+    </div>
+  );
+}
+
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CampoCard };

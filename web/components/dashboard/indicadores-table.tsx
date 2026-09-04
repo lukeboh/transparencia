@@ -12,13 +12,13 @@ import {
   Columns3,
   Info,
   ListTree,
-  MoveHorizontal,
   RotateCcw,
   Search,
   SlidersHorizontal,
   X,
 } from 'lucide-react';
 import {
+  CampoCard,
   Card,
   CardContent,
   CardDescription,
@@ -107,10 +107,29 @@ function IconeOrd({ ativo, dir }: { ativo: boolean; dir: 'asc' | 'desc' }) {
   return <Icone className={cn('h-3.5 w-3.5 shrink-0', !ativo && 'opacity-50')} aria-hidden />;
 }
 
+/** Texto (+ barra de progresso para relações percentuais) de uma relação —
+ *  compartilhado entre a célula da tabela (desktop) e a linha de card
+ *  (mobile). Para relações 'contagem' (Qtd.), só o número com sufixo, sem
+ *  barra (a escala não é 0–100). "—" quando não há denominador. */
+function conteudoValorRelacao(valor: number | null, relacao: Relacao): React.ReactNode {
+  if (valor === null) return <span className="text-muted-foreground">—</span>;
+  if (relacao.formato === 'contagem') return formatarValorRelacao(valor, relacao);
+  const largura = Math.max(0, Math.min(100, valor));
+  return (
+    <span className="relative inline-block min-w-[4.5rem]">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0.5 left-0 rounded-sm bg-primary/15"
+        style={{ width: `calc(100% * ${largura / 100})` }}
+      />
+      <span className="relative">{formatarValorRelacao(valor, relacao)}</span>
+    </span>
+  );
+}
+
 /** Célula de valor. Para relações percentuais, uma barra de dados cresce da
  *  esquerda e trava em 100% (valores maiores acontecem em "fiscais" — pessoa
- *  com vários papéis). Para relações 'contagem' (Qtd.), só o número com
- *  sufixo, sem barra (a escala não é 0–100). "—" quando não há denominador. */
+ *  com vários papéis). */
 function CelulaPct({ valor, relacao }: { valor: number | null; relacao: Relacao }) {
   if (valor === null) {
     return <TableCell className="text-right tabular-nums text-muted-foreground">—</TableCell>;
@@ -170,7 +189,7 @@ function MenuColunas({
       {aberto && (
         <div
           role="menu"
-          className="absolute left-0 top-full z-50 mt-2 max-h-[70vh] w-72 overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-lg"
+          className="absolute left-0 top-full z-50 mt-2 max-h-[70vh] w-[min(18rem,calc(100vw-2rem))] overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-lg"
         >
           <div className="py-1">
             <p className="px-2 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -545,6 +564,7 @@ export function IndicadoresTable({
           )}
         </div>
 
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -666,11 +686,55 @@ export function IndicadoresTable({
             )}
           </TableBody>
         </Table>
+        </div>
 
-        <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground md:hidden">
-          <MoveHorizontal className="h-3 w-3 shrink-0" aria-hidden />
-          Deslize a tabela para o lado para ver mais colunas
-        </p>
+        <div className="space-y-3 md:hidden">
+          {pageRows.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Nenhuma unidade encontrada{busca ? ` para "${busca}"` : ''}
+            </p>
+          ) : (
+            pageRows.map(({ linha, valores }) => (
+              <Card key={linha.id} className="p-3">
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <span className="flex min-w-0 flex-wrap items-center gap-1 font-medium">
+                    {linha.unidadesCurto.length > 0 ? (
+                      linha.unidadesCurto.map((u, i) => (
+                        <span key={u.sigla + i} className="flex items-center gap-1">
+                          {i > 0 && <span aria-hidden className="text-muted-foreground">/</span>}
+                          <span title={u.nome}>{u.sigla}</span>
+                        </span>
+                      ))
+                    ) : (
+                      <span title={linha.nome}>{linha.sigla}</span>
+                    )}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setDetalheId(linha.id)}
+                    aria-label={`Ver detalhes de ${linha.sigla}`}
+                    title={`Ver detalhes de ${linha.sigla}`}
+                    className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <Info className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
+                <dl className="divide-y divide-border/50">
+                  {nivelVisivel && (
+                    <CampoCard rotulo="Nível">
+                      <span className="text-muted-foreground">{linha.nivel}</span>
+                    </CampoCard>
+                  )}
+                  {colunas.map((r) => (
+                    <CampoCard key={r.id} rotulo={`${r.grupo} — ${r.rotuloVariante}`}>
+                      {conteudoValorRelacao(valores.get(r.id) ?? null, r)}
+                    </CampoCard>
+                  ))}
+                </dl>
+              </Card>
+            ))
+          )}
+        </div>
 
         <div className="mt-4 flex items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">

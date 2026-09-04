@@ -154,17 +154,27 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   que restringe a quem tem função vigente hoje (`funcaoAtual`) e casa os
   níveis selecionados só com a função vigente. Função e atuação combinam em E;
   dentro de cada seção é OU; seção sem nada marcado não restringe.
-- ✅ Responsivo em telas de celular (320px+) — testado com Playwright em
-  320/375/768px nas 3 páginas. Cabeçalhos quebram para uma segunda linha em
-  vez de estourar a tela (nav com só ícone abaixo de `sm:`); tabelas crescem
-  além do card e rolam horizontalmente dentro do próprio container
-  (`overflow-x-auto`) sem derrubar a página inteira em scroll horizontal;
-  gráficos dentro de grid (`Evolução`/`Divisão por categoria`) ganharam
-  `min-w-0` no Card raiz — sem isso, o item de grid não encolhe abaixo do
-  conteúdo interno do gráfico, e a rosca de tema (`ThemePicker`) tinha o
-  dropdown saindo da tela por causa do grupo de botões ficar alinhado à
-  esquerda ao quebrar linha (trocado por `ml-auto`, que mantém alinhado à
-  direita em qualquer situação).
+- ✅ Responsivo em telas de celular (320px+). Abaixo de `md` (768px), as 6
+  tabelas da aplicação (`/servidores`, `/teletrabalho`, as 3 de
+  `/terceirizados` e `/indicadores`) viram uma lista de **cards** — um por
+  linha, pares rótulo/valor via o primitivo `CampoCard`
+  (`web/components/ui/card.tsx`) — em vez de depender de rolagem horizontal;
+  acima de `md` a tabela original (`web/components/ui/table.tsx`) continua
+  igual. Busca, ordenação, paginação e os cliques (abrir modal ao clicar na
+  linha, botões internos como "ver contratos") são exatamente os mesmos nas
+  duas apresentações — a versão card reaproveita a mesma lista já
+  filtrada/ordenada/paginada, sem duplicar lógica. Em `/indicadores`
+  (colunas dinâmicas escolhidas no menu "Colunas"), o card mostra as mesmas
+  colunas selecionadas para a tabela, com a mesma barra de progresso das
+  relações percentuais; o menu "Colunas" também teve a largura fixa (`w-72`)
+  trocada por `w-[min(18rem,calc(100vw-2rem))]` para não estourar telas
+  pequenas. Cabeçalhos quebram para uma segunda linha em vez de estourar a
+  tela (nav com só ícone abaixo de `sm:`); gráficos dentro de grid
+  (`Evolução`/`Divisão por categoria`) ganharam `min-w-0` no Card raiz — sem
+  isso, o item de grid não encolhe abaixo do conteúdo interno do gráfico, e a
+  rosca de tema (`ThemePicker`) tinha o dropdown saindo da tela por causa do
+  grupo de botões ficar alinhado à esquerda ao quebrar linha (trocado por
+  `ml-auto`, que mantém alinhado à direita em qualquer situação).
 - ✅ Representação visual dos perfis de fiscalização/gestão
   (`web/lib/perfis-fiscalizacao.ts`) — cada "papel" da fonte vira emoji +
   rótulo curto (🤴 Autoridade, 🧑‍💼 Gestor, 👮‍♂️ Fiscal, 🧑‍🔬 Técnico,
@@ -274,7 +284,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   (`horasExtras`, `horasExtrasCiclo`).
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v0.37**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v1.0**.
 
 ## Dashboard web
 

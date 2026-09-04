@@ -1,8 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ArrowUpDown, Building2, MoveHorizontal } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Building2 } from 'lucide-react';
 import {
+  CampoCard,
   Card,
   CardContent,
   CardDescription,
@@ -246,6 +247,7 @@ export function TerceirizadosContratosCard({
               </label>
             </div>
 
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -292,10 +294,51 @@ export function TerceirizadosContratosCard({
                 )}
               </TableBody>
             </Table>
-            <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground md:hidden">
-              <MoveHorizontal className="h-3 w-3 shrink-0" aria-hidden />
-              Deslize a tabela para o lado para ver mais colunas
-            </p>
+            </div>
+
+            <div className="space-y-3 md:hidden">
+              {ordenados.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  {temFiltro
+                    ? `Nenhum contrato para “${filtroEmpresa}”`
+                    : 'Nenhum contrato com terceirizado ativo. Desligue o filtro Vigente para ver o histórico.'}
+                </p>
+              ) : (
+                ordenados.map((c) => (
+                  <Card
+                    key={c.contrato}
+                    onClick={() => onVerContrato(c)}
+                    className="cursor-pointer p-3 transition-colors hover:bg-accent/40"
+                  >
+                    <div className="mb-2 flex items-start justify-between gap-2">
+                      <span className="font-medium tabular-nums">{c.contrato}</span>
+                      <span className="shrink-0 text-right">
+                        <span className="text-base font-medium tabular-nums">{numero(c.ativos)}</span>
+                        <span className="ml-1 text-xs text-muted-foreground">ativos</span>
+                      </span>
+                    </div>
+                    <dl className="divide-y divide-border/50">
+                      <CampoCard rotulo="Empresa">
+                        <span
+                          className="block max-w-[14rem] truncate text-xs text-muted-foreground"
+                          title={c.fornecedor ?? c.empresa}
+                        >
+                          {c.empresa || c.fornecedor || '—'}
+                        </span>
+                      </CampoCard>
+                      <CampoCard rotulo="Histórico">
+                        <span className="text-muted-foreground">{numero(c.total)}</span>
+                      </CampoCard>
+                      <CampoCard rotulo="Valor global">
+                        <span className="text-muted-foreground">
+                          {c.valorGlobal != null ? brlCompacto(c.valorGlobal) : '—'}
+                        </span>
+                      </CampoCard>
+                    </dl>
+                  </Card>
+                ))
+              )}
+            </div>
           </>
         )}
       </CardContent>

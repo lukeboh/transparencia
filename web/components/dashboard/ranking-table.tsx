@@ -10,13 +10,13 @@ import {
   ChevronsLeft,
   ChevronsRight,
   ListTree,
-  MoveHorizontal,
   Network,
   Search,
   X,
   type LucideIcon,
 } from 'lucide-react';
 import {
+  CampoCard,
   Card,
   CardContent,
   CardDescription,
@@ -532,6 +532,7 @@ export function RankingTable({
           />
         </div>
 
+        <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -791,10 +792,97 @@ export function RankingTable({
             )}
           </TableBody>
         </Table>
-        <p className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground md:hidden">
-          <MoveHorizontal className="h-3 w-3 shrink-0" aria-hidden />
-          Deslize a tabela para o lado para ver mais colunas
-        </p>
+        </div>
+
+        <div className="space-y-3 md:hidden">
+          {linhas.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Nenhum servidor encontrado para{' '}
+              &ldquo;{[busca.trim(), filtroLotacao.trim()].filter(Boolean).join('” · “')}&rdquo;
+            </p>
+          ) : (
+            linhas.map(({ linha, posicao, ordem }) => {
+              const servidor = funcoesPorNome.get(linha.nome);
+              const { siglas, unidades } = lotacaoDe(linha.nome);
+              const dias = teletrabalhoPorNome.get(linha.nome)?.diasConsolidados ?? 0;
+              const he = horasExtrasPorNome.get(linha.nome);
+              return (
+                <Card
+                  key={posicao}
+                  onClick={() => setSelecionado(linha)}
+                  className="cursor-pointer p-3 transition-colors hover:bg-accent/40"
+                >
+                  <div className="mb-2 flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-medium">{nomeProprio(linha.nome)}</p>
+                      <div className="mt-1">
+                        <Papeis papeis={linha.papeis} />
+                      </div>
+                    </div>
+                    <span
+                      className="shrink-0 text-xs text-muted-foreground tabular-nums"
+                      title={ordem !== posicao ? `Posição no ranking base (por valor): ${posicao}` : undefined}
+                    >
+                      #{ordem}
+                    </span>
+                  </div>
+                  <dl className="divide-y divide-border/50">
+                    <CampoCard rotulo="Funções">
+                      {servidor ? (
+                        <FuncoesBadges servidor={servidor} todas />
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </CampoCard>
+                    <CampoCard rotulo="Lotação">
+                      {!siglas ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : unidades.length === 0 ? (
+                        <span className="text-xs text-muted-foreground">{siglas}</span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          {unidades.map((u, i) => (
+                            <span key={u.sigla + i}>
+                              {i > 0 && <span aria-hidden> / </span>}
+                              {u.sigla}
+                            </span>
+                          ))}
+                        </span>
+                      )}
+                    </CampoCard>
+                    <CampoCard rotulo="Teletrabalho">
+                      {dias > 0 ? `${numero(dias)} dias` : <span className="text-muted-foreground">—</span>}
+                    </CampoCard>
+                    <CampoCard rotulo="Horas extras">
+                      {!he || he.horasConsolidadas <= 0 ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (
+                        `${numero(Math.round(he.horasConsolidadas))} h`
+                      )}
+                    </CampoCard>
+                    <CampoCard rotulo="Faixas">
+                      <FaixasValor linha={linha} contratos={contratos} />
+                    </CampoCard>
+                    <CampoCard rotulo="Contratos">{numero(linha.quantidadeContratos)}</CampoCard>
+                    <CampoCard rotulo="Valor Global">
+                      <span className="text-base">{brlCompleto(linha.valorConsolidado)}</span>
+                    </CampoCard>
+                    <CampoCard rotulo="Empenhado">
+                      <span className="text-muted-foreground">
+                        {brlCompleto(linha.valorEmpenhadoConsolidado || 0)}
+                      </span>
+                    </CampoCard>
+                    <CampoCard rotulo="Pago">
+                      <span className="text-muted-foreground">
+                        {brlCompleto(linha.valorPagoConsolidado || 0)}
+                      </span>
+                    </CampoCard>
+                  </dl>
+                </Card>
+              );
+            })
+          )}
+        </div>
 
         <div className="mt-4 flex items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
