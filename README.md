@@ -284,7 +284,7 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   (`horasExtras`, `horasExtrasCiclo`).
 
 O rodapé de cada página traz um identificador de versão do app
-(`web/lib/version.ts`, `APP_VERSION`) — atual: **v1.0**.
+(`web/lib/version.ts`, `APP_VERSION`) — atual: **v1.01**.
 
 ## Dashboard web
 
