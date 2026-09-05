@@ -19,6 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
+import { OrdenacaoMobile } from '@/components/dashboard/ordenacao-mobile';
 import { CampoBusca, ColapsarBotao, VigenteToggle } from '@/components/dashboard/card-controles';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
 import { bool } from '@/lib/url-filtros';
@@ -48,6 +49,21 @@ function normalizar(texto: string) {
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase();
 }
+
+/** Opções do seletor de ordenação mobile — mesmos campos do cabeçalho da
+ *  tabela desktop, como pares campo:direção. */
+const OPCOES_ORDENACAO_MOBILE: { valor: string; rotulo: string }[] = [
+  { valor: 'contrato:asc', rotulo: 'Contrato (A→Z)' },
+  { valor: 'contrato:desc', rotulo: 'Contrato (Z→A)' },
+  { valor: 'empresa:asc', rotulo: 'Empresa (A→Z)' },
+  { valor: 'empresa:desc', rotulo: 'Empresa (Z→A)' },
+  { valor: 'ativos:desc', rotulo: 'Ativos (maior→menor)' },
+  { valor: 'ativos:asc', rotulo: 'Ativos (menor→maior)' },
+  { valor: 'total:desc', rotulo: 'Histórico (maior→menor)' },
+  { valor: 'total:asc', rotulo: 'Histórico (menor→maior)' },
+  { valor: 'valor:desc', rotulo: 'Valor global (maior→menor)' },
+  { valor: 'valor:asc', rotulo: 'Valor global (menor→maior)' },
+];
 
 const COLUNAS_EXPORT: ColunaExport<ContratoTerceirizados>[] = [
   { cabecalho: 'Contrato', valor: (c) => c.contrato },
@@ -133,6 +149,13 @@ export function TerceirizadosContratosCard({
       setCampo(c);
       setDirecao(c === 'contrato' || c === 'empresa' ? 'asc' : 'desc');
     }
+  }
+
+  const valorOrdenacaoMobile = `${campo}:${direcao}`;
+  function ordenarPorMobile(valor: string) {
+    const [c, d] = valor.split(':') as [Campo, Direcao];
+    setCampo(c);
+    setDirecao(d);
   }
 
   const base = useMemo(() => {
@@ -297,6 +320,12 @@ export function TerceirizadosContratosCard({
             </div>
 
             <div className="space-y-3 md:hidden">
+              <OrdenacaoMobile
+                opcoes={OPCOES_ORDENACAO_MOBILE}
+                valorAtual={valorOrdenacaoMobile}
+                onMudar={ordenarPorMobile}
+                className="mb-1"
+              />
               {ordenados.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
                   {temFiltro

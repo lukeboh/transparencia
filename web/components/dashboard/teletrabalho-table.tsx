@@ -31,6 +31,7 @@ import {
 import { Papeis } from '@/components/dashboard/ranking-table';
 import { FuncoesBadges, funcaoDestaque } from '@/components/dashboard/funcoes-badges';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
+import { OrdenacaoMobile } from '@/components/dashboard/ordenacao-mobile';
 import { cn, nomeProprio, numero } from '@/lib/utils';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
 import { inteiro, ordem } from '@/lib/url-filtros';
@@ -56,6 +57,20 @@ const DIRECAO_INICIAL: Record<CampoOrdenavel, DirecaoOrdenacao> = {
   lotacao: 'asc',
   situacao: 'desc',
 };
+
+/** Opções do seletor de ordenação mobile — mesmos campos do cabeçalho da
+ *  tabela desktop, como pares campo:direção. */
+const OPCOES_ORDENACAO_MOBILE: { valor: string; rotulo: string }[] = [
+  { valor: 'padrao', rotulo: 'Ranking padrão (#)' },
+  { valor: 'nome:asc', rotulo: 'Servidor (A→Z)' },
+  { valor: 'nome:desc', rotulo: 'Servidor (Z→A)' },
+  { valor: 'situacao:desc', rotulo: 'Situação (vigente primeiro)' },
+  { valor: 'situacao:asc', rotulo: 'Situação (finalizado primeiro)' },
+  { valor: 'lotacao:asc', rotulo: 'Lotação (A→Z)' },
+  { valor: 'lotacao:desc', rotulo: 'Lotação (Z→A)' },
+  { valor: 'dias:desc', rotulo: 'Dias em teletrabalho (maior→menor)' },
+  { valor: 'dias:asc', rotulo: 'Dias em teletrabalho (menor→maior)' },
+];
 
 /** Nome plano da lotação (unidade mais específica) — a "folha" de `unidadeNiveis`
  *  (que vem da fonte do menor para o maior). É a chave para resolver as siglas
@@ -264,6 +279,17 @@ export function TeletrabalhoTable({
       }
       return null;
     });
+  }
+
+  const valorOrdenacaoMobile = ordenacao ? `${ordenacao.campo}:${ordenacao.direcao}` : 'padrao';
+  function ordenarPorMobile(valor: string) {
+    setPagina(0);
+    if (valor === 'padrao') {
+      setOrdenacao(null);
+      return;
+    }
+    const [campo, direcao] = valor.split(':') as [CampoOrdenavel, DirecaoOrdenacao];
+    setOrdenacao({ campo, direcao });
   }
 
   return (
@@ -482,6 +508,12 @@ export function TeletrabalhoTable({
         </div>
 
         <div className="space-y-3 md:hidden">
+          <OrdenacaoMobile
+            opcoes={OPCOES_ORDENACAO_MOBILE}
+            valorAtual={valorOrdenacaoMobile}
+            onMudar={ordenarPorMobile}
+            className="mb-1"
+          />
           {linhas.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
               Nenhum servidor encontrado{busca ? ` para "${busca}"` : ''}

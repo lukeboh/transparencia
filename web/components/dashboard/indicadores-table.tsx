@@ -34,6 +34,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
+import { OrdenacaoMobile } from '@/components/dashboard/ordenacao-mobile';
 import { UnidadeDetalheDialog } from '@/components/dashboard/unidade-detalhe-dialog';
 import { PillToggle } from '@/components/ui/pill-toggle';
 import { InfoDica } from '@/components/ui/info-dica';
@@ -446,6 +447,40 @@ export function IndicadoresTable({
 
   const nivelVisivel = colunasVisiveis.has(COLUNA_NIVEL_ID);
 
+  // Opções do seletor de ordenação mobile — mesmas colunas do cabeçalho da
+  // tabela desktop (fixas + as relações escolhidas no menu Colunas), como
+  // pares chave:direção.
+  const opcoesOrdenacaoMobile = useMemo<{ valor: string; rotulo: string }[]>(() => {
+    const opcoes: { valor: string; rotulo: string }[] = [
+      { valor: 'unidade:asc', rotulo: 'Unidade (A→Z)' },
+      { valor: 'unidade:desc', rotulo: 'Unidade (Z→A)' },
+      { valor: 'unidade_hier:asc', rotulo: 'Unidade (hierárquica)' },
+    ];
+    if (nivelVisivel) {
+      opcoes.push(
+        { valor: 'nivel:desc', rotulo: 'Nível (maior→menor)' },
+        { valor: 'nivel:asc', rotulo: 'Nível (menor→maior)' },
+      );
+    }
+    for (const r of colunas) {
+      const rotulo = `${r.grupo} — ${r.rotuloVariante}`;
+      opcoes.push(
+        { valor: `${r.id}:desc`, rotulo: `${rotulo} (maior→menor)` },
+        { valor: `${r.id}:asc`, rotulo: `${rotulo} (menor→maior)` },
+      );
+    }
+    return opcoes;
+  }, [colunas, nivelVisivel]);
+
+  const valorOrdenacaoMobile = `${ordEfetiva?.chave ?? 'unidade'}:${ordEfetiva?.dir ?? 'asc'}`;
+  function ordenarPorMobile(valor: string) {
+    setPagina(0);
+    const i = valor.lastIndexOf(':');
+    const chave = valor.slice(0, i);
+    const dir = valor.slice(i + 1) as 'asc' | 'desc';
+    setOrdenacao({ chave, dir });
+  }
+
   const colunasExport = useMemo<ColunaExport<LinhaValores>[]>(
     () => [
       { cabecalho: 'Caminho', valor: ({ linha }) => linha.caminho },
@@ -689,6 +724,12 @@ export function IndicadoresTable({
         </div>
 
         <div className="space-y-3 md:hidden">
+          <OrdenacaoMobile
+            opcoes={opcoesOrdenacaoMobile}
+            valorAtual={valorOrdenacaoMobile}
+            onMudar={ordenarPorMobile}
+            className="mb-1"
+          />
           {pageRows.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
               Nenhuma unidade encontrada{busca ? ` para "${busca}"` : ''}

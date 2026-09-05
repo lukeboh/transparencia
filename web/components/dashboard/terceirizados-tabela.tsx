@@ -32,6 +32,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
+import { OrdenacaoMobile } from '@/components/dashboard/ordenacao-mobile';
 import { ColapsarBotao, VigenteToggle } from '@/components/dashboard/card-controles';
 import { cn, mesAnoCurto, numero } from '@/lib/utils';
 import { useSincronizarUrl } from '@/lib/use-sincronizar-url';
@@ -49,6 +50,20 @@ interface Ordenacao {
   campo: CampoOrdenavel;
   direcao: DirecaoOrdenacao;
 }
+
+/** Opções do seletor de ordenação mobile — mesmos campos do cabeçalho da
+ *  tabela desktop, como pares campo:direção. */
+const OPCOES_ORDENACAO_MOBILE: { valor: string; rotulo: string }[] = [
+  { valor: 'padrao', rotulo: 'Ordem padrão (nome)' },
+  { valor: 'nome:asc', rotulo: 'Nome (A→Z)' },
+  { valor: 'nome:desc', rotulo: 'Nome (Z→A)' },
+  { valor: 'lotacao:asc', rotulo: 'Lotação (A→Z)' },
+  { valor: 'lotacao:desc', rotulo: 'Lotação (Z→A)' },
+  { valor: 'inicio:asc', rotulo: 'Início (mais antigo→recente)' },
+  { valor: 'inicio:desc', rotulo: 'Início (mais recente→antigo)' },
+  { valor: 'fim:asc', rotulo: 'Fim (mais antigo→recente)' },
+  { valor: 'fim:desc', rotulo: 'Fim (mais recente→antigo)' },
+];
 
 function normalizar(texto: string) {
   return texto
@@ -294,6 +309,17 @@ export function TerceirizadosTabela({
     });
   }
 
+  const valorOrdenacaoMobile = ordenacao ? `${ordenacao.campo}:${ordenacao.direcao}` : 'padrao';
+  function ordenarPorMobile(valor: string) {
+    setPagina(0);
+    if (valor === 'padrao') {
+      setOrdenacao(null);
+      return;
+    }
+    const [campo, direcao] = valor.split(':') as [CampoOrdenavel, DirecaoOrdenacao];
+    setOrdenacao({ campo, direcao });
+  }
+
   return (
     <Card id="tabela-terceirizados" className="scroll-mt-4">
       <CardHeader>
@@ -502,6 +528,12 @@ export function TerceirizadosTabela({
             </div>
 
             <div className="space-y-3 md:hidden">
+              <OrdenacaoMobile
+                opcoes={OPCOES_ORDENACAO_MOBILE}
+                valorAtual={valorOrdenacaoMobile}
+                onMudar={ordenarPorMobile}
+                className="mb-1"
+              />
               {linhas.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
                   Nenhum terceirizado encontrado{busca ? ` para “${busca}”` : ''}

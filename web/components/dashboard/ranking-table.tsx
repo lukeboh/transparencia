@@ -35,6 +35,7 @@ import { type ContratoAuditavel } from '@/components/dashboard/contratos-dialog'
 import { ServidorDetalheDialog } from '@/components/dashboard/servidor-detalhe-dialog';
 import { FuncoesBadges, funcoesTexto } from '@/components/dashboard/funcoes-badges';
 import { BotaoExportar } from '@/components/dashboard/botao-exportar';
+import { OrdenacaoMobile } from '@/components/dashboard/ordenacao-mobile';
 import { InfoDica } from '@/components/ui/info-dica';
 import { brlCompleto, cn, nomeProprio, numero } from '@/lib/utils';
 import { categoriasDeContratos, descricaoFaixa } from '@/lib/categorias-valor';
@@ -148,6 +149,32 @@ const DIRECAO_INICIAL: Record<CampoOrdenavel, DirecaoOrdenacao> = {
   empenhado: 'desc',
   pago: 'desc',
 };
+
+/** Opções do seletor de ordenação mobile — mesmos campos do cabeçalho da
+ *  tabela desktop, como pares campo:direção (a hierárquica de lotação é a
+ *  única com um só sentido). */
+const OPCOES_ORDENACAO_MOBILE: { valor: string; rotulo: string }[] = [
+  { valor: 'padrao', rotulo: 'Ranking padrão (#)' },
+  { valor: 'nome:asc', rotulo: 'Servidor (A→Z)' },
+  { valor: 'nome:desc', rotulo: 'Servidor (Z→A)' },
+  { valor: 'funcoes:asc', rotulo: 'Funções (crescente)' },
+  { valor: 'funcoes:desc', rotulo: 'Funções (decrescente)' },
+  { valor: 'lotacao:asc', rotulo: 'Lotação (A→Z)' },
+  { valor: 'lotacao:desc', rotulo: 'Lotação (Z→A)' },
+  { valor: 'lotacao_hier:asc', rotulo: 'Lotação (hierárquica)' },
+  { valor: 'teletrabalho:desc', rotulo: 'Teletrabalho (maior→menor)' },
+  { valor: 'teletrabalho:asc', rotulo: 'Teletrabalho (menor→maior)' },
+  { valor: 'horas_extras:desc', rotulo: 'Horas extras (maior→menor)' },
+  { valor: 'horas_extras:asc', rotulo: 'Horas extras (menor→maior)' },
+  { valor: 'contratos:desc', rotulo: 'Contratos (maior→menor)' },
+  { valor: 'contratos:asc', rotulo: 'Contratos (menor→maior)' },
+  { valor: 'valor:desc', rotulo: 'Valor Global (maior→menor)' },
+  { valor: 'valor:asc', rotulo: 'Valor Global (menor→maior)' },
+  { valor: 'empenhado:desc', rotulo: 'Empenhado (maior→menor)' },
+  { valor: 'empenhado:asc', rotulo: 'Empenhado (menor→maior)' },
+  { valor: 'pago:desc', rotulo: 'Pago (maior→menor)' },
+  { valor: 'pago:asc', rotulo: 'Pago (menor→maior)' },
+];
 
 /** Chave de ordenação por função vigente: "CJ04" / "FC03"; vazio = sem função
  *  vigente na relação atual (vai para o fim, independente da direção). */
@@ -477,6 +504,17 @@ export function RankingTable({
     });
   }
 
+  const valorOrdenacaoMobile = ordenacao ? `${ordenacao.campo}:${ordenacao.direcao}` : 'padrao';
+  function ordenarPorMobile(valor: string) {
+    setPagina(0);
+    if (valor === 'padrao') {
+      setOrdenacao(null);
+      return;
+    }
+    const [campo, direcao] = valor.split(':') as [CampoOrdenavel, DirecaoOrdenacao];
+    setOrdenacao({ campo, direcao });
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -795,6 +833,12 @@ export function RankingTable({
         </div>
 
         <div className="space-y-3 md:hidden">
+          <OrdenacaoMobile
+            opcoes={OPCOES_ORDENACAO_MOBILE}
+            valorAtual={valorOrdenacaoMobile}
+            onMudar={ordenarPorMobile}
+            className="mb-1"
+          />
           {linhas.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
               Nenhum servidor encontrado para{' '}
