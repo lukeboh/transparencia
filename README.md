@@ -499,6 +499,36 @@ Páginas com filtro Vigente hoje: `/servidores` (dois: o chip **VIGENTE** de
 "Por contratos" e o de "Por função"), `/teletrabalho` e `/terceirizados` (um
 para a tabela de terceirizados e outro para a de contratos de cessão).
 
+## Operação em produção
+
+Duas peças para quem administra o servidor onde o site fica no ar — setup
+completo (cron/systemd, variáveis de ambiente) em **`deploy/README.md`**:
+
+- **Atualização automática** (`scripts/atualizar-app.mjs`, pensado para rodar
+  1x/dia via cron ou systemd timer): puxa do git tudo que é novo e
+  **versionado** (código + os sete JSON de dados versionados em `data/`, ver
+  seção abaixo) e não toca no que **não é versionado**
+  (`node_modules/`, `web/.next/`, `web/.cache/`, `logs/`, `.env*`) — garantia
+  natural do `git merge --ff-only`, que só mexe em arquivo rastreado. Aborta
+  sem mexer em nada (registrando o motivo no log) se houver alteração local
+  não commitada em arquivo versionado, ou se o HEAD divergiu do remoto —
+  nunca força/reescreve histórico nem descarta trabalho. Depois do pull,
+  roda `npm install` só se `package.json`/`package-lock.json` mudou, builda
+  (`next build`) e reinicia o processo — o comando de reinício é quem
+  administra quem define, via `ATUALIZAR_APP_RESTART_CMD` (PM2, systemd,
+  etc.), já que o script não assume um gerenciador de processos específico.
+  **Isto não roda sozinho** — precisa ser instalado no servidor real (cron
+  ou o `deploy/transparencia-atualizar.{service,timer}` incluído).
+- **Painel interno** (`/painel/[chave]`): logs de scraping (a atualização de
+  dados sob demanda, ver acima), da atualização automática e de erros da
+  aplicação (renderização, rotas de API, exceções não tratadas), com filtro
+  por categoria. Não é linkado em nenhum lugar da navegação; a URL exige uma
+  chave secreta no próprio caminho (`PAINEL_CHAVE` em `web/.env.local`, nunca
+  versionada) — sem ela, ou com a chave errada, a rota devolve 404,
+  indistinguível de uma rota que não existe. Logger compartilhado em
+  `src/lib/logger.js` (JSON Lines em `logs/app.log`, com rotação simples por
+  tamanho).
+
 ## Como os dados são obtidos
 
 A página `https://contratos.comprasnet.gov.br/transparencia/contratos?unidade=TSE`

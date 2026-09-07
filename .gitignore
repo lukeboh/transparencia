@@ -8,3 +8,7 @@ web/node_modules/
 web/.next/
 web/.cache/
 *.tsbuildinfo
+logs/
+.env
+.env.local
+.env.*.local

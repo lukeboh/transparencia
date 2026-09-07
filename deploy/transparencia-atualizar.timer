@@ -1,0 +1,14 @@
+[Unit]
+Description=Roda transparencia-atualizar.service 1x/dia (+ recuperação se a máquina estava desligada)
+
+[Timer]
+# Horário de menor uso — ajuste ao seu fuso/servidor. OnCalendar usa a hora
+# local do sistema (timedatectl).
+OnCalendar=*-*-* 05:00:00
+# Se o servidor estava desligado/reiniciando no horário, roda assim que voltar.
+Persistent=true
+# Espalha em até 10 min para não bater tudo junto com outros timers do host.
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target

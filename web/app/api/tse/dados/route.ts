@@ -12,6 +12,7 @@ import { scrapeTeletrabalho } from '../../../../../src/tse/scrapeTeletrabalho.js
 import { scrapeUnidades } from '../../../../../src/tse/scrapeUnidades.js';
 import { agregarDashboard } from '../../../../../src/tse/agregarDashboard.js';
 import { carregarExcecoes } from '../../../../../src/tse/excecoes.js';
+import { registrar } from '../../../../../src/lib/logger.js';
 import type { DashboardData } from '@/lib/dashboard-data';
 
 export const dynamic = 'force-dynamic';
@@ -183,6 +184,8 @@ function iniciarAtualizacao(e: EstadoCache) {
   e.erro = null;
   e.progresso = { fase: 'contratos', feitos: 0, total: 0 };
   e.ultimaTentativa = Date.now();
+  const inicio = Date.now();
+  registrar('scraping', 'info', 'Atualização de dados iniciada (fonte oficial do TSE)');
 
   void (async () => {
     try {
@@ -260,9 +263,18 @@ function iniciarAtualizacao(e: EstadoCache) {
         unidadesBrutos: unidadesArvore,
       };
       await fs.writeFile(ARQUIVO_CACHE, JSON.stringify(persistido), 'utf8');
+      registrar('scraping', 'info', 'Atualização de dados concluída', {
+        duracaoMs: Date.now() - inicio,
+        contratos: contratos.length,
+        agentesPublicos: agentesPublicos.length,
+      });
     } catch (err) {
       e.erro = err instanceof Error ? err.message : String(err);
       console.error('[tse/dados] falha na atualização:', err);
+      registrar('scraping', 'erro', e.erro, {
+        duracaoMs: Date.now() - inicio,
+        stack: err instanceof Error ? err.stack : undefined,
+      });
     } finally {
       e.atualizando = false;
       e.progresso = null;

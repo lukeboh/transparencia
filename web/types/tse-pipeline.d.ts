@@ -61,3 +61,22 @@ declare module '*src/tse/scrapeTeletrabalho.js' {
 declare module '*src/tse/scrapeUnidades.js' {
   export function scrapeUnidades(): Promise<unknown>;
 }
+
+declare module '*src/lib/logger.js' {
+  export type CategoriaLog = 'scraping' | 'atualizacao' | 'erro' | 'app';
+  export type NivelLog = 'info' | 'aviso' | 'erro';
+  export interface RegistroLog {
+    ts: string;
+    categoria: CategoriaLog;
+    nivel: NivelLog;
+    mensagem: string;
+    detalhes?: unknown;
+  }
+  export function registrar(
+    categoria: CategoriaLog,
+    nivel: NivelLog,
+    mensagem: string,
+    detalhes?: Record<string, unknown>,
+  ): RegistroLog;
+  export function lerRegistros(opcoes?: { categoria?: string; limite?: number }): RegistroLog[];
+}
