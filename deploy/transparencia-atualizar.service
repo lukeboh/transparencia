@@ -10,8 +10,9 @@ WorkingDirectory=/caminho/para/transparencia
 ExecStart=/caminho/para/transparencia/scripts/atualizar-app.sh
 # AJUSTE: usuário dono do checkout (nunca root, se evitável).
 User=transparencia
-# Como reiniciar o site depois de um build novo — exemplos:
-#   pm2:      Environment=ATUALIZAR_APP_RESTART_CMD=pm2 reload transparencia-web
-#   systemd:  Environment=ATUALIZAR_APP_RESTART_CMD=systemctl restart transparencia-web
+# Como reiniciar o site depois de um build novo — exemplos (aspas obrigatórias:
+# sem elas o systemd quebra o valor no primeiro espaço e descarta o resto):
+#   pm2:      Environment="ATUALIZAR_APP_RESTART_CMD=pm2 reload transparencia-web"
+#   systemd:  Environment="ATUALIZAR_APP_RESTART_CMD=systemctl restart transparencia-web"
 # Sem isto, o script só builda e avisa no log — o processo antigo continua no ar.
 Environment=ATUALIZAR_APP_RESTART_CMD=
