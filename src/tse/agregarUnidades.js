@@ -99,6 +99,22 @@ function somarHorasExtrasPorCiclo(...listas) {
   return horasExtrasPorCicloParaArray(map);
 }
 
+function horasExtrasPorMesParaArray(map) {
+  return [...map.values()].sort((a, b) => a.mes.localeCompare(b.mes));
+}
+
+function somarHorasExtrasPorMes(...listas) {
+  const map = new Map();
+  for (const lista of listas) {
+    for (const item of lista) {
+      const atual = map.get(item.mes) ?? { mes: item.mes, horas: 0 };
+      atual.horas += item.horas;
+      map.set(item.mes, atual);
+    }
+  }
+  return horasExtrasPorMesParaArray(map);
+}
+
 /**
  * @param {object} arvoreBruta árvore crua de scrapeUnidades.js.
  * @param {Array} agentesPublicos relação atual de agentes públicos (scrapeAgentesPublicos.js).
@@ -136,6 +152,7 @@ function agregarUnidades(
       terceirizados: 0,
       horasExtras: 0,
       horasExtrasPorCicloMap: new Map(),
+      horasExtrasPorMesMap: new Map(),
     });
   }
 
@@ -330,6 +347,11 @@ function agregarUnidades(
     const atual = metrica.horasExtrasPorCicloMap.get(chaveCiclo) ?? { ciclo: chaveCiclo, horas: 0 };
     atual.horas += o.horas;
     metrica.horasExtrasPorCicloMap.set(chaveCiclo, atual);
+    // `o.chave` é o mês de referência ("AAAA-MM") — mesma chave de
+    // agregarHorasExtras.js, usada pelas relações mensais de /indicadores.
+    const atualMes = metrica.horasExtrasPorMesMap.get(o.chave) ?? { mes: o.chave, horas: 0 };
+    atualMes.horas += o.horas;
+    metrica.horasExtrasPorMesMap.set(o.chave, atualMes);
   }
 
   // --- Consolidação bottom-up ---
@@ -346,6 +368,7 @@ function agregarUnidades(
       terceirizados: metrica.terceirizados,
       horasExtras: metrica.horasExtras,
       horasExtrasPorCiclo: horasExtrasPorCicloParaArray(metrica.horasExtrasPorCicloMap),
+      horasExtrasPorMes: horasExtrasPorMesParaArray(metrica.horasExtrasPorMesMap),
     };
     const consolidado = {
       servidores: direto.servidores + filhos.reduce((s, f) => s + f.consolidado.servidores, 0),
@@ -357,6 +380,10 @@ function agregarUnidades(
       horasExtrasPorCiclo: somarHorasExtrasPorCiclo(
         direto.horasExtrasPorCiclo,
         ...filhos.map((f) => f.consolidado.horasExtrasPorCiclo),
+      ),
+      horasExtrasPorMes: somarHorasExtrasPorMes(
+        direto.horasExtrasPorMes,
+        ...filhos.map((f) => f.consolidado.horasExtrasPorMes),
       ),
     };
 

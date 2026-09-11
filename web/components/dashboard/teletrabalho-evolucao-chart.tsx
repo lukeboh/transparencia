@@ -20,62 +20,10 @@ import {
 } from '@/components/ui/card';
 import { MoveHorizontal } from 'lucide-react';
 import { mesAnoCurto, mesAnoLongo, numero } from '@/lib/utils';
+import { serieMensalTeletrabalho, type PontoMesTeletrabalho } from '@/lib/teletrabalho-serie';
 import type { LinhaTeletrabalho } from '@/lib/dashboard-data';
 
-interface PontoMes {
-  mes: string; // "AAAA-MM"
-  count: number;
-  pct: number;
-}
-
-/** Meses "AAAA-MM" de `de` até `ate`, inclusive. */
-function mesesEntre(de: string, ate: string): string[] {
-  const out: string[] = [];
-  let [ano, mes] = de.split('-').map(Number);
-  const [anoF, mesF] = ate.split('-').map(Number);
-  while (ano < anoF || (ano === anoF && mes <= mesF)) {
-    out.push(`${ano}-${String(mes).padStart(2, '0')}`);
-    mes += 1;
-    if (mes > 12) {
-      mes = 1;
-      ano += 1;
-    }
-  }
-  return out;
-}
-
-/**
- * Série mês a mês: quantos servidores do `ranking` tinham um período de
- * teletrabalho ativo naquele mês, e a fração sobre `totalOrgao` — o quadro de
- * hoje do TSE inteiro ou, quando há filtro de lotação, só o dessa unidade.
- * Denominador FIXO — não há quadro histórico; ver nota no card.
- */
-function serieMensal(
-  ranking: LinhaTeletrabalho[],
-  totalOrgao: number,
-  mesAtual: string,
-): PontoMes[] {
-  let primeiro = mesAtual;
-  for (const linha of ranking) {
-    for (const p of linha.periodos) {
-      const ym = (p.dataInicio ?? '').slice(0, 7);
-      if (ym && ym < primeiro) primeiro = ym;
-    }
-  }
-  return mesesEntre(primeiro, mesAtual).map((mes) => {
-    let count = 0;
-    for (const linha of ranking) {
-      const ativo = linha.periodos.some((p) => {
-        const ini = (p.dataInicio ?? '').slice(0, 7);
-        if (!ini) return false;
-        const fim = p.dataFim ? p.dataFim.slice(0, 7) : mesAtual;
-        return ini <= mes && fim >= mes;
-      });
-      if (ativo) count += 1;
-    }
-    return { mes, count, pct: totalOrgao > 0 ? (count / totalOrgao) * 100 : 0 };
-  });
-}
+type PontoMes = PontoMesTeletrabalho;
 
 const fmtPct = (v: number) => (v > 0 && v < 10 ? v.toFixed(1) : String(Math.round(v)));
 
@@ -120,7 +68,7 @@ export function TeletrabalhoEvolucaoChart({
   escopoLotacao?: string | null;
 }) {
   const dados = useMemo(
-    () => serieMensal(ranking, totalOrgao, mesReferencia),
+    () => serieMensalTeletrabalho(ranking, totalOrgao, mesReferencia),
     [ranking, totalOrgao, mesReferencia],
   );
 

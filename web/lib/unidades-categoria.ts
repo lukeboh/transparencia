@@ -118,3 +118,31 @@ export function classificarUnidades(raiz: UnidadeNode): Map<string, CategoriaUni
   visita(raiz, 0, null);
   return mapa;
 }
+
+/**
+ * Só os nós de TOPO de `categoria` — quando um nó da categoria tem um
+ * ancestro que também é da mesma categoria, o ancestro entra e o
+ * descendente NÃO. Necessário pra somar `consolidado` sem contar a mesma
+ * hora extra (ou servidor) duas vezes: `consolidado` já soma a subárvore
+ * inteira, então dois nós da mesma categoria numa relação ancestral-
+ * descendente teriam sobreposição. `alta-gestao` e `folha` são só folhas
+ * (nunca aninham por definição — ver `classificarUnidades`); a checagem
+ * importa mesmo para `secretaria`/`coordenadoria`, que teoricamente
+ * poderiam aninhar (uma secretaria dentro de outra, por nome).
+ */
+export function unidadesTopoDaCategoria(
+  raiz: UnidadeNode,
+  categoria: CategoriaUnidade,
+  categoriaPorId: Map<string, CategoriaUnidade>,
+): UnidadeNode[] {
+  const topo: UnidadeNode[] = [];
+  function visita(no: UnidadeNode) {
+    if (categoriaPorId.get(no.id) === categoria) {
+      topo.push(no);
+      return; // não desce — evitaria contar a subárvore duas vezes
+    }
+    for (const filho of no.children) visita(filho);
+  }
+  visita(raiz);
+  return topo;
+}

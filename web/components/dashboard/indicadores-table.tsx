@@ -38,7 +38,7 @@ import { OrdenacaoMobile } from '@/components/dashboard/ordenacao-mobile';
 import { UnidadeDetalheDialog } from '@/components/dashboard/unidade-detalhe-dialog';
 import { PillToggle } from '@/components/ui/pill-toggle';
 import { InfoDica } from '@/components/ui/info-dica';
-import { cn, numero } from '@/lib/utils';
+import { cn, mesAnoCurto, numero } from '@/lib/utils';
 import type { ColunaExport } from '@/lib/exportar-dados';
 import type { LinhaUnidade } from '@/lib/unidades-flat';
 import { CATEGORIAS_UNIDADE, IDS_CATEGORIA, type CategoriaUnidade } from '@/lib/unidades-categoria';
@@ -47,12 +47,15 @@ import { csv, excluidos, inteiro, ordem } from '@/lib/url-filtros';
 import { chaveHierarquicaLotacao, compararHierarquico } from '@/lib/lotacao-hierarquia';
 import {
   GRUPOS_RELACOES,
+  IDS_RELACOES_MENSAIS_HORAS_EXTRAS,
   RELACOES,
   RELACOES_PADRAO,
   RELACOES_POR_ID,
+  criarRelacoesMensaisHorasExtras,
   formatarValorRelacao,
   type Relacao,
 } from '@/lib/indicadores-unidades';
+import type { UnidadeMetricas } from '@/lib/dashboard-data';
 
 const LINHAS_POR_PAGINA = 50;
 const LS_COLUNAS = 'indicadores-colunas';
@@ -60,7 +63,22 @@ const LS_COLUNAS = 'indicadores-colunas';
  *  RELACOES — id sintético tratado à parte no menu de Colunas. */
 const COLUNA_NIVEL_ID = 'nivel';
 const COLUNAS_PADRAO = [COLUNA_NIVEL_ID, ...RELACOES_PADRAO];
-const colunaValida = (id: string) => id === COLUNA_NIVEL_ID || RELACOES_POR_ID.has(id);
+const IDS_MENSAIS = new Set<string>(IDS_RELACOES_MENSAIS_HORAS_EXTRAS);
+const colunaValida = (id: string) =>
+  id === COLUNA_NIVEL_ID || RELACOES_POR_ID.has(id) || IDS_MENSAIS.has(id);
+
+/** Consolidado "vazio" — usado só enquanto a árvore de unidades não carregou
+ *  (a tela já mostra outro estado nesse caso; é só pro TypeScript). */
+const METRICA_VAZIA: UnidadeMetricas = {
+  servidores: 0,
+  funcoes: [],
+  fiscais: [],
+  teletrabalho: 0,
+  terceirizados: 0,
+  horasExtras: 0,
+  horasExtrasPorCiclo: [],
+  horasExtrasPorMes: [],
+};
 
 type ChaveOrd = 'unidade' | 'nivel' | (string & {});
 interface Ordenacao {
@@ -158,9 +176,11 @@ function CelulaPct({ valor, relacao }: { valor: number | null; relacao: Relacao 
 function MenuColunas({
   visiveis,
   onToggle,
+  grupos,
 }: {
   visiveis: Set<string>;
   onToggle: (id: string) => void;
+  grupos: typeof GRUPOS_RELACOES;
 }) {
   const [aberto, setAberto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -209,7 +229,7 @@ function MenuColunas({
               <span>Nível</span>
             </label>
           </div>
-          {GRUPOS_RELACOES.map((g) => (
+          {grupos.map((g) => (
             <div key={g.base} className="py-1">
               <p className="px-2 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 {g.grupo}
@@ -241,17 +261,25 @@ export function IndicadoresTable({
   linhas,
   tseServidores,
   categoriaPorId,
+  competenciasHorasExtras,
 }: {
   linhas: LinhaUnidade[];
   tseServidores: number;
   /** id da unidade → categoria (mesma heurística de /unidades, ver lib/unidades-categoria.ts). */
   categoriaPorId: Map<string, CategoriaUnidade>;
+  /** Meses "AAAA-MM" com alguma hora extra estimada, ascendente — base do seletor de mês das 2 colunas "% Mensal" de Horas extras. */
+  competenciasHorasExtras: string[];
 }) {
   const [busca, setBusca] = useState('');
   const [pagina, setPagina] = useState(0);
   const [colunasVisiveis, setColunasVisiveis] = useState<Set<string>>(() => new Set(COLUNAS_PADRAO));
   const [ordenacao, setOrdenacao] = useState<Ordenacao | null>(null);
   const [carregou, setCarregou] = useState(false);
+  // Mês de referência das 2 colunas "% Mensal" de Horas extras — padrão: a
+  // competência mais recente com alguma hora extra estimada.
+  const [mesHoras, setMesHoras] = useState<string | null>(
+    () => competenciasHorasExtras[competenciasHorasExtras.length - 1] ?? null,
+  );
   // Primeiro nível de detalhamento da unidade — modal interno (id da linha).
   const [detalheId, setDetalheId] = useState<string | null>(null);
   // Filtro de tipo de unidade — mesmas categorias de /unidades, todas ligadas
@@ -311,7 +339,7 @@ export function IndicadoresTable({
     colunasVisiveis.size === COLUNAS_PADRAO.length &&
     COLUNAS_PADRAO.every((id) => colunasVisiveis.has(id));
 
-  // Filtros compartilháveis pela URL (busca, tipos, colunas, ordenação, página).
+  // Filtros compartilháveis pela URL (busca, tipos, colunas, ordenação, página, mês de HE).
   useSincronizarUrl(
     {
       q: busca || undefined,
@@ -319,6 +347,9 @@ export function IndicadoresTable({
       cols: colunasNoPadrao ? undefined : csv.escrever([...colunasVisiveis]),
       ord: ordem.escrever(ordenacao?.chave, ordenacao?.dir),
       pg: inteiro.escrever(pagina, 0),
+      mes_he: mesHoras && mesHoras !== competenciasHorasExtras[competenciasHorasExtras.length - 1]
+        ? mesHoras
+        : undefined,
     },
     (sp) => {
       const q = sp.get('q');
@@ -341,30 +372,54 @@ export function IndicadoresTable({
         (o.campo === 'unidade' ||
           o.campo === 'unidade_hier' ||
           o.campo === 'nivel' ||
-          RELACOES_POR_ID.has(o.campo))
+          RELACOES_POR_ID.has(o.campo) ||
+          IDS_MENSAIS.has(o.campo))
       ) {
         setOrdenacao({ chave: o.campo, dir: o.direcao });
       }
 
       const pg = inteiro.ler(sp.get('pg'), 0, 0);
       if (pg > 0) setPagina(pg);
+
+      const mesHe = sp.get('mes_he');
+      if (mesHe && competenciasHorasExtras.includes(mesHe)) setMesHoras(mesHe);
     },
+  );
+
+  // As 2 relações "% Mensal" de horas extras dependem do mês selecionado —
+  // recriadas quando ele muda; mescladas no grupo "Horas extras" do menu.
+  const relacoesMensais = useMemo(() => criarRelacoesMensaisHorasExtras(mesHoras), [mesHoras]);
+  const relacoesTodas = useMemo<Relacao[]>(() => [...RELACOES, ...relacoesMensais], [relacoesMensais]);
+  const gruposComMensais = useMemo(
+    () =>
+      GRUPOS_RELACOES.map((g) =>
+        g.base === 'horas_extras' ? { ...g, relacoes: [...g.relacoes, ...relacoesMensais] } : g,
+      ),
+    [relacoesMensais],
   );
 
   // Colunas na ordem do catálogo, não na ordem em que o usuário marcou.
   const colunas = useMemo<Relacao[]>(
-    () => RELACOES.filter((r) => colunasVisiveis.has(r.id)),
-    [colunasVisiveis],
+    () => relacoesTodas.filter((r) => colunasVisiveis.has(r.id)),
+    [relacoesTodas, colunasVisiveis],
   );
 
-  // Todas as relações são calculadas uma vez por unidade (barato: ~18 × 265).
+  // Consolidado da RAIZ (TSE inteiro) — denominador de cada relação "%" (ver
+  // lib/indicadores-unidades.ts: cada métrica define o seu, não é sempre
+  // "total de servidores").
+  const raizConsolidado = useMemo<UnidadeMetricas>(
+    () => linhas.find((l) => l.nivel === 0)?.node.consolidado ?? METRICA_VAZIA,
+    [linhas],
+  );
+
+  // Todas as relações são calculadas uma vez por unidade (barato: ~20 × 265).
   const linhasComValores = useMemo<LinhaValores[]>(
     () =>
       linhas.map((linha) => ({
         linha,
-        valores: new Map(RELACOES.map((r) => [r.id, r.calc(linha.node, tseServidores)])),
+        valores: new Map(relacoesTodas.map((r) => [r.id, r.calc(linha.node, raizConsolidado)])),
       })),
-    [linhas, tseServidores],
+    [linhas, relacoesTodas, raizConsolidado],
   );
 
   const ordEfetiva: Ordenacao | null =
@@ -516,10 +571,13 @@ export function IndicadoresTable({
         <CardDescription>
           Uma linha por unidade; cada coluna é uma relação escolhida no menu{' '}
           <strong>Colunas</strong> — <strong>Qtd.</strong> é o valor bruto (nesta unidade ou nesta unidade
-          + subárvore) e <strong>%</strong> é esse mesmo valor sobre o total de servidores do TSE, com
-          barra que trava em 100%. <strong>Horas extras</strong> soma horas <strong>estimadas</strong>{' '}
-          (serviço extraordinário desde 2009; valor pago ÷ hora normal ÷ 1,5, Res. TSE 22.901/2008 —
-          limite superior). Clique num cabeçalho para ordenar.
+          + subárvore) e <strong>%</strong> é esse mesmo valor sobre o total do TSE naquela métrica (para a
+          maioria, o total de servidores; para <strong>Horas extras</strong>, o total de horas extras —
+          o TSE inteiro sempre dá 100%), com barra que trava em 100%. <strong>Horas extras</strong> soma
+          horas <strong>estimadas</strong> (serviço extraordinário desde 2009; valor pago ÷ hora normal ÷
+          1,5, Res. TSE 22.901/2008 — limite superior); as 2 colunas <strong>% Mensal</strong> usam só o
+          mês escolhido no seletor &ldquo;Mês (Horas extras)&rdquo; — as demais somam o histórico todo.
+          Clique num cabeçalho para ordenar.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -559,7 +617,27 @@ export function IndicadoresTable({
               </button>
             )}
           </div>
-          <MenuColunas visiveis={colunasVisiveis} onToggle={toggleColuna} />
+          <MenuColunas visiveis={colunasVisiveis} onToggle={toggleColuna} grupos={gruposComMensais} />
+          {competenciasHorasExtras.length > 0 && (
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              Mês (Horas extras)
+              <select
+                value={mesHoras ?? ''}
+                onChange={(e) => {
+                  setMesHoras(e.target.value || null);
+                  setPagina(0);
+                }}
+                title="Mês de referência das colunas “% Mensal” de Horas extras"
+                className="h-9 rounded-md border border-border bg-card px-2 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {[...competenciasHorasExtras].reverse().map((mes) => (
+                  <option key={mes} value={mes}>
+                    {mesAnoCurto(mes)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <BotaoExportar
             linhas={visiveis}
             colunas={colunasExport}

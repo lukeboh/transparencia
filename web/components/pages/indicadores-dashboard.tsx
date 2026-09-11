@@ -56,6 +56,7 @@ export function IndicadoresDashboard() {
             linhas={linhas}
             tseServidores={unidades.totalServidoresTSE}
             categoriaPorId={categoriaPorId}
+            competenciasHorasExtras={estado.dados.horasExtras.competencias}
           />
         </div>
       )}
@@ -64,19 +65,32 @@ export function IndicadoresDashboard() {
         Cada métrica (servidores, com FC, com CJ, fiscais, teletrabalho, terceirizados, horas extras) tem 4
         colunas: <strong>Qtd. Unidade</strong> (valor bruto, só quem está lotado exatamente no nó),{' '}
         <strong>Qtd. Consolidado</strong> (o nó e toda a subárvore), <strong>% Unidade</strong> e{' '}
-        <strong>% Consolidado</strong> (o mesmo valor bruto de Qtd., dividido pelo total de servidores do
-        TSE). &ldquo;Horas extras&rdquo; traz a soma de horas extras <strong>estimadas</strong> (serviço
-        extraordinário desde 2009: o valor pago na folha ÷ valor da hora normal ÷ 1,5, conforme a Resolução
-        TSE nº 22.901/2008; é um limite superior). &ldquo;—&rdquo; aparece quando o TSE não tem nenhum
-        servidor cadastrado (só em base vazia). &ldquo;Fiscais&rdquo; soma papéis: quem tem mais de um papel
-        conta em cada um, então o percentual pode passar de 100% e a barra trava em 100%. Tudo reflete só o
-        momento atual (relação de agentes públicos vigente, contratos vigentes, teletrabalho em aberto).
-        &ldquo;Terceirizados&rdquo; é uma contagem estimada do PDF mensal do TSE de postos de cessão de mão
-        de obra
+        <strong>% Consolidado</strong> (o mesmo valor bruto de Qtd., dividido pelo total do TSE naquela
+        métrica — para a maioria isso é o total de servidores, mas para{' '}
+        <strong>Horas extras</strong> é o total de horas extras do TSE, para o percentual ter leitura de
+        &ldquo;fatia do total&rdquo; — o TSE (raiz) sempre dá 100%). &ldquo;Horas extras&rdquo; traz a soma
+        de horas extras <strong>estimadas</strong> (serviço extraordinário desde 2009: o valor pago na
+        folha ÷ valor da hora normal ÷ 1,5, conforme a Resolução TSE nº 22.901/2008; é um limite superior) e
+        tem ainda 2 colunas extras, <strong>% Mensal Unidade</strong> e{' '}
+        <strong>% Mensal Consolidado</strong>: igual às de %, mas usando só o mês escolhido no seletor
+        &ldquo;Mês (Horas extras)&rdquo; em vez do histórico inteiro. &ldquo;—&rdquo; aparece quando o
+        denominador é zero (TSE sem nenhum servidor/hora extra registrada — só em base vazia).
+        &ldquo;Fiscais&rdquo; soma papéis: quem tem mais de um papel conta em cada um, então o percentual
+        pode passar de 100% e a barra trava em 100%. Tudo reflete só o momento atual (relação de agentes
+        públicos vigente, contratos vigentes, teletrabalho em aberto) — as colunas mensais de horas extras
+        são a exceção, presas ao mês escolhido. &ldquo;Terceirizados&rdquo; é uma contagem estimada do PDF
+        mensal do TSE de postos de cessão de mão de obra
         {estado.dados.unidades.terceirizadosCompetencia
           ? ` (competência ${estado.dados.unidades.terceirizadosCompetencia})`
           : ''}
-        {' '}— aproximada, já que a fonte é um PDF escaneado.
+        {' '}— aproximada, já que a fonte é um PDF escaneado. Veja também{' '}
+        <Link
+          href="/sazonalidade"
+          className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
+        >
+          /sazonalidade
+        </Link>{' '}
+        para a evolução mês a mês de horas extras por unidade.
         <AppVersion />
       </footer>
     </main>

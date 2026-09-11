@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import {
+  CalendarRange,
   HardHat,
   Landmark,
   Laptop,
@@ -13,7 +14,13 @@ import {
 import { ThemePicker } from '@/components/theme-picker';
 import { ThemeToggle } from '@/components/theme-toggle';
 
-export type SecaoId = 'servidores' | 'teletrabalho' | 'unidades' | 'terceirizados' | 'indicadores';
+export type SecaoId =
+  | 'servidores'
+  | 'teletrabalho'
+  | 'unidades'
+  | 'terceirizados'
+  | 'indicadores'
+  | 'sazonalidade';
 
 const SECOES: { id: SecaoId; href: string; rotulo: string; Icone: LucideIcon }[] = [
   { id: 'servidores', href: '/servidores', rotulo: 'Servidores', Icone: Users },
@@ -21,6 +28,7 @@ const SECOES: { id: SecaoId; href: string; rotulo: string; Icone: LucideIcon }[]
   { id: 'unidades', href: '/unidades', rotulo: 'Unidades', Icone: Network },
   { id: 'terceirizados', href: '/terceirizados', rotulo: 'Terceirizados', Icone: HardHat },
   { id: 'indicadores', href: '/indicadores', rotulo: 'Indicadores', Icone: Percent },
+  { id: 'sazonalidade', href: '/sazonalidade', rotulo: 'Sazonalidade', Icone: CalendarRange },
 ];
 
 interface AppHeaderProps {

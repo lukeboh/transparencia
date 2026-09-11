@@ -404,6 +404,9 @@ export interface UnidadeMetricas {
   horasExtras: number;
   /** Mesmo total quebrado por ciclo eleitoral. */
   horasExtrasPorCiclo: { ciclo: string; horas: number }[];
+  /** Mesmo total quebrado por mês de referência ("AAAA-MM") — base das
+   *  relações "% Mensal" de /indicadores (ver web/lib/indicadores-unidades.ts). */
+  horasExtrasPorMes: { mes: string; horas: number }[];
 }
 
 export interface UnidadeNode {
