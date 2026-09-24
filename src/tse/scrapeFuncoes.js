@@ -21,6 +21,7 @@ import { writeFile, mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { stripHtml } from './scrapeContratos.js';
+import { registrar } from '../lib/logger.js';
 
 const BASE = 'https://www.tse.jus.br/legislacao/compilada/prt';
 
@@ -57,6 +58,22 @@ async function listarPortariasDoAno(ano) {
   if (!res.ok) throw new Error(`Falha ao listar portarias de ${ano} (status ${res.status})`);
   const html = await res.text();
   return listarLinhas(html);
+}
+
+/** Mesma coisa, mas nunca lança: um ano problemático (ex.: bloqueio da fonte
+ *  para um ano antigo específico) não pode derrubar a atualização automática
+ *  inteira — melhor pular esse ano nesta execução (registrado no log) do que
+ *  perder também contratos/agentes/unidades já raspados com sucesso antes
+ *  dele no pipeline (ver iniciarAtualizacao em web/app/api/tse/dados/route.ts). */
+async function listarPortariasDoAnoSemFalhar(ano) {
+  try {
+    return await listarPortariasDoAno(ano);
+  } catch (err) {
+    const mensagem = `Índice de portarias de ${ano} indisponível (${err instanceof Error ? err.message : String(err)}) — pulado nesta execução.`;
+    console.warn(`[Aviso] ${mensagem}`);
+    registrar('scraping', 'aviso', mensagem);
+    return [];
+  }
 }
 
 function candidatasRelevantes(linhas) {
@@ -243,7 +260,7 @@ function extrairMovimentos(html, portariaRef) {
 // 1) A busca dos índices de ano (linha "for (let ano = ...)" abaixo) é
 //    sequencial — só a busca do detalhe de cada portaria é paralelizada
 //    (lotes de `concurrency`). Paralelizar também os índices de ano
-//    reduziria o tempo do backfill histórico completo (1999–hoje).
+//    reduziria o tempo do backfill histórico completo (2000–hoje).
 // 2) Hoje toda execução reconsulta o índice de TODOS os anos, mesmo os já
 //    encerrados (cujas portarias nunca mudam depois de publicadas). Guardar
 //    quais anos já foram totalmente sincronizados e, numa atualização
@@ -266,7 +283,13 @@ function extrairMovimentos(html, portariaRef) {
 //    regenerado do zero manualmente quando necessário, mas o cache do
 //    servidor não tem esse hábito. Ver detalhe no README.
 async function scrapeFuncoes({
-  anoInicio = 1999,
+  // 1999 era o início "natural" (primeiro ano da legislação compilada), mas a
+  // fonte passou a bloquear (403) esse índice especificamente em produção —
+  // e não há, de qualquer forma, nenhum movimento relevante registrado antes
+  // de 2006 em data/tse_funcoes.json (a regra de "função comissionada" só
+  // parece ter passado a valer/ser citada nessas portarias a partir daí).
+  // 2000 é só uma margem de segurança sobre esse achado, não um valor exato.
+  anoInicio = 2000,
   anoFim = new Date().getFullYear(),
   concurrency = 5,
   cacheMovimentos,
@@ -283,7 +306,7 @@ async function scrapeFuncoes({
 
   const candidatasTotais = [];
   for (let ano = anoInicio; ano <= anoFim; ano++) {
-    const linhas = await listarPortariasDoAno(ano);
+    const linhas = await listarPortariasDoAnoSemFalhar(ano);
     candidatasTotais.push(...candidatasRelevantes(linhas));
   }
 
@@ -318,7 +341,10 @@ async function scrapeFuncoes({
 }
 
 async function main() {
-  const anoInicio = process.argv[2] ? Number(process.argv[2]) : 1999;
+  // Mesmo padrão de scrapeFuncoes() — ver comentário lá sobre por que não é
+  // mais 1999. Passe 1999 explicitamente (ex.: `-- 1999 1999`) se quiser
+  // tentar de novo manualmente; a fonte é quem decide se responde.
+  const anoInicio = process.argv[2] ? Number(process.argv[2]) : 2000;
   const anoFim = process.argv[3] ? Number(process.argv[3]) : new Date().getFullYear();
   const out = process.argv[4] ?? 'data/tse_funcoes.json';
 

@@ -71,7 +71,8 @@ async function carregarHorasExtras(): Promise<unknown> {
 interface Progresso {
   // 'agentes' é a fonte primária (relação atual de agentes públicos) — uma
   // única página, rápida. 'funcoes' é o histórico secundário de portarias
-  // (1999–hoje): a primeira execução baixa milhares de páginas e pode levar
+  // (2000–hoje — ver scrapeFuncoes.js sobre por que não 1999): a primeira
+  // execução baixa milhares de páginas e pode levar
   // dezenas de minutos; as seguintes são incrementais (só portarias novas).
   // 'teletrabalho' e 'unidades' são página/endpoint único (sem paginação,
   // sem cache incremental).
@@ -213,7 +214,7 @@ function iniciarAtualizacao(e: EstadoCache) {
       e.unidadesBrutos = unidadesArvore;
       e.progresso = { fase: 'unidades', feitos: 1, total: 1 };
 
-      // Fonte SECUNDÁRIA, só para histórico: portarias (1999–hoje). Roda
+      // Fonte SECUNDÁRIA, só para histórico: portarias (2000–hoje). Roda
       // depois da primária, de propósito — a primeira execução é um
       // backfill pesado (milhares de páginas); com `movimentosFuncoesBrutos`
       // já persistido, as próximas só buscam os índices de ano (baratos) e

@@ -838,13 +838,16 @@ por sobreposição de vigência.
 - **Cobertura do histórico é parcial** (2020–hoje, no momento) — quem foi
   dispensado antes disso pode aparecer só como "não consta na relação atual"
   sem histórico de mandato nenhum. Ver roadmap para rodar o backfill
-  completo (1999–hoje).
+  completo (2000–hoje — a fonte passou a bloquear com 403 o índice de 1999
+  especificamente; `scrapeFuncoes()` não tenta mais esse ano por padrão, e
+  não há de qualquer forma nenhum movimento relevante registrado antes de
+  2006 em `data/tse_funcoes.json`).
 
 ### Rodando a extração
 
 ```bash
 npm run tse:scrape-agentes                    # relação atual (rápido, ~1 requisição) em data/tse_agentes.json
-npm run tse:scrape-funcoes                    # histórico completo (1999–hoje) em data/tse_funcoes.json
+npm run tse:scrape-funcoes                    # histórico completo (2000–hoje) em data/tse_funcoes.json
 npm run tse:scrape-funcoes -- 2024 2026       # só um intervalo de anos, útil para testar
 npm run data                                  # regrava o snapshot embutido com contratos + agentes + histórico
 ```
@@ -1042,7 +1045,7 @@ superconjunto). Cada commit que inclua um scrape novo adiciona alguns MB ao
   busca portarias que ainda não estão em `cacheMovimentos` — uma portaria já
   cacheada nunca é reprocessada, mesmo que o parser tenha sido corrigido
   depois. Isso é inofensivo para `data/tse_funcoes.json` (regenerado do
-  zero via `npm run tse:scrape-funcoes -- 1999` quando necessário), mas é um
+  zero via `npm run tse:scrape-funcoes -- 2000` quando necessário), mas é um
   problema real para `web/.cache/tse-dados.json`: esse cache do servidor em
   runtime (usado pela rota `/api/tse/dados`, ver `iniciarAtualizacao` em
   `web/app/api/tse/dados/route.ts`) só cresce por cima do que já tinha a
