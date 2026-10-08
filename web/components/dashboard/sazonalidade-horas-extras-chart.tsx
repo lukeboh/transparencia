@@ -22,7 +22,7 @@ import { MoveHorizontal } from 'lucide-react';
 import { PillToggle } from '@/components/ui/pill-toggle';
 import { InfoDica } from '@/components/ui/info-dica';
 import { mesAnoCurto, mesAnoLongo, numero } from '@/lib/utils';
-import { unidadesTopoDaCategoria, type CategoriaUnidade } from '@/lib/unidades-categoria';
+import { CATEGORIAS_UNIDADE, unidadesTopoDaCategoria, type CategoriaUnidade } from '@/lib/unidades-categoria';
 import type { UnidadeNode } from '@/lib/dashboard-data';
 
 const CORES_SLOTS = [
@@ -34,17 +34,8 @@ const CORES_SLOTS = [
   'var(--chart-6)',
 ];
 const COR_OUTROS = '#898781';
+const COR_SEM_SUBDIVISAO = 'var(--chart-1)';
 const MAX_SERIES = CORES_SLOTS.length;
-
-// Só os 4 níveis que o usuário escolhe entre — "demais ramos" e "tribunal"
-// (raiz) ficam de fora: não fazem parte do vocabulário "alta gestão /
-// secretaria / coordenadoria / unidade-folha" da tela.
-const NIVEIS: { id: CategoriaUnidade; rotulo: string; descricao: string }[] = [
-  { id: 'alta-gestao', rotulo: 'Alta gestão', descricao: 'Gabinetes de ministros, presidência e assessorias diretas à cúpula.' },
-  { id: 'secretaria', rotulo: 'Secretarias', descricao: 'Secretarias, diretorias, corregedoria, procuradoria e escola.' },
-  { id: 'coordenadoria', rotulo: 'Coordenadorias', descricao: 'Ramos cujo nome começa com Coordenadoria.' },
-  { id: 'folha', rotulo: 'Unidades-folha', descricao: 'Nós sem subunidade (seções, núcleos) que não são de alta gestão.' },
-];
 
 interface Serie {
   id: string;
@@ -59,23 +50,39 @@ interface Resultado {
 }
 
 /**
- * Para cada unidade de topo da categoria escolhida (`unidadesTopoDaCategoria`
- * já garante que não há ancestral/descendente da mesma categoria — sem isso,
- * somar `consolidado` de dois nós aninhados contaria a mesma hora extra duas
- * vezes), pega o `consolidado.horasExtrasPorMes`. As top `MAX_SERIES` por
- * total viram uma série cada; o resto entra em "Outros".
+ * A altura da barra é sempre o total do TSE no mês (`arvore.consolidado`,
+ * raiz — soma a árvore inteira uma única vez). O chip de nível só decide como
+ * ela se subdivide: as até `MAX_SERIES` unidades de topo da categoria
+ * (`unidadesTopoDaCategoria` já garante que não há ancestral/descendente da
+ * mesma categoria somado duas vezes) ganham uma cor cada; o resto do total —
+ * o rabo da própria categoria E tudo que é de outra categoria — cai em
+ * "Outros". Sem nível (`unidades` null), a barra sai inteira, sem
+ * subdivisão.
  */
-function montarSerie(unidades: UnidadeNode[], meses: string[]): Resultado {
-  const comTotal = unidades
+function montarSerie(arvore: UnidadeNode, unidades: UnidadeNode[] | null, meses: string[]): Resultado {
+  const totalPorMes = new Map(arvore.consolidado.horasExtrasPorMes.map((m) => [m.mes, m.horas]));
+
+  if (!unidades) {
+    const series: Serie[] = [
+      {
+        id: 'total',
+        nome: 'Horas extras',
+        cor: COR_SEM_SUBDIVISAO,
+        total: [...totalPorMes.values()].reduce((s, h) => s + h, 0),
+      },
+    ];
+    const dados = meses.map((mes) => ({ mes, total: totalPorMes.get(mes) ?? 0 }));
+    return { dados, series };
+  }
+
+  const topo = unidades
     .map((u) => ({
       unidade: u,
       total: u.consolidado.horasExtrasPorMes.reduce((s, m) => s + m.horas, 0),
     }))
     .filter((u) => u.total > 0)
-    .sort((a, b) => b.total - a.total);
-
-  const topo = comTotal.slice(0, MAX_SERIES);
-  const resto = comTotal.slice(MAX_SERIES);
+    .sort((a, b) => b.total - a.total)
+    .slice(0, MAX_SERIES);
 
   const series: Serie[] = topo.map((u, i) => ({
     id: u.unidade.id,
@@ -83,17 +90,9 @@ function montarSerie(unidades: UnidadeNode[], meses: string[]): Resultado {
     cor: CORES_SLOTS[i % CORES_SLOTS.length],
     total: u.total,
   }));
-  if (resto.length > 0) {
-    series.push({
-      id: 'outros',
-      nome: `Outros (${resto.length})`,
-      cor: COR_OUTROS,
-      total: resto.reduce((s, u) => s + u.total, 0),
-    });
-  }
 
   const porMes = new Map<string, Record<string, number | string>>(
-    meses.map((mes) => [mes, { mes, ...Object.fromEntries(series.map((s) => [s.id, 0])) }]),
+    meses.map((mes) => [mes, { mes, ...Object.fromEntries(series.map((s) => [s.id, 0])), outros: 0 }]),
   );
   for (const { unidade } of topo) {
     for (const { mes, horas } of unidade.consolidado.horasExtrasPorMes) {
@@ -101,11 +100,17 @@ function montarSerie(unidades: UnidadeNode[], meses: string[]): Resultado {
       if (linha) linha[unidade.id] = (Number(linha[unidade.id]) || 0) + horas;
     }
   }
-  for (const { unidade } of resto) {
-    for (const { mes, horas } of unidade.consolidado.horasExtrasPorMes) {
-      const linha = porMes.get(mes);
-      if (linha) linha.outros = (Number(linha.outros) || 0) + horas;
-    }
+
+  let outrosTotal = 0;
+  for (const mes of meses) {
+    const linha = porMes.get(mes)!;
+    const somaTopo = topo.reduce((s, { unidade }) => s + (Number(linha[unidade.id]) || 0), 0);
+    const outros = Math.max(0, (totalPorMes.get(mes) ?? 0) - somaTopo);
+    linha.outros = outros;
+    outrosTotal += outros;
+  }
+  if (outrosTotal > 0.5) {
+    series.push({ id: 'outros', nome: 'Outros', cor: COR_OUTROS, total: outrosTotal });
   }
 
   return { dados: meses.map((mes) => porMes.get(mes)!), series };
@@ -144,45 +149,50 @@ export function SazonalidadeHorasExtrasChart({
   /** DashboardData.horasExtras.competencias — meses "AAAA-MM" ascendente com alguma hora extra estimada. */
   competencias: string[];
 }) {
-  const [nivel, setNivel] = useState<CategoriaUnidade>('secretaria');
+  const [nivel, setNivel] = useState<CategoriaUnidade | null>('secretaria');
 
   const unidades = useMemo(
-    () => unidadesTopoDaCategoria(arvore, nivel, categoriaPorId),
+    () => (nivel ? unidadesTopoDaCategoria(arvore, nivel, categoriaPorId) : null),
     [arvore, nivel, categoriaPorId],
   );
 
-  const { dados, series } = useMemo(() => montarSerie(unidades, competencias), [unidades, competencias]);
+  const { dados, series } = useMemo(
+    () => montarSerie(arvore, unidades, competencias),
+    [arvore, unidades, competencias],
+  );
+
+  const alternarNivel = (id: CategoriaUnidade) => setNivel((atual) => (atual === id ? null : id));
 
   const larguraMin = Math.max(560, dados.length * 16);
-  const rotuloNivel = NIVEIS.find((n) => n.id === nivel)?.rotulo ?? nivel;
+  const semDados = dados.length === 0 || series.every((s) => s.total <= 0);
 
   return (
     <Card className="min-w-0">
       <CardHeader>
         <CardTitle className="text-base font-semibold">Horas extras por unidade, mês a mês</CardTitle>
         <CardDescription>
-          Barra empilhada: horas extras <strong>estimadas</strong> por mês, uma cor por unidade (as{' '}
-          {MAX_SERIES} com mais horas no nível escolhido; o resto agrupado em &ldquo;Outros&rdquo;).
-          Escolha o nível — nunca dois níveis ao mesmo tempo, pra não contar a mesma hora extra duas vezes
-          (uma coordenadoria já está dentro do consolidado da secretaria-mãe).
+          Barra empilhada: o total de horas extras <strong>estimadas</strong> do TSE em cada mês — essa
+          altura não muda. Os chips só decidem como ela se subdivide: as até {MAX_SERIES} unidades com mais
+          horas no nível escolhido ganham uma cor cada, e o restante do total (inclusive de outros níveis)
+          cai em &ldquo;Outros&rdquo;. Sem nenhum chip selecionado, a barra aparece inteira, sem subdivisão.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1.5" role="radiogroup" aria-label="Nível de unidade">
-          {NIVEIS.map((n) => (
-            <PillToggle key={n.id} pressionado={nivel === n.id} onClick={() => setNivel(n.id)}>
-              <span title={n.descricao}>{n.rotulo}</span>
+        <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1.5" role="group" aria-label="Nível de subdivisão da barra">
+          {CATEGORIAS_UNIDADE.map((c) => (
+            <PillToggle key={c.id} pressionado={nivel === c.id} onClick={() => alternarNivel(c.id)}>
+              <span title={c.descricao}>{c.rotulo}</span>
             </PillToggle>
           ))}
           <InfoDica titulo="Por que só um nível por vez?" alinhamento="esquerda">
             Uma coordenadoria fica dentro de uma secretaria — somar os dois níveis juntos contaria a mesma
-            hora extra duas vezes. Troque de nível pra comparar em outra granularidade.
+            hora extra duas vezes. Clique de novo no chip ativo pra tirar a subdivisão e ver o total absoluto.
           </InfoDica>
         </div>
 
-        {dados.length === 0 || series.length === 0 ? (
+        {semDados ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
-            Nenhuma hora extra estimada para {rotuloNivel.toLowerCase()}.
+            Nenhuma hora extra estimada no período.
           </p>
         ) : (
           <>
