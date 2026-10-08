@@ -80,20 +80,6 @@
     "observacoes": []
   },
   {
-    "nome": "ADRIANA DA SILVA",
-    "matricula": "30900793",
-    "cargo": "ANALISTA JUDICIÁRIO",
-    "funcao": {
-      "tipo": "FC",
-      "nivel": 4,
-      "cargoTitulo": "ASSISTENTE IV"
-    },
-    "lotacao": "SEÇÃO DE ARQUITETURA DA INFORMAÇÃO",
-    "atoProvimento": "PORTARIA nº 154/2002",
-    "dataPublicacao": "31/07/2002",
-    "observacoes": []
-  },
-  {
     "nome": "ADRIANA FÁTIMA DE REZENDE TEIXEIRA",
     "matricula": "309R0683",
     "cargo": null,
@@ -131,8 +117,8 @@
       "cargoTitulo": "ASSESSOR I"
     },
     "lotacao": "SEÇÃO DE APURAÇÃO DE INFRAÇÕES CONTRATUAIS",
-    "atoProvimento": "PORTARIA TSE nº 819/2023",
-    "dataPublicacao": "18/10/2023",
+    "atoProvimento": "PORTARIA nº 650/2026",
+    "dataPublicacao": "05/10/2026",
     "observacoes": []
   },
   {
@@ -522,6 +508,20 @@
     "observacoes": []
   },
   {
+    "nome": "ALINE BEATRIZ SCHUH",
+    "matricula": "30901839",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 2,
+      "cargoTitulo": "ASSISTENTE II"
+    },
+    "lotacao": "SEÇÃO DE PLANEJAMENTO",
+    "atoProvimento": "PORTARIA nº 514/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "ALINE CRISTHINA ARAÚJO SILVA",
     "matricula": "30901823",
     "cargo": "ANALISTA JUDICIÁRIO",
@@ -543,20 +543,6 @@
     "lotacao": "MINISTRO VICE-PRESIDENTE",
     "atoProvimento": "PORTARIA nº 52/2011",
     "dataPublicacao": "02/02/2011",
-    "observacoes": []
-  },
-  {
-    "nome": "ALINE YUKA SHINIKE ASSAKAWA",
-    "matricula": "30900941",
-    "cargo": "TÉCNICO JUDICIÁRIO",
-    "funcao": {
-      "tipo": "FC",
-      "nivel": 3,
-      "cargoTitulo": "ASSISTENTE III"
-    },
-    "lotacao": "SEÇÃO DE FISCALIZAÇÃO ADMINISTRATIVA I",
-    "atoProvimento": "PORTARIA nº 305/2007",
-    "dataPublicacao": "13/07/2007",
     "observacoes": []
   },
   {
@@ -627,6 +613,16 @@
     "lotacao": "SEÇÃO DE PLANEJAMENTO",
     "atoProvimento": "PORTARIA TSE nº 173/2016",
     "dataPublicacao": "01/03/2016",
+    "observacoes": []
+  },
+  {
+    "nome": "AMANDA DE ARAUJO BOMFIM NEVES",
+    "matricula": "30901873",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": null,
+    "atoProvimento": "PORTARIA nº 642/2026",
+    "dataPublicacao": "28/09/2026",
     "observacoes": []
   },
   {
@@ -733,8 +729,8 @@
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 4,
-      "cargoTitulo": "ASSISTENTE IV"
+      "nivel": 6,
+      "cargoTitulo": "CHEFE DE SEÇÃO"
     },
     "lotacao": "SEÇÃO DE APURAÇÃO DE INFRAÇÕES CONTRATUAIS",
     "atoProvimento": "PORTARIA nº 394/1996",
@@ -837,6 +833,20 @@
     "lotacao": "GABINETE DA COORDENADORIA DE SOLUÇÕES PROCESSUAIS E PARTIDÁRIAS",
     "atoProvimento": "PORTARIA nº 15/1996",
     "dataPublicacao": "31/01/1996",
+    "observacoes": []
+  },
+  {
+    "nome": "ANA LUÍZA PIAU DUTRA",
+    "matricula": "30901837",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 3,
+      "cargoTitulo": "ASSISTENTE III"
+    },
+    "lotacao": "ASSESSORIA CONSULTIVA",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -1103,8 +1113,8 @@
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 4,
-      "cargoTitulo": "ASSISTENTE IV"
+      "nivel": 6,
+      "cargoTitulo": "ASSISTENTE VI"
     },
     "lotacao": "MINISTRO 5 - JURISTA",
     "atoProvimento": "PORTARIA nº 305/2007",
@@ -1146,9 +1156,9 @@
     "funcao": {
       "tipo": "CJ",
       "nivel": 1,
-      "cargoTitulo": "ASSESSOR I"
+      "cargoTitulo": "CHEFE DE NÚCLEO III"
     },
-    "lotacao": "GABINETE DA COORDENADORIA DE AUDIOVISUAL",
+    "lotacao": "NÚCLEO ADMINISTRATIVO",
     "atoProvimento": "OFÍCIO nº /2021",
     "dataPublicacao": "11/01/2022",
     "observacoes": []
@@ -1352,9 +1362,9 @@
     "funcao": {
       "tipo": "FC",
       "nivel": 6,
-      "cargoTitulo": "CHEFE DE NÚCLEO II"
+      "cargoTitulo": "ASSISTENTE VI"
     },
-    "lotacao": "NÚCLEO DE APOIO À GESTÃO DE PESSOAS",
+    "lotacao": "GABINETE DA DIRETORIA DE ASSUNTOS ESTRATÉGICOS",
     "atoProvimento": "PORTARIA nº 329/2007",
     "dataPublicacao": "27/07/2007",
     "observacoes": []
@@ -1363,8 +1373,12 @@
     "nome": "ANTENOR BORGES NETO",
     "matricula": "30901614",
     "cargo": "TÉCNICO JUDICIÁRIO",
-    "funcao": null,
-    "lotacao": "SEÇÃO DE BENEFÍCIOS",
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 1,
+      "cargoTitulo": "ASSISTENTE I"
+    },
+    "lotacao": "MINISTRO 6 - JURISTA",
     "atoProvimento": "PORTARIA TSE nº 492/2017",
     "dataPublicacao": "06/07/2017",
     "observacoes": []
@@ -1509,7 +1523,11 @@
     "nome": "ARETHA SILICIA LOPEZ SOARES",
     "matricula": "30901826",
     "cargo": "ANALISTA JUDICIÁRIO",
-    "funcao": null,
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 4,
+      "cargoTitulo": "ASSISTENTE IV"
+    },
     "lotacao": "GABINETE DA DIRETORIA DE ASSUNTOS ESTRATÉGICOS",
     "atoProvimento": "PORTARIA nº 466/2026",
     "dataPublicacao": "29/07/2026",
@@ -1599,6 +1617,16 @@
     "lotacao": "SEÇÃO DE INTEGRAÇÃO, GARANTIA E CONTROLE DE QUALIDADE DE SOLUÇÕES",
     "atoProvimento": "PORTARIA nº 163/2026",
     "dataPublicacao": "24/04/2026",
+    "observacoes": []
+  },
+  {
+    "nome": "AUGUSTO CESAR BARBOSA DO NASCIMENTO",
+    "matricula": "30901856",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "NÚCLEO ESTRATÉGICO DE METODOLOGIAS E PROJETOS",
+    "atoProvimento": "PORTARIA nº 519/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -1713,6 +1741,16 @@
     "lotacao": "ASSESSORIA DE EXAME DE CONTAS ELEITORAIS E PARTIDÁRIAS",
     "atoProvimento": "PORTARIA TRE nº 395/2020",
     "dataPublicacao": "01/09/2020",
+    "observacoes": []
+  },
+  {
+    "nome": "BRUNO MARCELO GUIMARÃES MIRANDA",
+    "matricula": "30901841",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE DIREITOS E DEVERES",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -1859,6 +1897,20 @@
     "lotacao": "SEÇÃO DE TECNOLOGIAS EDUCACIONAIS",
     "atoProvimento": "PORTARIA nº 305/2007",
     "dataPublicacao": "13/07/2007",
+    "observacoes": []
+  },
+  {
+    "nome": "CAMILA NUNES ALENCAR",
+    "matricula": "30901867",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 1,
+      "cargoTitulo": "ASSISTENTE I"
+    },
+    "lotacao": "MINISTRO 6 - JURISTA",
+    "atoProvimento": "PORTARIA nº 516/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -2092,6 +2144,16 @@
     "observacoes": []
   },
   {
+    "nome": "CAROLINE MOREIRA COSTA GUIMARÃES",
+    "matricula": "30901868",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE LOTAÇÃO E GESTÃO DE DESEMPENHO",
+    "atoProvimento": "PORTARIA nº 516/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "CAROLINE SANT'ANA DELFINO",
     "matricula": "309R0732",
     "cargo": null,
@@ -2103,6 +2165,40 @@
     "lotacao": "ESCOLA JUDICIÁRIA ELEITORAL",
     "atoProvimento": "PORTARIA TSE nº 866/2023",
     "dataPublicacao": "08/11/2023",
+    "observacoes": []
+  },
+  {
+    "nome": "CAYRO PRAÇA CERQUEIRA",
+    "matricula": "30901857",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE AUTOMAÇÃO À JURISPRUDÊNCIA, PROCEDIMENTOS ADMINISTRATIVOS E COMUNICAÇÕES PROCESSUAIS",
+    "atoProvimento": "PORTARIA nº 519/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
+    "nome": "CECÍLIA AGUIAR SILVA PALAU",
+    "matricula": "30901834",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE REGISTROS FUNCIONAIS",
+    "atoProvimento": "PORTARIA nº 514/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
+    "nome": "CECÍLIA CATARINA OLIVEIRA DE CASTRO",
+    "matricula": "30901844",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 4,
+      "cargoTitulo": "ASSISTENTE IV"
+    },
+    "lotacao": "SEÇÃO DE APURAÇÃO DE INFRAÇÕES CONTRATUAIS",
+    "atoProvimento": "PORTARIA nº 514/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -2159,6 +2255,20 @@
     "lotacao": "SEÇÃO DE PROCEDIMENTOS CARTORÁRIOS",
     "atoProvimento": "PORTARIA nº 566/2010",
     "dataPublicacao": "04/11/2010",
+    "observacoes": []
+  },
+  {
+    "nome": "CELSO REIC URBIETA",
+    "matricula": "309R0813",
+    "cargo": null,
+    "funcao": {
+      "tipo": "CJ",
+      "nivel": 1,
+      "cargoTitulo": "ASSESSOR I"
+    },
+    "lotacao": "ASSESSORIA DE SEGURANÇA DA INFORMAÇÃO",
+    "atoProvimento": "PORTARIA nº /2026",
+    "dataPublicacao": "29/09/2026",
     "observacoes": []
   },
   {
@@ -2242,11 +2352,11 @@
     "matricula": "309R0764",
     "cargo": null,
     "funcao": {
-      "tipo": "FC",
-      "nivel": 6,
-      "cargoTitulo": "CHEFE DE SEÇÃO"
+      "tipo": "CJ",
+      "nivel": 2,
+      "cargoTitulo": "COORDENADOR"
     },
-    "lotacao": "SEÇÃO DE ATENÇÃO ODONTOLOGICA",
+    "lotacao": "GABINETE DA COORDENADORIA DE ATENÇÃO À SAÚDE",
     "atoProvimento": "OFÍCIO nº /2024",
     "dataPublicacao": "31/07/2024",
     "observacoes": []
@@ -2308,7 +2418,7 @@
     "matricula": "30901206",
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": null,
-    "lotacao": "SEÇÃO DE EDITORAÇÃO E PROGRAMAÇÃO VISUAL",
+    "lotacao": "SEÇÃO DE DESIGN EDITORIAL E EXPOSITIVO",
     "atoProvimento": "PORTARIA nº 145/2009",
     "dataPublicacao": "27/02/2009",
     "observacoes": []
@@ -2353,6 +2463,16 @@
     "lotacao": "ASSESSORIA CONSULTIVA",
     "atoProvimento": "PORTARIA nº 394/1996",
     "dataPublicacao": "30/10/1996",
+    "observacoes": []
+  },
+  {
+    "nome": "CLEYTON ANDERSON PEREIRA",
+    "matricula": "30901861",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "ASSESSORIA DE GESTÃO DE IDENTIFICAÇÃO",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -2409,20 +2529,6 @@
     "lotacao": "GABINETE DA DIRETORIA DE ASSUNTOS ESTRATÉGICOS",
     "atoProvimento": "PORTARIA TRE nº 41/2022",
     "dataPublicacao": "16/03/2022",
-    "observacoes": []
-  },
-  {
-    "nome": "CLÁUDIO MARCELO ALBUQUERQUE NASCIMENTO SILVA",
-    "matricula": "309R0801",
-    "cargo": null,
-    "funcao": {
-      "tipo": "CJ",
-      "nivel": 2,
-      "cargoTitulo": "COORDENADOR"
-    },
-    "lotacao": "GABINETE DA COORDENADORIA DE SEGURANÇA CIBERNÉTICA E REDES",
-    "atoProvimento": "PORTARIA nº /2026",
-    "dataPublicacao": "10/07/2026",
     "observacoes": []
   },
   {
@@ -2493,20 +2599,6 @@
     "lotacao": "SEÇÃO DE FISCALIZAÇÃO ADMINISTRATIVA II",
     "atoProvimento": "PORTARIA TSE nº 15/2015",
     "dataPublicacao": "23/01/2015",
-    "observacoes": []
-  },
-  {
-    "nome": "CRISTIANE MEIRELES ORTIZ",
-    "matricula": "309R0746",
-    "cargo": null,
-    "funcao": {
-      "tipo": "CJ",
-      "nivel": 3,
-      "cargoTitulo": "ASSESSOR-CHEFE"
-    },
-    "lotacao": "GABINETE DA SECRETARIA-GERAL DA PRESIDÊNCIA",
-    "atoProvimento": "PORTARIA nº /2024",
-    "dataPublicacao": "13/06/2024",
     "observacoes": []
   },
   {
@@ -2678,7 +2770,7 @@
     "matricula": "30901807",
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": null,
-    "lotacao": "SEÇÃO DE EDITAIS",
+    "lotacao": "SEÇÃO DE COMPRAS",
     "atoProvimento": "PORTARIA nº 87/2026",
     "dataPublicacao": "11/03/2026",
     "observacoes": []
@@ -2689,10 +2781,10 @@
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 2,
-      "cargoTitulo": "ASSISTENTE II"
+      "nivel": 4,
+      "cargoTitulo": "ASSISTENTE IV"
     },
-    "lotacao": "SEÇÃO DE GESTÃO ORÇAMENTÁRIA",
+    "lotacao": "NÚCLEO DE GESTÃO ORÇAMENTÁRIA",
     "atoProvimento": "PORTARIA nº 667/2009",
     "dataPublicacao": "21/09/2009",
     "observacoes": []
@@ -2704,9 +2796,9 @@
     "funcao": {
       "tipo": "CJ",
       "nivel": 2,
-      "cargoTitulo": "ASSESSOR II"
+      "cargoTitulo": "CHEFE DE NÚCLEO IV"
     },
-    "lotacao": "GABINETE DO DIRETOR-GERAL",
+    "lotacao": "NÚCLEO DE GOVERNANÇA E CONFORMIDADE DE PROCESSOS",
     "atoProvimento": "PORTARIA nº 145/2009",
     "dataPublicacao": "27/02/2009",
     "observacoes": []
@@ -2765,6 +2857,20 @@
     "lotacao": "SEÇÃO DE CANDIDATURAS E INFORMAÇÕES PARTIDÁRIAS",
     "atoProvimento": "PORTARIA TSE nº 438/2023",
     "dataPublicacao": "16/06/2023",
+    "observacoes": []
+  },
+  {
+    "nome": "DANIEL MONTEIRO FERREIRA DOS SANTOS",
+    "matricula": "309R0811",
+    "cargo": null,
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 6,
+      "cargoTitulo": "ASSISTENTE VI"
+    },
+    "lotacao": "NÚCLEO DE PROGRAMAÇÃO VISUAL",
+    "atoProvimento": "OFÍCIO nº /2026",
+    "dataPublicacao": "11/09/2026",
     "observacoes": []
   },
   {
@@ -3041,8 +3147,8 @@
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 1,
-      "cargoTitulo": "ASSISTENTE I"
+      "nivel": 4,
+      "cargoTitulo": "ASSISTENTE IV"
     },
     "lotacao": "MINISTRO 6 - JURISTA",
     "atoProvimento": "PORTARIA TSE nº 772/2016",
@@ -3116,15 +3222,25 @@
     "observacoes": []
   },
   {
+    "nome": "DÉBORAH MARIA PINHEIRO FERNANDES",
+    "matricula": "30901829",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "OUVIDORIA",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "DÊNIS PAIVA CARVALHO",
     "matricula": "30900602",
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 3,
-      "cargoTitulo": "ASSISTENTE III"
+      "nivel": 4,
+      "cargoTitulo": "ASSISTENTE IV"
     },
-    "lotacao": "SEÇÃO DE AUDITORIA DE CONTRATOS E CONVÊNIOS",
+    "lotacao": "SEÇÃO DE ARQUITETURA DA INFORMAÇÃO",
     "atoProvimento": "PORTARIA nº 402/1996",
     "dataPublicacao": "14/11/1996",
     "observacoes": []
@@ -3135,8 +3251,8 @@
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 1,
-      "cargoTitulo": "ASSISTENTE I"
+      "nivel": 3,
+      "cargoTitulo": "ASSISTENTE III"
     },
     "lotacao": "MINISTRO 5 - JURISTA",
     "atoProvimento": "PORTARIA nº 667/2009",
@@ -3166,7 +3282,7 @@
       "nivel": 6,
       "cargoTitulo": "ASSISTENTE VI"
     },
-    "lotacao": "GABINETE DA DIRETORIA DE ASSUNTOS ESTRATÉGICOS",
+    "lotacao": "GABINETE DA COORDENADORIA DE GESTÃO ESTRATÉGICA E SOCIOAMBIENTAL",
     "atoProvimento": "PORTARIA nº 539/2010",
     "dataPublicacao": "21/10/2010",
     "observacoes": []
@@ -3176,7 +3292,7 @@
     "matricula": "30900164",
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": null,
-    "lotacao": "NÚCLEO DE SEGURANÇA DE AUTORIDADES",
+    "lotacao": "SEÇÃO DE POLICIAMENTO INTERNO",
     "atoProvimento": "PORTARIA nº 134/1989",
     "dataPublicacao": "31/08/1989",
     "observacoes": []
@@ -3210,6 +3326,26 @@
     "observacoes": []
   },
   {
+    "nome": "EDMUR FERREIRA PEREIRA JUNIOR",
+    "matricula": "30901851",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE GERENCIAMENTO DE REDES",
+    "atoProvimento": "PORTARIA nº 519/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
+    "nome": "EDSON GONÇALVES DOS SANTOS",
+    "matricula": "30901860",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE TECNOLOGIA DE URNAS ELETRÔNICAS",
+    "atoProvimento": "PORTARIA nº 519/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "EDSON RODRIGUES PEREIRA",
     "matricula": "30900529",
     "cargo": "TÉCNICO JUDICIÁRIO",
@@ -3231,6 +3367,16 @@
     "lotacao": "SEÇÃO DE ENGENHARIA, ARQUITETURA E PROJETOS",
     "atoProvimento": "PORTARIA nº 794/2008",
     "dataPublicacao": "14/11/2008",
+    "observacoes": []
+  },
+  {
+    "nome": "EDUARDO AUGUSTO CROZARIOLI LOPES FILHO",
+    "matricula": "30901854",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE TECNOLOGIA DE NUVEM COMPUTACIONAL",
+    "atoProvimento": "PORTARIA nº 519/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -3329,6 +3475,16 @@
     "lotacao": "SEÇÃO DE CONTROLE DE CUSTO E GESTÃO DE ATA DE REGISTRO DE PREÇOS",
     "atoProvimento": "PORTARIA nº 63/2011",
     "dataPublicacao": "14/02/2011",
+    "observacoes": []
+  },
+  {
+    "nome": "EDUARDO SODRÉ CASTRO",
+    "matricula": "30901871",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": null,
+    "atoProvimento": "PORTARIA nº 612/2026",
+    "dataPublicacao": "15/09/2026",
     "observacoes": []
   },
   {
@@ -3467,11 +3623,7 @@
     "nome": "ELISA MARIA SILVEIRA",
     "matricula": "30901260",
     "cargo": "TÉCNICO JUDICIÁRIO",
-    "funcao": {
-      "tipo": "FC",
-      "nivel": 1,
-      "cargoTitulo": "ASSISTENTE I"
-    },
+    "funcao": null,
     "lotacao": "SEÇÃO DE PREPARAÇÃO E REVISÃO DE CONTEÚDOS",
     "atoProvimento": "PORTARIA nº 117/2010",
     "dataPublicacao": "05/04/2010",
@@ -3488,7 +3640,7 @@
     "observacoes": []
   },
   {
-    "nome": "ELISA SUMIKO YOSHIMOTO SOFIAN",
+    "nome": "ELISA SUMIKO YOSHIMOTO",
     "matricula": "309R0530",
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": {
@@ -3563,8 +3715,8 @@
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 1,
-      "cargoTitulo": "ASSISTENTE I"
+      "nivel": 4,
+      "cargoTitulo": "ASSISTENTE IV"
     },
     "lotacao": "MINISTRO 1 - STF",
     "atoProvimento": "PORTARIA nº 104/1995",
@@ -3580,7 +3732,7 @@
       "nivel": 1,
       "cargoTitulo": "ASSESSOR I"
     },
-    "lotacao": "GABINETE DA SAD",
+    "lotacao": "NÚCLEO DE GOVERNANÇA E CONFORMIDADE DE PROCESSOS",
     "atoProvimento": "OFÍCIO nº /2026",
     "dataPublicacao": "01/06/2026",
     "observacoes": []
@@ -3628,6 +3780,20 @@
     "observacoes": []
   },
   {
+    "nome": "ERICK LOBO SUDRÉ",
+    "matricula": "30901865",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 1,
+      "cargoTitulo": "ASSISTENTE I"
+    },
+    "lotacao": "MINISTRO 5 - JURISTA",
+    "atoProvimento": "PORTARIA nº 516/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "ERICK RAYNE LIMA FERREIRA",
     "matricula": "30901016",
     "cargo": "ANALISTA JUDICIÁRIO",
@@ -3653,6 +3819,16 @@
     "lotacao": "SEÇÃO DE PAGAMENTOS",
     "atoProvimento": "PORTARIA TRE nº 323/2016",
     "dataPublicacao": "01/09/2016",
+    "observacoes": []
+  },
+  {
+    "nome": "ERISVALDO ALVES DOS SANTOS",
+    "matricula": "30901862",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE ADMINISTRAÇÃO FINANCEIRA",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -3782,7 +3958,7 @@
       "nivel": 2,
       "cargoTitulo": "COORDENADOR"
     },
-    "lotacao": "GABINETE DA COORDENADORIA DE BIBLIOTECA E MUSEU",
+    "lotacao": "GABINETE DA COORDENADORIA DE GESTÃO BIBLIOGRÁFICA E MEMÓRIA",
     "atoProvimento": "PORTARIA nº 294/2007",
     "dataPublicacao": "11/07/2007",
     "observacoes": []
@@ -3827,20 +4003,6 @@
     "lotacao": "SEÇÃO DE SUPORTE E INOVAÇÃO AO PROCESSO JUDICIAL ELETRÔNICO",
     "atoProvimento": "PORTARIA nº 295/2007",
     "dataPublicacao": "11/07/2007",
-    "observacoes": []
-  },
-  {
-    "nome": "FABIO GALERANI RODRIGUES ALVES",
-    "matricula": "309R0802",
-    "cargo": null,
-    "funcao": {
-      "tipo": "CJ",
-      "nivel": 2,
-      "cargoTitulo": "ASSESSOR II"
-    },
-    "lotacao": "ASSESSORIA DO CENTRO CULTURAL DA JUSTIÇA ELEITORAL",
-    "atoProvimento": "OFÍCIO nº /2026",
-    "dataPublicacao": "15/07/2026",
     "observacoes": []
   },
   {
@@ -3889,10 +4051,24 @@
     "nome": "FELIPE AUGUSTO CORDEIRO SALES",
     "matricula": "30901782",
     "cargo": "TÉCNICO JUDICIÁRIO",
-    "funcao": null,
-    "lotacao": "SEÇÃO DE APOIO ADMINISTRATIVO",
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 3,
+      "cargoTitulo": "ASSISTENTE III"
+    },
+    "lotacao": "ASSESSORIA DE PLENÁRIO",
     "atoProvimento": "PORTARIA nº 345/2025",
     "dataPublicacao": "07/08/2025",
+    "observacoes": []
+  },
+  {
+    "nome": "FELIPE BARROS ARAUJO SANTOS",
+    "matricula": "30901853",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE AUDITORIA DE TECNOLOGIA DA INFORMAÇÃO",
+    "atoProvimento": "PORTARIA nº 515/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -3907,6 +4083,20 @@
     "lotacao": "COMISSÃO PERMANENTE DE LICITAÇÃO",
     "atoProvimento": "PORTARIA nº 87/2026",
     "dataPublicacao": "11/03/2026",
+    "observacoes": []
+  },
+  {
+    "nome": "FELIPE DE OLIVEIRA DUARTE",
+    "matricula": "30901843",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 2,
+      "cargoTitulo": "ASSISTENTE II"
+    },
+    "lotacao": "SEÇÃO DE AUDITORIA DE GESTÃO",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -4004,7 +4194,7 @@
     "observacoes": []
   },
   {
-    "nome": "FERNANDA GUEDES ANDRADE",
+    "nome": "FERNANDA GUEDES ANDRADE DE ALMEIDA",
     "matricula": "309R0772",
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": {
@@ -4043,6 +4233,16 @@
     "lotacao": "SEÇÃO DE ANÁLISE DE DADOS FÍSICOS DAS DESPESAS OBRIGATÓRIAS",
     "atoProvimento": "PORTARIA nº 305/2007",
     "dataPublicacao": "13/07/2007",
+    "observacoes": []
+  },
+  {
+    "nome": "FERNANDO CLEMENTINO VIGANÓ",
+    "matricula": "30901846",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE PAGAMENTOS",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -4168,20 +4368,6 @@
     "observacoes": []
   },
   {
-    "nome": "FLÁVIA CARVALHO COELHO",
-    "matricula": "309R0778",
-    "cargo": null,
-    "funcao": {
-      "tipo": "CJ",
-      "nivel": 1,
-      "cargoTitulo": "ASSESSOR I"
-    },
-    "lotacao": "GABINETE DA PRESIDÊNCIA",
-    "atoProvimento": "PORTARIA nº 302/2026",
-    "dataPublicacao": "16/06/2026",
-    "observacoes": []
-  },
-  {
     "nome": "FLÁVIA FARIAS TEÓDULO PALITOT",
     "matricula": "30901176",
     "cargo": "ANALISTA JUDICIÁRIO",
@@ -4235,6 +4421,16 @@
     "lotacao": "MINISTRO 1 - STF",
     "atoProvimento": "PORTARIA TRE nº 695/2021",
     "dataPublicacao": "05/04/2021",
+    "observacoes": []
+  },
+  {
+    "nome": "FRANCISCO ALISSON COSTA LOPES",
+    "matricula": "30901864",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE PESQUISA E SUSTENTAÇÃO DE BANCOS DE DADOS",
+    "atoProvimento": "PORTARIA nº 518/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -4394,6 +4590,20 @@
     "observacoes": []
   },
   {
+    "nome": "FÁBIO GALERANI RODRIGUES ALVES",
+    "matricula": "309R0802",
+    "cargo": null,
+    "funcao": {
+      "tipo": "CJ",
+      "nivel": 2,
+      "cargoTitulo": "ASSESSOR II"
+    },
+    "lotacao": "ASSESSORIA DO CENTRO CULTURAL DA JUSTIÇA ELEITORAL",
+    "atoProvimento": "OFÍCIO nº /2026",
+    "dataPublicacao": "15/07/2026",
+    "observacoes": []
+  },
+  {
     "nome": "FÁBIO JOSÉ VICENTE",
     "matricula": "30900952",
     "cargo": "TÉCNICO JUDICIÁRIO",
@@ -4443,6 +4653,26 @@
     "lotacao": "SEÇÃO DE OPERAÇÃO CIBERNÉTICA",
     "atoProvimento": "PORTARIA nº 346/2025",
     "dataPublicacao": "07/08/2025",
+    "observacoes": []
+  },
+  {
+    "nome": "GABRIEL FERRAZ FIGUEIREDO",
+    "matricula": "30901840",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": null,
+    "atoProvimento": "PORTARIA nº 634/2026",
+    "dataPublicacao": "28/09/2026",
+    "observacoes": []
+  },
+  {
+    "nome": "GABRIEL GUSTAVO DE ALMEIDA SANTOS",
+    "matricula": "30901855",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE ENGENHARIA, ARQUITETURA E PROJETOS",
+    "atoProvimento": "PORTARIA nº 517/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -4586,7 +4816,7 @@
       "nivel": 3,
       "cargoTitulo": "ASSISTENTE III"
     },
-    "lotacao": "GABINETE DA COORDENADORIA DE BIBLIOTECA E MUSEU",
+    "lotacao": "GABINETE DA COORDENADORIA DE GESTÃO BIBLIOGRÁFICA E MEMÓRIA",
     "atoProvimento": "PORTARIA TSE nº 382/2015",
     "dataPublicacao": "18/08/2015",
     "observacoes": []
@@ -4624,7 +4854,7 @@
       "nivel": 1,
       "cargoTitulo": "ASSISTENTE I"
     },
-    "lotacao": "SEÇÃO DE BIBLIOTECA DIGITAL",
+    "lotacao": "SEÇÃO DE GESTÃO DE ACERVOS DIGITAIS",
     "atoProvimento": "PORTARIA nº 42/1998",
     "dataPublicacao": "06/03/1998",
     "observacoes": []
@@ -4766,7 +4996,7 @@
       "nivel": 2,
       "cargoTitulo": "ASSISTENTE II"
     },
-    "lotacao": "SEÇÃO DE GESTÃO ORÇAMENTÁRIA",
+    "lotacao": "NÚCLEO DE GESTÃO ORÇAMENTÁRIA",
     "atoProvimento": "PORTARIA TSE nº 173/2016",
     "dataPublicacao": "01/03/2016",
     "observacoes": []
@@ -4804,7 +5034,7 @@
     "matricula": "30900761",
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": null,
-    "lotacao": "SEÇÃO DE FISCALIZAÇÃO ADMINISTRATIVA I",
+    "lotacao": null,
     "atoProvimento": "PORTARIA nº 16/2001",
     "dataPublicacao": "12/02/2001",
     "observacoes": []
@@ -5006,7 +5236,7 @@
     "matricula": "30901298",
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": null,
-    "lotacao": "SEÇÃO DE BIBLIOTECA DIGITAL",
+    "lotacao": "SEÇÃO DE GESTÃO DE ACERVOS DIGITAIS",
     "atoProvimento": "PORTARIA nº 425/2011",
     "dataPublicacao": "12/09/2011",
     "observacoes": []
@@ -5017,8 +5247,8 @@
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 4,
-      "cargoTitulo": "ASSISTENTE IV"
+      "nivel": 6,
+      "cargoTitulo": "ASSISTENTE VI"
     },
     "lotacao": "MINISTRO 1 - STF",
     "atoProvimento": "PORTARIA nº 86/2026",
@@ -5155,6 +5385,20 @@
     "lotacao": "SEÇÃO DE CONTEÚDO DE JURISPRUDÊNCIA",
     "atoProvimento": "PORTARIA nº 151/1999",
     "dataPublicacao": "20/07/1999",
+    "observacoes": []
+  },
+  {
+    "nome": "IDO EMANUEL DE LIMA FERREIRA",
+    "matricula": "309R0809",
+    "cargo": null,
+    "funcao": {
+      "tipo": "CJ",
+      "nivel": 1,
+      "cargoTitulo": "CHEFE DE NÚCLEO III"
+    },
+    "lotacao": "NÚCLEO DE PROGRAMAÇÃO VISUAL",
+    "atoProvimento": "PORTARIA nº 563/2026",
+    "dataPublicacao": "03/09/2026",
     "observacoes": []
   },
   {
@@ -5328,20 +5572,6 @@
     "observacoes": []
   },
   {
-    "nome": "ISABEL CRISTINA FERNANDES DE CARVALHO",
-    "matricula": "309R0792",
-    "cargo": null,
-    "funcao": {
-      "tipo": "CJ",
-      "nivel": 2,
-      "cargoTitulo": "COORDENADOR"
-    },
-    "lotacao": "GABINETE DA COORDENADORIA DE IMPRENSA",
-    "atoProvimento": "PORTARIA nº 207/2026",
-    "dataPublicacao": "18/05/2026",
-    "observacoes": []
-  },
-  {
     "nome": "ISABELA NOLETO FRANKLIN DE CARVALHO",
     "matricula": "30900881",
     "cargo": "TÉCNICO JUDICIÁRIO",
@@ -5364,7 +5594,7 @@
       "nivel": 1,
       "cargoTitulo": "ASSESSOR I"
     },
-    "lotacao": "SEÇÃO ADMINISTRATIVA",
+    "lotacao": "NÚCLEO ADMINISTRATIVO",
     "atoProvimento": "OFÍCIO nº /2022",
     "dataPublicacao": "11/02/2022",
     "observacoes": []
@@ -5375,8 +5605,8 @@
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 3,
-      "cargoTitulo": "ASSISTENTE III"
+      "nivel": 4,
+      "cargoTitulo": "ASSISTENTE IV"
     },
     "lotacao": "GABINETE DA COORDENADORIA DE EDITORAÇÃO E PUBLICAÇÕES",
     "atoProvimento": "PORTARIA nº 353/2004",
@@ -5445,8 +5675,8 @@
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 6,
-      "cargoTitulo": "CHEFE DE SEÇÃO"
+      "nivel": 5,
+      "cargoTitulo": "ASSISTENTE V"
     },
     "lotacao": "SEÇÃO DE PROGRAMAÇÃO ORÇAMENTÁRIA",
     "atoProvimento": "PORTARIA nº 220/2008",
@@ -5571,8 +5801,8 @@
     "cargo": null,
     "funcao": {
       "tipo": "FC",
-      "nivel": 1,
-      "cargoTitulo": "ASSISTENTE I"
+      "nivel": 3,
+      "cargoTitulo": "ASSISTENTE III"
     },
     "lotacao": "SEÇÃO DE FISCALIZAÇÃO ADMINISTRATIVA I",
     "atoProvimento": "OFÍCIO nº /",
@@ -5668,7 +5898,7 @@
       "nivel": 4,
       "cargoTitulo": "ASSISTENTE IV"
     },
-    "lotacao": "SEÇÃO DE BIBLIOTECA DIGITAL",
+    "lotacao": "SEÇÃO DE GESTÃO DE ACERVOS DIGITAIS",
     "atoProvimento": "PORTARIA nº 294/2007",
     "dataPublicacao": "11/07/2007",
     "observacoes": []
@@ -5806,6 +6036,16 @@
     "observacoes": []
   },
   {
+    "nome": "JEFFERSON DE OLIVEIRA COÍMBRA",
+    "matricula": "30901830",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE APURAÇÃO DE INFRAÇÕES CONTRATUAIS",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "JENNER ARRUDA MODESTO DOS SANTOS",
     "matricula": "30900501",
     "cargo": "ANALISTA JUDICIÁRIO",
@@ -5834,11 +6074,11 @@
     "matricula": "309R0785",
     "cargo": null,
     "funcao": {
-      "tipo": "CJ",
-      "nivel": 1,
-      "cargoTitulo": "ASSESSOR I"
+      "tipo": "FC",
+      "nivel": 6,
+      "cargoTitulo": "ASSISTENTE VI"
     },
-    "lotacao": "GABINETE DA PRESIDÊNCIA",
+    "lotacao": "ASSESSORIA DE PLENÁRIO",
     "atoProvimento": "PORTARIA nº /2025",
     "dataPublicacao": "25/11/2025",
     "observacoes": []
@@ -5989,8 +6229,8 @@
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 6,
-      "cargoTitulo": "ASSISTENTE VI"
+      "nivel": 5,
+      "cargoTitulo": "ASSISTENTE V"
     },
     "lotacao": "GABINETE DA DIRETORIA DE ASSUNTOS ESTRATÉGICOS",
     "atoProvimento": "PORTARIA TSE nº 101/2016",
@@ -6107,6 +6347,16 @@
     "lotacao": "SEÇÃO DE GESTÃO SOCIOAMBIENTAL",
     "atoProvimento": "PORTARIA nº 89/1989",
     "dataPublicacao": "03/07/1989",
+    "observacoes": []
+  },
+  {
+    "nome": "JOSÉ MAURÍCIO NEVES BERTO JÚNIOR",
+    "matricula": "30901849",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE POLICIAMENTO INTERNO",
+    "atoProvimento": "PORTARIA nº 513/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -6602,13 +6852,33 @@
     "matricula": "30901357",
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": {
-      "tipo": "FC",
-      "nivel": 6,
-      "cargoTitulo": "ASSISTENTE VI"
+      "tipo": "CJ",
+      "nivel": 1,
+      "cargoTitulo": "ASSESSOR I"
     },
-    "lotacao": "MINISTRO 1 - STF",
+    "lotacao": "GABINETE DA PRESIDÊNCIA",
     "atoProvimento": "PORTARIA TSE nº 222/2013",
     "dataPublicacao": "22/05/2013",
+    "observacoes": []
+  },
+  {
+    "nome": "KAMILA BASSETTO DA SILVA PITTERI",
+    "matricula": "30901872",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": null,
+    "atoProvimento": "PORTARIA nº 648/2026",
+    "dataPublicacao": "28/09/2026",
+    "observacoes": []
+  },
+  {
+    "nome": "KAMILLA MOTA DE AVELAR",
+    "matricula": "30901832",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE SERVIÇOS GRÁFICOS",
+    "atoProvimento": "PORTARIA nº 514/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -6637,6 +6907,26 @@
     "lotacao": "SEÇÃO DE SOLUÇÕES EM APLICATIVOS MÓVEIS",
     "atoProvimento": "PORTARIA nº 60/2025",
     "dataPublicacao": "24/02/2025",
+    "observacoes": []
+  },
+  {
+    "nome": "KASSIA CRISTINA SANTOS NEVES MARTINS",
+    "matricula": "30901827",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE PAGAMENTOS",
+    "atoProvimento": "PORTARIA nº 512/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
+    "nome": "KATHLEEN PORTO MARCILIO",
+    "matricula": "30901847",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE CAMPANHA E REDES SOCIAIS",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -6739,8 +7029,8 @@
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": {
       "tipo": "CJ",
-      "nivel": 2,
-      "cargoTitulo": "ASSESSOR II"
+      "nivel": 3,
+      "cargoTitulo": "ASSESSOR III"
     },
     "lotacao": "MINISTRO VICE-PRESIDENTE",
     "atoProvimento": "PORTARIA TRE nº 140/2015",
@@ -6898,6 +7188,16 @@
     "observacoes": []
   },
   {
+    "nome": "LEILANNE TAVARES QUIRINO DE SOUZA",
+    "matricula": "30901850",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "GABINETE DA COORDENADORIA DE SISTEMAS ADMINISTRATIVOS",
+    "atoProvimento": "PORTARIA nº 519/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "LENNER MACEDO MARIANO",
     "matricula": "30901675",
     "cargo": "TÉCNICO JUDICIÁRIO",
@@ -6962,7 +7262,7 @@
       "nivel": 1,
       "cargoTitulo": "ASSESSOR I"
     },
-    "lotacao": "SEÇÃO DE DADOS ESTRATÉGICOS GERENCIAIS",
+    "lotacao": "GABINETE DA DIRETORIA DE ASSUNTOS ESTRATÉGICOS",
     "atoProvimento": "PORTARIA nº 281/2007",
     "dataPublicacao": "11/07/2007",
     "observacoes": []
@@ -6979,6 +7279,30 @@
     "lotacao": "GABINETE DA SECRETARIA-GERAL DA PRESIDÊNCIA",
     "atoProvimento": "PORTARIA nº 215/2011",
     "dataPublicacao": "02/05/2011",
+    "observacoes": []
+  },
+  {
+    "nome": "LETICIA DE CARVALHO CAPOBIANCO RIBEIRO",
+    "matricula": "309R0810",
+    "cargo": null,
+    "funcao": {
+      "tipo": "CJ",
+      "nivel": 2,
+      "cargoTitulo": "COORDENADOR"
+    },
+    "lotacao": "GABINETE DA COORDENADORIA DE IMPRENSA",
+    "atoProvimento": "PORTARIA nº 548/2026",
+    "dataPublicacao": "27/08/2026",
+    "observacoes": []
+  },
+  {
+    "nome": "LETÍCIA DE SOUSA NOGUEIRA",
+    "matricula": "30901828",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "GABINETE DA SAD",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -7113,8 +7437,8 @@
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": {
       "tipo": "CJ",
-      "nivel": 1,
-      "cargoTitulo": "ASSESSOR I"
+      "nivel": 3,
+      "cargoTitulo": "ASSESSOR-CHEFE"
     },
     "lotacao": "GABINETE DA SECRETARIA-GERAL DA PRESIDÊNCIA",
     "atoProvimento": "PORTARIA TSE nº 722/2016",
@@ -7160,6 +7484,16 @@
     "observacoes": []
   },
   {
+    "nome": "LUCAS COSTA DA SILVA CARVALHO",
+    "matricula": "30901842",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE INSPEÇÕES E CORREIÇÕES",
+    "atoProvimento": "PORTARIA nº 514/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "LUCAS FERREIRA DE LIMA",
     "matricula": "30901253",
     "cargo": "ANALISTA JUDICIÁRIO",
@@ -7174,6 +7508,16 @@
     "observacoes": []
   },
   {
+    "nome": "LUCAS GUEDES PIRES",
+    "matricula": "30901874",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": null,
+    "atoProvimento": "PORTARIA nº 637/2026",
+    "dataPublicacao": "28/09/2026",
+    "observacoes": []
+  },
+  {
     "nome": "LUCAS HENRIQUE DE LIMA",
     "matricula": "30901445",
     "cargo": "ANALISTA JUDICIÁRIO",
@@ -7182,7 +7526,7 @@
       "nivel": 2,
       "cargoTitulo": "ASSISTENTE II"
     },
-    "lotacao": "SEÇÃO DE GESTÃO ORÇAMENTÁRIA",
+    "lotacao": "NÚCLEO DE GESTÃO ORÇAMENTÁRIA",
     "atoProvimento": "PORTARIA TSE nº 569/2015",
     "dataPublicacao": "24/11/2015",
     "observacoes": []
@@ -7195,6 +7539,16 @@
     "lotacao": "GABINETE DA COORDENADORIA DE SISTEMAS ADMINISTRATIVOS",
     "atoProvimento": "PORTARIA nº 139/2026",
     "dataPublicacao": "22/04/2026",
+    "observacoes": []
+  },
+  {
+    "nome": "LUCAS RODRIGUES ARAÚJO",
+    "matricula": "30901848",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE ENGENHARIA, ARQUITETURA E PROJETOS",
+    "atoProvimento": "PORTARIA nº 531/2026",
+    "dataPublicacao": "19/08/2026",
     "observacoes": []
   },
   {
@@ -7216,9 +7570,9 @@
     "matricula": "30901581",
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": {
-      "tipo": "FC",
-      "nivel": 6,
-      "cargoTitulo": "ASSISTENTE VI"
+      "tipo": "CJ",
+      "nivel": 1,
+      "cargoTitulo": "ASSESSOR I"
     },
     "lotacao": "MINISTRO VICE-PRESIDENTE",
     "atoProvimento": "PORTARIA TSE nº 985/2016",
@@ -7433,8 +7787,8 @@
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 3,
-      "cargoTitulo": "ASSISTENTE III"
+      "nivel": 4,
+      "cargoTitulo": "ASSISTENTE IV"
     },
     "lotacao": "SEÇÃO DE REGISTROS FUNCIONAIS",
     "atoProvimento": "PORTARIA TSE nº 916/2020",
@@ -7457,12 +7811,12 @@
   },
   {
     "nome": "LUIZ THIAGO MONTEREI DOS SANTOS",
-    "matricula": "30901815",
-    "cargo": "TÉCNICO JUDICIÁRIO",
+    "matricula": "30901845",
+    "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": null,
     "lotacao": "SEÇÃO DE ENGENHARIA, ARQUITETURA E PROJETOS",
-    "atoProvimento": "PORTARIA nº 159/2026",
-    "dataPublicacao": "22/04/2026",
+    "atoProvimento": "PORTARIA nº 514/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -7539,6 +7893,34 @@
     "lotacao": "SEÇÃO DE GESTÃO DE ALMOXARIFADO",
     "atoProvimento": "PORTARIA nº 80/1996",
     "dataPublicacao": "18/03/1996",
+    "observacoes": []
+  },
+  {
+    "nome": "LUÍS OCTÁVIO MENDES BORGES",
+    "matricula": "30901869",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 1,
+      "cargoTitulo": "ASSISTENTE I"
+    },
+    "lotacao": "MINISTRO 3 - STJ",
+    "atoProvimento": "PORTARIA nº 516/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
+    "nome": "LYLIANE MATOS SENA FERREIRA",
+    "matricula": "30901835",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 1,
+      "cargoTitulo": "ASSISTENTE I"
+    },
+    "lotacao": "SEÇÃO DE FISCALIZAÇÃO ADMINISTRATIVA I",
+    "atoProvimento": "PORTARIA nº 514/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -7922,11 +8304,11 @@
     "matricula": "30901056",
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": {
-      "tipo": "FC",
-      "nivel": 6,
-      "cargoTitulo": "CHEFE DE SEÇÃO"
+      "tipo": "CJ",
+      "nivel": 1,
+      "cargoTitulo": "CHEFE DE NÚCLEO III"
     },
-    "lotacao": "SEÇÃO DE GESTÃO ORÇAMENTÁRIA",
+    "lotacao": "NÚCLEO DE GESTÃO ORÇAMENTÁRIA",
     "atoProvimento": "PORTARIA nº 287/2007",
     "dataPublicacao": "11/07/2007",
     "observacoes": []
@@ -7989,10 +8371,10 @@
     "cargo": null,
     "funcao": {
       "tipo": "CJ",
-      "nivel": 2,
-      "cargoTitulo": "COORDENADOR"
+      "nivel": 3,
+      "cargoTitulo": "SECRETÁRIO"
     },
-    "lotacao": "GABINETE DA COORDENADORIA DE ATENÇÃO À SAÚDE",
+    "lotacao": "GABINETE DA SECRETARIA INTEGRADA DE SAÚDE",
     "atoProvimento": "OFÍCIO nº /2022",
     "dataPublicacao": "23/09/2022",
     "observacoes": []
@@ -8023,6 +8405,16 @@
     "lotacao": "MINISTRO 4 - STJ",
     "atoProvimento": "PORTARIA nº 157/1996",
     "dataPublicacao": "13/05/1996",
+    "observacoes": []
+  },
+  {
+    "nome": "MARCOS FELIPE DE ORNELIS BORGES",
+    "matricula": "30901859",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE CADASTRO DE ELEITOR",
+    "atoProvimento": "PORTARIA nº 519/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -8099,8 +8491,12 @@
     "nome": "MARCOS VINICIUS DOS SANTOS VIEIRA",
     "matricula": "30901769",
     "cargo": "TÉCNICO JUDICIÁRIO",
-    "funcao": null,
-    "lotacao": "OUVIDORIA",
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 3,
+      "cargoTitulo": "ASSISTENTE III"
+    },
+    "lotacao": "NÚCLEO DE APOIO À GESTÃO DE PESSOAS",
     "atoProvimento": "PORTARIA nº 345/2025",
     "dataPublicacao": "07/08/2025",
     "observacoes": []
@@ -8232,6 +8628,16 @@
     "observacoes": []
   },
   {
+    "nome": "MARIA AUXILIADORA PAULA FERREIRA DA CRUZ",
+    "matricula": "30901852",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE FISCALIZAÇÃO ADMINISTRATIVA I",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "MARIA DA CONCEIÇÃO FONSÊCA DA SILVA PINTO",
     "matricula": "30900409",
     "cargo": "ANALISTA JUDICIÁRIO",
@@ -8250,7 +8656,7 @@
     "matricula": "30901644",
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": null,
-    "lotacao": "GABINETE DA DIRETORIA DE ASSUNTOS ESTRATÉGICOS",
+    "lotacao": "GABINETE DA COORDENADORIA DE GESTÃO ESTRATÉGICA E SOCIOAMBIENTAL",
     "atoProvimento": "ATO DA PRESIDÊNCIA nº 17/2019",
     "dataPublicacao": "25/03/2019",
     "observacoes": []
@@ -8636,6 +9042,16 @@
     "observacoes": []
   },
   {
+    "nome": "MATHEUS CASTELO BRANCO CABRAL",
+    "matricula": "30901825",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE FISCALIZAÇÃO ADMINISTRATIVA II",
+    "atoProvimento": "PORTARIA nº 514/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "MATHEUS MARTINS DO NASCIMENTO",
     "matricula": "30901776",
     "cargo": "TÉCNICO JUDICIÁRIO",
@@ -8731,8 +9147,8 @@
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 4,
-      "cargoTitulo": "ASSISTENTE IV"
+      "nivel": 6,
+      "cargoTitulo": "CHEFE DE SEÇÃO"
     },
     "lotacao": "SEÇÃO DE GESTÃO ORÇAMENTÁRIA",
     "atoProvimento": "PORTARIA nº 361/2012",
@@ -8880,16 +9296,6 @@
     "observacoes": []
   },
   {
-    "nome": "MURILLO TELES ROQUÊTE",
-    "matricula": "30901777",
-    "cargo": "ANALISTA JUDICIÁRIO",
-    "funcao": null,
-    "lotacao": "SEÇÃO DE IDENTIFICAÇÃO BIOMÉTRICA",
-    "atoProvimento": "PORTARIA nº 352/2025",
-    "dataPublicacao": "07/08/2025",
-    "observacoes": []
-  },
-  {
     "nome": "MURILO MAIA HERZ",
     "matricula": "30900716",
     "cargo": "TÉCNICO JUDICIÁRIO",
@@ -8898,7 +9304,7 @@
       "nivel": 5,
       "cargoTitulo": "ASSISTENTE V"
     },
-    "lotacao": "SEÇÃO DE POLICIAMENTO INTERNO",
+    "lotacao": "ASSESSORIA DE ARTICULAÇÃO PARLAMENTAR",
     "atoProvimento": "PORTARIA nº 119/1999",
     "dataPublicacao": "14/06/1999",
     "observacoes": []
@@ -8974,6 +9380,16 @@
     "observacoes": []
   },
   {
+    "nome": "MÁRCIA ROSILENE FERREIRA DOS SANTOS MARQUES",
+    "matricula": "30901833",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "NÚCLEO DE APOIO ADMINISTRATIVO",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "MÁRCIO AUGUSTO ALVES ROSNER",
     "matricula": "30900381",
     "cargo": "TÉCNICO JUDICIÁRIO",
@@ -9035,10 +9451,10 @@
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 4,
-      "cargoTitulo": "ASSISTENTE IV"
+      "nivel": 1,
+      "cargoTitulo": "ASSISTENTE I"
     },
-    "lotacao": "MINISTRO 6 - JURISTA",
+    "lotacao": "MINISTRO VICE-PRESIDENTE",
     "atoProvimento": "PORTARIA nº 798/2023",
     "dataPublicacao": "16/10/2023",
     "observacoes": []
@@ -9087,8 +9503,8 @@
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 4,
-      "cargoTitulo": "ASSISTENTE IV"
+      "nivel": 3,
+      "cargoTitulo": "ASSISTENTE III"
     },
     "lotacao": "SEÇÃO DE REGISTROS FUNCIONAIS",
     "atoProvimento": "PORTARIA nº 798/2023",
@@ -9212,7 +9628,7 @@
       "nivel": 4,
       "cargoTitulo": "ASSISTENTE IV"
     },
-    "lotacao": "SEÇÃO DE EDITORAÇÃO E PROGRAMAÇÃO VISUAL",
+    "lotacao": "SEÇÃO DE DESIGN EDITORIAL E EXPOSITIVO",
     "atoProvimento": "PORTARIA TSE nº 173/2016",
     "dataPublicacao": "01/03/2016",
     "observacoes": []
@@ -9276,9 +9692,9 @@
     "funcao": {
       "tipo": "FC",
       "nivel": 6,
-      "cargoTitulo": "CHEFE DE SEÇÃO"
+      "cargoTitulo": "ASSISTENTE VI"
     },
-    "lotacao": "SEÇÃO ADMINISTRATIVA",
+    "lotacao": "NÚCLEO ADMINISTRATIVO",
     "atoProvimento": "PORTARIA nº /2026",
     "dataPublicacao": "20/01/2026",
     "observacoes": []
@@ -9349,7 +9765,11 @@
     "nome": "PABLO LEITE",
     "matricula": "30900866",
     "cargo": "TÉCNICO JUDICIÁRIO",
-    "funcao": null,
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 1,
+      "cargoTitulo": "ASSISTENTE I"
+    },
     "lotacao": "SEÇÃO DE GESTÃO DA FREQUÊNCIA",
     "atoProvimento": "PORTARIA nº 305/2007",
     "dataPublicacao": "13/07/2007",
@@ -9460,20 +9880,6 @@
     "observacoes": []
   },
   {
-    "nome": "PAULO HENRIQUE DE OLIVEIRA SILVA",
-    "matricula": "30901810",
-    "cargo": "ANALISTA JUDICIÁRIO",
-    "funcao": {
-      "tipo": "FC",
-      "nivel": 4,
-      "cargoTitulo": "ASSISTENTE IV"
-    },
-    "lotacao": "SEÇÃO DE DEFESA CIBERNÉTICA",
-    "atoProvimento": "PORTARIA nº 85/2026",
-    "dataPublicacao": "11/03/2026",
-    "observacoes": []
-  },
-  {
     "nome": "PAULO MARCO CRESTANI PEREZ",
     "matricula": "30900715",
     "cargo": "TÉCNICO JUDICIÁRIO",
@@ -9502,7 +9908,7 @@
       "nivel": 6,
       "cargoTitulo": "CHEFE DE SEÇÃO"
     },
-    "lotacao": "SEÇÃO DE EDITORAÇÃO E PROGRAMAÇÃO VISUAL",
+    "lotacao": "SEÇÃO DE DESIGN EDITORIAL E EXPOSITIVO",
     "atoProvimento": "PORTARIA TSE nº 173/2016",
     "dataPublicacao": "01/03/2016",
     "observacoes": []
@@ -9572,7 +9978,7 @@
       "nivel": 4,
       "cargoTitulo": "ASSISTENTE IV"
     },
-    "lotacao": "SEÇÃO DE APOIO ADMINISTRATIVO",
+    "lotacao": "NÚCLEO DE APOIO ADMINISTRATIVO",
     "atoProvimento": "PORTARIA nº 1127/2015",
     "dataPublicacao": "01/07/2015",
     "observacoes": []
@@ -9662,6 +10068,16 @@
     "observacoes": []
   },
   {
+    "nome": "PRISCILA CARMEN ALBUQUERQUE CARCARÁ MELÃO",
+    "matricula": "30901831",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "ASSESSORIA DE EXAME DE CONTAS ELEITORAIS E PARTIDÁRIAS",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "PRISCILA FERNANDES DA SILVA PAÇO",
     "matricula": "309R0650",
     "cargo": "TÉCNICO JUDICIÁRIO",
@@ -9746,9 +10162,9 @@
     "matricula": "309R0783",
     "cargo": null,
     "funcao": {
-      "tipo": "CJ",
-      "nivel": 1,
-      "cargoTitulo": "ASSESSOR I"
+      "tipo": "FC",
+      "nivel": 6,
+      "cargoTitulo": "ASSISTENTE VI"
     },
     "lotacao": "MINISTRO VICE-PRESIDENTE",
     "atoProvimento": "PORTARIA nº /2025",
@@ -9778,7 +10194,7 @@
       "nivel": 2,
       "cargoTitulo": "ASSISTENTE II"
     },
-    "lotacao": "SEÇÃO DE BIBLIOTECA DIGITAL",
+    "lotacao": "SEÇÃO DE GESTÃO DE ACERVOS DIGITAIS",
     "atoProvimento": "PORTARIA nº 305/2007",
     "dataPublicacao": "13/07/2007",
     "observacoes": []
@@ -9950,9 +10366,9 @@
     "funcao": {
       "tipo": "FC",
       "nivel": 6,
-      "cargoTitulo": "CHEFE DE SEÇÃO"
+      "cargoTitulo": "CHEFE DE NÚCLEO II"
     },
-    "lotacao": "SEÇÃO DE APOIO ADMINISTRATIVO",
+    "lotacao": "NÚCLEO DE APOIO ADMINISTRATIVO",
     "atoProvimento": "PORTARIA nº 506/2011",
     "dataPublicacao": "14/10/2011",
     "observacoes": []
@@ -10367,10 +10783,10 @@
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 2,
-      "cargoTitulo": "ASSISTENTE II"
+      "nivel": 3,
+      "cargoTitulo": "ASSISTENTE III"
     },
-    "lotacao": "SEÇÃO DE AUDITORIA DE GESTÃO",
+    "lotacao": "SEÇÃO DE AUDITORIA DE CONTRATOS E CONVÊNIOS",
     "atoProvimento": "PORTARIA TSE nº 382/2015",
     "dataPublicacao": "18/08/2015",
     "observacoes": []
@@ -10690,6 +11106,20 @@
     "observacoes": []
   },
   {
+    "nome": "ROSA CAROLINA RODRIGUES ALVES REIS",
+    "matricula": "309R0814",
+    "cargo": null,
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 6,
+      "cargoTitulo": "CHEFE DE SEÇÃO"
+    },
+    "lotacao": "SEÇÃO DE INFRAESTRUTURA E MODERNIZAÇÃO VISUAL",
+    "atoProvimento": "OFÍCIO nº /2026",
+    "dataPublicacao": "08/10/2026",
+    "observacoes": []
+  },
+  {
     "nome": "ROSANA CÉLIA NOLÊTO MAGALHÃES",
     "matricula": "30901824",
     "cargo": "ANALISTA JUDICIÁRIO",
@@ -10729,10 +11159,10 @@
     "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 4,
-      "cargoTitulo": "ASSISTENTE IV"
+      "nivel": 6,
+      "cargoTitulo": "CHEFE DE NÚCLEO II"
     },
-    "lotacao": "SEÇÃO DE PREPARAÇÃO E REVISÃO DE CONTEÚDOS",
+    "lotacao": "NÚCLEO DE APOIO À GESTÃO DE PESSOAS",
     "atoProvimento": "PORTARIA nº 775/2022",
     "dataPublicacao": "22/08/2022",
     "observacoes": []
@@ -10793,8 +11223,12 @@
     "nome": "RUI MOREIRA DE OLIVEIRA",
     "matricula": "30900836",
     "cargo": "ANALISTA JUDICIÁRIO",
-    "funcao": null,
-    "lotacao": "SEÇÃO DE GESTÃO DA FREQUÊNCIA",
+    "funcao": {
+      "tipo": "CJ",
+      "nivel": 1,
+      "cargoTitulo": "ASSESSOR I"
+    },
+    "lotacao": "GABINETE DA SECRETARIA-GERAL DA PRESIDÊNCIA",
     "atoProvimento": "PORTARIA nº 535/2004",
     "dataPublicacao": "14/12/2004",
     "observacoes": []
@@ -10839,6 +11273,20 @@
     "lotacao": "ASSESSORIA CONSULTIVA",
     "atoProvimento": "OFÍCIO nº /2022",
     "dataPublicacao": "15/09/2022",
+    "observacoes": []
+  },
+  {
+    "nome": "SABRINA MARIA ALVES",
+    "matricula": "309R0812",
+    "cargo": null,
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 6,
+      "cargoTitulo": "ASSISTENTE VI"
+    },
+    "lotacao": "MINISTRO 4 - STJ",
+    "atoProvimento": "OFÍCIO nº /2026",
+    "dataPublicacao": "17/09/2026",
     "observacoes": []
   },
   {
@@ -10909,6 +11357,16 @@
     "lotacao": "GABINETE DA COORDENADORIA DE SERVIÇOS, ENGENHARIA E ARQUITETURA",
     "atoProvimento": "DESPACHO nº /2023",
     "dataPublicacao": "04/05/2023",
+    "observacoes": []
+  },
+  {
+    "nome": "SAMUEL JUSCELINO VILAÇA",
+    "matricula": "30901875",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": null,
+    "atoProvimento": "PORTARIA nº 642/2026",
+    "dataPublicacao": "28/09/2026",
     "observacoes": []
   },
   {
@@ -11459,8 +11917,8 @@
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 5,
-      "cargoTitulo": "ASSISTENTE V"
+      "nivel": 6,
+      "cargoTitulo": "CHEFE DE SEÇÃO"
     },
     "lotacao": "SEÇÃO DE PROGRAMAÇÃO ORÇAMENTÁRIA",
     "atoProvimento": "PORTARIA TSE nº 173/2016",
@@ -11483,16 +11941,16 @@
   },
   {
     "nome": "TATIANA KOLLY WASILEWSKI RODRIGUES",
-    "matricula": "309R0703",
-    "cargo": null,
+    "matricula": "30901870",
+    "cargo": "TÉCNICO JUDICIÁRIO",
     "funcao": {
       "tipo": "CJ",
       "nivel": 3,
       "cargoTitulo": "ASSESSOR-CHEFE"
     },
     "lotacao": "OUVIDORIA",
-    "atoProvimento": "PORTARIA TRE nº /2022",
-    "dataPublicacao": "02/12/2022",
+    "atoProvimento": "PORTARIA TRE nº 283/2026",
+    "dataPublicacao": "01/09/2026",
     "observacoes": []
   },
   {
@@ -11521,6 +11979,16 @@
     "lotacao": "MINISTRO VICE-PRESIDENTE",
     "atoProvimento": "OFÍCIO nº /2024",
     "dataPublicacao": "24/07/2024",
+    "observacoes": []
+  },
+  {
+    "nome": "THAYLLA SOYNARA LUCENA",
+    "matricula": "30901836",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "GABINETE DA COORDENADORIA DE GESTÃO BIBLIOGRÁFICA E MEMÓRIA",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
     "observacoes": []
   },
   {
@@ -11555,7 +12023,11 @@
     "nome": "THIAGO ALVES CEDRO",
     "matricula": "30901780",
     "cargo": "ANALISTA JUDICIÁRIO",
-    "funcao": null,
+    "funcao": {
+      "tipo": "FC",
+      "nivel": 6,
+      "cargoTitulo": "CHEFE DE SEÇÃO"
+    },
     "lotacao": "SEÇÃO DE ATENÇÃO ODONTOLOGICA",
     "atoProvimento": "PORTARIA nº 349/2025",
     "dataPublicacao": "07/08/2025",
@@ -11609,8 +12081,8 @@
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 4,
-      "cargoTitulo": "ASSISTENTE IV"
+      "nivel": 5,
+      "cargoTitulo": "ASSISTENTE V"
     },
     "lotacao": "GABINETE DA DIRETORIA DE ASSUNTOS ESTRATÉGICOS",
     "atoProvimento": "PORTARIA nº 323/2024",
@@ -11896,6 +12368,16 @@
     "observacoes": []
   },
   {
+    "nome": "VICTOR AUGUSTO BROCCHIERI FERREIRA",
+    "matricula": "30901858",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "GABINETE DA COORDENADORIA DE SEGURANÇA CIBERNÉTICA E REDES",
+    "atoProvimento": "PORTARIA nº 518/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "VICTOR DE SOUTO PEREIRA",
     "matricula": "30900845",
     "cargo": "TÉCNICO JUDICIÁRIO",
@@ -12148,7 +12630,7 @@
       "nivel": 6,
       "cargoTitulo": "CHEFE DE SEÇÃO"
     },
-    "lotacao": "SEÇÃO DE BIBLIOTECA DIGITAL",
+    "lotacao": "SEÇÃO DE GESTÃO DE ACERVOS DIGITAIS",
     "atoProvimento": "PORTARIA nº 136/2000",
     "dataPublicacao": "20/07/2000",
     "observacoes": []
@@ -12238,6 +12720,16 @@
     "observacoes": []
   },
   {
+    "nome": "WILSON RODRIGUES CARVALHO JÚNIOR",
+    "matricula": "30901876",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": null,
+    "atoProvimento": "PORTARIA nº 638/2026",
+    "dataPublicacao": "28/09/2026",
+    "observacoes": []
+  },
+  {
     "nome": "WLADIMIR AZEVEDO CAETANO",
     "matricula": "30900181",
     "cargo": "TÉCNICO JUDICIÁRIO",
@@ -12266,6 +12758,16 @@
     "observacoes": []
   },
   {
+    "nome": "YASMIM DE LIMA LOPES",
+    "matricula": "30901838",
+    "cargo": "ANALISTA JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "SEÇÃO DE ATENÇÃO SOCIAL E PSICOLÓGICA",
+    "atoProvimento": "PORTARIA nº 520/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "YASMIN CAMILLE SILVA MESQUITA",
     "matricula": "30901628",
     "cargo": "TÉCNICO JUDICIÁRIO",
@@ -12280,13 +12782,23 @@
     "observacoes": []
   },
   {
+    "nome": "YTALLA NANDY JÁCOME DANTAS",
+    "matricula": "30901863",
+    "cargo": "TÉCNICO JUDICIÁRIO",
+    "funcao": null,
+    "lotacao": "NÚCLEO DE PROCESSAMENTO ESPECIALIZADO",
+    "atoProvimento": "PORTARIA nº 523/2026",
+    "dataPublicacao": "18/08/2026",
+    "observacoes": []
+  },
+  {
     "nome": "YURI SAMPAIO ZUVANOV",
     "matricula": "30901247",
     "cargo": "ANALISTA JUDICIÁRIO",
     "funcao": {
       "tipo": "FC",
-      "nivel": 3,
-      "cargoTitulo": "ASSISTENTE III"
+      "nivel": 4,
+      "cargoTitulo": "ASSISTENTE IV"
     },
     "lotacao": "MINISTRO 5 - JURISTA",
     "atoProvimento": "PORTARIA nº 651/2009",
