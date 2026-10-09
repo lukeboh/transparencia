@@ -2,6 +2,7 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { lerRegistros, type RegistroLog } from '../../../../src/lib/logger.js';
+import { AtualizarAgoraBotao } from '@/components/dashboard/atualizar-agora-botao';
 import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -72,6 +73,10 @@ export default async function PainelInterno({
         aplicação. Mostrando {registros.length} registro{registros.length === 1 ? '' : 's'}
         {categoria ? ` em "${CATEGORIAS.find((c) => c.valor === categoria)?.rotulo}"` : ''}.
       </p>
+
+      <div className="mt-4">
+        <AtualizarAgoraBotao chave={chave} />
+      </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <a

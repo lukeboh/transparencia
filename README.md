@@ -518,7 +518,10 @@ completo (cron/systemd, variáveis de ambiente) em **`deploy/README.md`**:
   administra quem define, via `ATUALIZAR_APP_RESTART_CMD` (PM2, systemd,
   etc.), já que o script não assume um gerenciador de processos específico.
   **Isto não roda sozinho** — precisa ser instalado no servidor real (cron
-  ou o `deploy/transparencia-atualizar.{service,timer}` incluído).
+  ou o `deploy/transparencia-atualizar.{service,timer}` incluído). O painel
+  interno (abaixo) tem um botão **"Forçar atualização agora"**
+  (`POST /api/atualizar-app`) pra disparar o mesmo script na hora, sem
+  esperar o agendamento.
 - **Painel interno** (`/painel/[chave]`): logs de scraping (a atualização de
   dados sob demanda, ver acima), da atualização automática e de erros da
   aplicação (renderização, rotas de API, exceções não tratadas), com filtro

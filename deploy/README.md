@@ -74,11 +74,30 @@ sudo systemctl start transparencia-atualizar.service
 journalctl -u transparencia-atualizar.service -n 50
 ```
 
+### Forçar agora, fora do agendamento
+
+O painel interno (seção 2) tem um botão **"Forçar atualização agora"** que
+dispara o mesmo `scripts/atualizar-app.mjs` na hora, via
+`POST /api/atualizar-app` — não precisa esperar o cron/timer. A rota só
+spawna o script em background (processo destacado — sobrevive mesmo que
+`ATUALIZAR_APP_RESTART_CMD` reinicie o próprio servidor que o originou) e
+responde na hora; o resultado sai nos logs, como qualquer outra execução.
+
+Só uma ressalva de configuração: como esse caminho roda **dentro do processo
+do site**, `ATUALIZAR_APP_RESTART_CMD` (e `ATUALIZAR_APP_BRANCH`, se usar)
+precisam estar no ambiente **desse processo** — não basta estarem só na
+linha do cron ou no `Environment=` do `transparencia-atualizar.service`
+(esse é outro processo, só usado pelo agendamento). Defina a mesma variável
+onde quer que o site em si seja iniciado (unit do PM2/systemd do site,
+docker-compose, etc.) ou em `web/.env.local` (o Next.js carrega esse arquivo
+no processo do servidor).
+
 ## 2. Painel interno (`/painel/[chave]`)
 
 Mostra os últimos registros de log — scraping (a atualização de dados sob
 demanda que já existia, disparada pela própria página), atualização automática
-(seção 1 acima) e erros da aplicação (renderização, rotas de API, exceções não
+(seção 1 acima, incluindo disparos manuais pelo botão "Forçar atualização
+agora") e erros da aplicação (renderização, rotas de API, exceções não
 tratadas) — com filtro por categoria.
 
 Não é linkado em nenhum lugar da navegação, e a URL exige uma chave secreta no
