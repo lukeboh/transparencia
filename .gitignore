@@ -12,3 +12,5 @@ logs/
 .env
 .env.local
 .env.*.local
+mcp/dist/
+mcp/build/
