@@ -1,0 +1,48 @@
+{
+  "name": "tse-transparencia-mcp",
+  "version": "0.1.0",
+  "description": "Servidor MCP com os dados de transparência do TSE (contratos, fiscais/gestores, servidores, funções comissionadas, unidades, teletrabalho, terceirizados e horas extras estimadas), obtidos sob demanda das fontes oficiais.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "tse-transparencia-mcp": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist/index.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "dev": "node src/index.js",
+    "build": "node scripts/build.mjs",
+    "pack:mcpb": "node scripts/pack-mcpb.mjs",
+    "inspect": "npx @modelcontextprotocol/inspector node dist/index.js",
+    "test": "node --test test/*.test.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "tse",
+    "transparencia",
+    "dados-abertos",
+    "contratos",
+    "servidores-publicos"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lukeboh/transparencia.git",
+    "directory": "mcp"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^4.10.38"
+  },
+  "devDependencies": {
+    "@anthropic-ai/mcpb": "^2.1.2",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "esbuild": "^0.28.2",
+    "zod": "^4.6.5"
+  }
+}

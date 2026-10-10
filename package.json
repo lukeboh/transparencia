@@ -17,7 +17,7 @@
     "tse:cruzar-siac": "node src/tse/cruzarSiac.js",
     "data": "node src/tse/buildDashboardData.js",
     "start": "node src/tse/scrapeAgentesPublicos.js && node src/tse/buildDashboardData.js && npm run dev --prefix web",
-    "test": "node --test"
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "pdfjs-dist": "^4.10.38",

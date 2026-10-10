@@ -283,6 +283,16 @@ TSE: [Consulta contratos, convênios e outros (Compras.gov.br)](https://contrato
   rotulada como **estimativa** e **limite superior**, com o método no glossário
   (`horasExtras`, `horasExtrasCiclo`).
 
+- ✅ **Servidor MCP** (`mcp/`) — expõe todos esses dados a qualquer IA de
+  desktop (Claude Desktop, Claude Code, Cursor, VS Code/Copilot, Windsurf, LM
+  Studio…) para consulta sob demanda: 13 ferramentas (busca de contratos,
+  ranking de fiscais, servidores, perfil cruzado, organograma, teletrabalho,
+  funções, terceirizados, horas extras e uma **consulta livre** com filtros e
+  agrupamentos), reaproveitando os extratores de `src/tse/`. Busca na fonte
+  oficial e cai para o snapshot de `data/` quando ela não responde. Instalável
+  com um clique no Claude Desktop (`.mcpb`) ou via `npx`. Ver
+  [`mcp/README.md`](mcp/README.md).
+
 O rodapé de cada página traz um identificador de versão do app
 (`web/lib/version.ts`, `APP_VERSION`) — atual: **v1.01**.
 
